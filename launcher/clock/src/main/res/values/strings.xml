@@ -1,0 +1,14 @@
+<resources>
+    <string name="show_clock">Show clock</string>
+    <string name="position">Position</string>
+    <string name="size">Text size</string>
+    <string name="higher">Higher</string>
+    <string name="lower">Lower</string>
+    <string name="smaller">Smaller</string>
+    <string name="larger">Larger</string>
+    <string name="reset_layout">Reset position and size</string>
+    <string name="top">Top</string>
+    <string name="bottom">Bottom</string>
+    <string name="position_percent">%1$d%%</string>
+    <string name="size_number">%1$d</string>
+</resources>

@@ -1,0 +1,98 @@
+{
+  "status": "Design exploration. Not implemented or installed.",
+  "audience": "Adults and a shared household managing their own TV time.",
+  "recommendation": "A session timer and a daily bedtime, with a five-minute warning followed by an optional dismissible stop screen.",
+  "image": {
+    "file": "concept-v1.png",
+    "generator": "OpenAI image generation built-in tool",
+    "prompt": "Use case: product-mockup.\nAsset type: high-resolution Android TV product design exploration board, not a real screenshot or shipping product.\nCreate a beautifully restrained, modern Android TV interface concept for \"TV Clock\", a lightweight clock and viewing-limit app for adults sharing a television. Design for reading across a living room and navigating only with a D-pad remote. Three equal 16:9 flat screen mockups stacked vertically on one tall board, each full width and fully visible. Small editorial labels outside each screen: \"01  SET A LIMIT\", \"02  A QUIET WARNING\", \"03  A CLEAR STOP\". Actual screen interfaces must be simple, generous, large type, no phone controls. Dark charcoal / midnight surfaces, white and warm ivory typography, a restrained pale-blue focus outline. No busy textures, no chrome, no heavy glass, no blur, no dashboards, no statistics, no gradients as decoration. Rounded rectangles with moderate radius and one very clear focused button. Consider premium Android TV / well-designed living room software, not a mobile dashboard. Consistent typography, edge margins, and controls across screens.\n\nScreen 1: settings, charcoal background. Small top-left title \"TV Clock\". Main heading \"Viewing limits\". Three simple spacious rows in left two thirds of screen, no sidebar: \"Timer\" with \"60 min\" and a focused white pill button \"Start\"; \"Bedtime\" with \"22:30\" and a small label \"Every day\"; \"At the limit\" with two clear choices \"Remind me\" and \"Stop screen\", Stop screen selected with a subtle pale-blue outline. Bottom helper \"The earlier limit applies.\" Top-right the white clock \"21:30\". Keep the right third mostly empty, excellent visual balance.\nScreen 2: a fictional subdued wide cinematic twilight coastal landscape playing full screen, no recognizable show, no media controls. Existing white clock \"22:25\" at top right. Under the clock, a compact calm opaque charcoal notification card, aligned to the safe right inset, reading exactly \"Bedtime in 5 minutes\" and below \"Time to stop at 22:30\". This card is non-interactive: NO buttons, NO focus ring. Keep subtitles region unobstructed and most picture visible. No full-screen dimming.\nScreen 3: a solid midnight charcoal full-screen intentional stop page, NO video visible. Small top-left title \"TV Clock\". Large left-aligned main heading \"Time for bed\". Below a large but restrained time \"22:30\". Supporting line \"Your bedtime has arrived.\" Two wide horizontal buttons below, \"Go to Home\" focused with white fill and black text; \"5 more minutes\" secondary dark outlined button. Bottom small helper \"Use the power button to turn off the TV.\" No lock icons, no PIN, no claim that viewing is technically blocked. Generous calm negative space.\n\nTypography: elegant readable sans-serif, very large TV-legible headings and comfortable body text, exact spelling. Every control must be usable with left/right/up/down and OK. Frame no TV hardware, no remotes, no people, no presentation mockup perspective, no photoreal room. The purpose is visual inspiration for a simple native implementation.",
+    "role": "Visual inspiration. Not a device screenshot or a complete interaction specification."
+  },
+  "scope": {
+    "clock": "Keep existing clock appearance controls and installed home screen.",
+    "timer": {
+      "presetsMinutes": [
+        30,
+        60,
+        90,
+        120
+      ],
+      "meaning": "Elapsed time after Start, including standby. Not measured playback or viewing time.",
+      "controls": [
+        "Start",
+        "Cancel"
+      ]
+    },
+    "bedtime": {
+      "recurrence": "One local time every day",
+      "defaultEnabled": false,
+      "exception": "Skip tonight, with confirmation. Resume tomorrow.",
+      "lateActivation": "If today's time passed, schedule tomorrow and state the next deadline."
+    },
+    "endAction": {
+      "choices": [
+        "Remind me",
+        "Stop screen"
+      ],
+      "recommended": "Stop screen",
+      "selection": "Explicit user choice, not silently enabled."
+    }
+  },
+  "interaction": {
+    "warning": "Five minutes before the effective deadline. Brief non-interactive panel. Do not take remote focus or cover the subtitle area.",
+    "deadline": "Time to stop, or Time for bed. Default focus on Go to Home.",
+    "extension": "One confirmed five-minute extension, available only if another active deadline does not occur within that period. Never silently move bedtime when extending the timer.",
+    "escape": "Back dismisses the occurrence. Home keeps its normal system action. Never trap the remote or immediately reopen a dismissed screen.",
+    "firstKey": "Require release before accepting Select, to avoid consuming a press intended for the playing app.",
+    "labels": "Go to Home does not claim to pause playback or turn off the TV.",
+    "clockOff": "Clock visibility and time limits are independent. Show an active-limit summary even when the clock is hidden."
+  },
+  "deadlinePolicy": {
+    "overlap": "Use the earlier deadline. Coalesce identical deadlines into one warning and one stop screen. Bedtime supplies the title when simultaneous.",
+    "alreadyHandled": "Persist handled occurrences to avoid repeating them after app resume or process restart.",
+    "timeChanges": "Bedtime follows local clock and timezone changes. Duration timers use monotonic elapsed time within a boot.",
+    "standby": "Never wake the TV. Do not show stale full-screen interruptions after morning startup.",
+    "restart": "Restore future schedules after reboot. Reboot and missed-deadline behavior need device validation."
+  },
+  "visualDirection": "Large readable text, charcoal background, generous spacing, one clear remote focus indicator, restrained pale-blue accents. Use a different treatment for selection and focus. No heavy blur or runtime image backgrounds.",
+  "technicalBoundaries": [
+    "An ordinary overlay app does not provide tamper-proof blocking.",
+    "Some apps hide overlays.",
+    "Returning Home does not guarantee that another app stops audio or playback.",
+    "Precise alarms, background presentation, standby, and reboot recovery require a separate feasibility test on this Chromecast.",
+    "Keep native Android controls and local state. No accounts, analytics, accessibility service, or playback detection in the first version."
+  ],
+  "omitted": [
+    "PINs",
+    "Profiles",
+    "Viewing history",
+    "Automatic TV power control",
+    "Daily usage accounting",
+    "Weekday grids",
+    "General-purpose alarm screens",
+    "Hard device locks"
+  ],
+  "sources": [
+    {
+      "title": "Android TV navigation",
+      "url": "https://developer.android.com/design/ui/tv/guides/foundations/navigation-on-tv"
+    },
+    {
+      "title": "Android TV focus system",
+      "url": "https://developer.android.com/design/ui/tv/guides/styles/focus-system"
+    },
+    {
+      "title": "Android lock task mode",
+      "url": "https://developer.android.com/work/dpc/dedicated-devices/lock-task-mode"
+    },
+    {
+      "title": "Overlay restrictions",
+      "url": "https://developer.android.com/security/fraud-prevention/activities"
+    },
+    {
+      "title": "Alarm scheduling",
+      "url": "https://developer.android.com/develop/background-work/services/alarms"
+    }
+  ],
+  "review": "Android TV design sub-agent recommended this flow and reviewed overlap, dismissal, hidden-clock behavior, and shared-household use."
+}

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="ClockTheme" parent="android:style/Theme.Material.NoActionBar.Fullscreen">
+        <item name="android:windowBackground">#111318</item>
+        <item name="android:colorAccent">#FFFFFF</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+    <item name="clock_switch" type="id" />
+    <item name="position_up" type="id" />
+    <item name="position_down" type="id" />
+    <item name="position_value" type="id" />
+    <item name="size_up" type="id" />
+    <item name="size_down" type="id" />
+    <item name="size_value" type="id" />
+    <item name="reset_layout" type="id" />
+    <item name="clock_settings" type="id" />
+    <item name="limits_summary" type="id" />
+    <item name="timer_30" type="id" />
+    <item name="timer_60" type="id" />
+    <item name="timer_90" type="id" />
+    <item name="timer_start" type="id" />
+    <item name="timer_detail" type="id" />
+    <item name="bedtime_time" type="id" />
+    <item name="bedtime_toggle" type="id" />
+    <item name="bedtime_skip" type="id" />
+    <item name="bedtime_detail" type="id" />
+    <item name="bedtime_hour" type="id" />
+    <item name="bedtime_minute" type="id" />
+    <item name="action_remind" type="id" />
+    <item name="action_stop" type="id" />
+    <item name="limits_access" type="id" />
+    <item name="stop_home" type="id" />
+    <item name="stop_extend" type="id" />
+</resources>
