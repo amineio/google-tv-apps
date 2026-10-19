@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'amine/**']
   pull_request:
 
 permissions:
@@ -10,42 +10,64 @@ permissions:
 
 jobs:
   lists-and-tools:
-    name: Lists, tools and docs
+    name: Repository and installer tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - name: Tools virtualenv
+          python-version: '3.12'
+      - name: Tools environment
         run: |
           python3 -m venv tools/venv
           tools/venv/bin/pip install -q -r tools/requirements.txt
-      - name: Example lists, README tables, shell helpers
+      - name: Test lists, documentation, and installers without a TV
         env:
-          CLEANYOURTV_STRICT: ${{ github.event_name == 'push' && '1' || '' }}
+          CLEANYOURTV_STRICT: '1'
         run: python3 -m unittest discover -s tests -v
 
-  launcher:
-    name: Launcher build and unit tests
+  android-apps:
+    name: Build and test both Android apps
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: '17'
       - uses: android-actions/setup-android@v3
         with:
           packages: platforms;android-34 build-tools;34.0.0
       - uses: gradle/actions/setup-gradle@v4
-      - name: Unit tests and release build
-        working-directory: launcher
+      - name: Unit tests, lint, releases, and device test compilation
         run: |
-          chmod +x gradlew
-          ./gradlew --no-daemon testReleaseUnitTest assembleRelease
-      - name: The launcher stays small
+          ./gradlew --no-daemon :home:testReleaseUnitTest :clock:testReleaseUnitTest :home:lintRelease :clock:lintRelease :home:assembleRelease :clock:assembleRelease :clock:assembleDebugAndroidTest
+      - name: Keep both apps small
+        shell: python
         run: |
-          size=$(stat -c %s launcher/app/build/outputs/apk/release/app-release.apk)
-          echo "release APK: $((size / 1024)) KB"
-          test "$size" -lt 409600 || { echo "APK is over 400 KB; the launcher targets 1 GB TVs, keep it small"; exit 1; }
+          from pathlib import Path
+          limits = {
+              'apps/home/build/outputs/apk/release/home-release.apk': 409600,
+              'apps/clock/build/outputs/apk/release/clock-release.apk': 131072,
+          }
+          for name, limit in limits.items():
+              size = Path(name).stat().st_size
+              print(f'{name}: {size} bytes (limit {limit})')
+              assert size < limit, f'{name} exceeds its APK size limit'
+      - name: Save release APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: google-tv-apps
+          path: |
+            apps/home/build/outputs/apk/release/home-release.apk
+            apps/clock/build/outputs/apk/release/clock-release.apk
+          if-no-files-found: error
+      - name: Save test and lint reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-and-lint-reports
+          path: |
+            apps/*/build/reports/tests/
+            apps/*/build/reports/lint-results-release.*
+          if-no-files-found: ignore

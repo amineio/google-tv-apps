@@ -60,7 +60,7 @@ Set `JAVA_HOME` and `ANDROID_HOME` if the tools use different paths on your comp
 
 ## Local tests
 
-From the `launcher` directory, use JDK 17 and the installed Android SDK:
+From the repository root, use JDK 17 and the installed Android SDK:
 
 ```sh
 ./gradlew :clock:testDebugUnitTest :clock:lintRelease :clock:assembleRelease :clock:assembleDebugAndroidTest
@@ -77,7 +77,7 @@ The test changes the switch, opens Settings, and returns to the current home scr
 It leaves the clock on. Operate this command from the repository root:
 
 ```sh
-TV_SERIAL=192.168.1.121:34927 python3 launcher/clock/tests/device_test.py
+TV_SERIAL=192.168.1.121:34927 python3 apps/clock/tests/device_test.py
 ```
 
 The clock uses a foreground service, an Android task with a persistent notification.

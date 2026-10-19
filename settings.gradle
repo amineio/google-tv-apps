@@ -12,6 +12,8 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "tvhome"
-include ':app'
+rootProject.name = "google-tv-apps"
+include ':home'
+project(':home').projectDir = file('apps/home')
 include ':clock'
+project(':clock').projectDir = file('apps/clock')

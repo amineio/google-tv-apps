@@ -6,6 +6,11 @@ android {
     namespace 'com.gathin.tvhome'
     compileSdk 34
 
+    lint {
+        // Preserve documented upstream lint debt while detecting new errors.
+        baseline = file('lint-baseline.xml')
+    }
+
     defaultConfig {
         applicationId 'com.gathin.tvhome'
         minSdk 26

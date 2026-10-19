@@ -1,11 +1,13 @@
+# Local tools and device data
 tools/venv/
 tools/adbkey/
-__pycache__/
-launcher/.gradle/
-launcher/build/
-launcher/app/build/
-launcher/clock/build/
-launcher/local.properties
-# your own TV's dumps (serial, android_id, device names) stay local
 backup/
+__pycache__/
 .DS_Store
+
+# Android and IDE outputs
+.gradle/
+**/build/
+local.properties
+.idea/
+*.iml

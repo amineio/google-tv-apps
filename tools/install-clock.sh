@@ -14,9 +14,9 @@ if [ -z "${ANDROID_HOME:-}" ]; then
   fi
 fi
 adb -s "$TV_SERIAL" get-state
-cd "$ROOT/launcher"
+cd "$ROOT"
 ./gradlew :clock:assembleRelease :clock:lintRelease --console=plain
-APK="$ROOT/launcher/clock/build/outputs/apk/release/clock-release.apk"
+APK="$ROOT/apps/clock/build/outputs/apk/release/clock-release.apk"
 adb -s "$TV_SERIAL" push "$APK" /data/local/tmp/tv-clock.apk
 OUT=$(adb -s "$TV_SERIAL" shell pm install -r /data/local/tmp/tv-clock.apk)
 printf '%s\n' "$OUT"

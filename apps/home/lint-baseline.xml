@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='utf-8'?>
+<issues format="6" by="lint 8.5.2" type="baseline" client="gradle" dependencies="false" name="AGP (8.5.2)" variant="all" version="8.5.2">
+    <issue id="CoarseFineLocation" message="If you need access to FINE location, you must request both `ACCESS_FINE_LOCATION` and `ACCESS_COARSE_LOCATION`" errorLine1="    &lt;uses-permission android:name=&quot;android.permission.ACCESS_FINE_LOCATION&quot; /&gt;" errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/AndroidManifest.xml" line="12" column="5" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;date_format&quot; is not translated in &quot;ca&quot; (Catalan)" errorLine1="    &lt;string name=&quot;date_format&quot;&gt;EEEE  d MMMM&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="21" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;vpn&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese)" errorLine1="    &lt;string name=&quot;vpn&quot;&gt;VPN&lt;/string&gt;" errorLine2="            ~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="23" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;vpn_off&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese)" errorLine1="    &lt;string name=&quot;vpn_off&quot;&gt;VPN off&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="24" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;home_settings&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese)" errorLine1="    &lt;string name=&quot;home_settings&quot;&gt;Default home&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="25" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;home_settings_help&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese)" errorLine1="    &lt;string name=&quot;home_settings_help&quot;&gt;Choose a home screen in system settings, then press Home.&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="26" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;input_key_service_description&quot; is not translated in &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese)" errorLine1="    &lt;string name=&quot;input_key_service_description&quot;&gt;Opens the input switcher when the remote\'s Input button is pressed.&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="27" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;home_key_name&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese)" errorLine1="    &lt;string name=&quot;home_key_name&quot;&gt;Home button&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="28" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;home_key_description&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese)" errorLine1="    &lt;string name=&quot;home_key_description&quot;&gt;Makes the remote\'s Home button open this launcher.&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="29" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;card_prompt_title&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese), &quot;sr&quot; (Serbian)" errorLine1="    &lt;string name=&quot;card_prompt_title&quot;&gt;New card from %1$s&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="30" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;card_prompt_body&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese), &quot;sr&quot; (Serbian)" errorLine1="    &lt;string name=&quot;card_prompt_body&quot;&gt;%1$s can show a card on your home screen. Keeping it hidden leaves the app\'s normal tile as it is.&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="31" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;card_prompt_names&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese), &quot;sr&quot; (Serbian)" errorLine1="    &lt;string name=&quot;card_prompt_names&quot;&gt;The card is named \'%1$s\'. The app is \'%2$s\'.&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="32" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;card_prompt_resigned&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese), &quot;sr&quot; (Serbian)" errorLine1="    &lt;string name=&quot;card_prompt_resigned&quot;&gt;%1$s was updated with a different signing key, so your earlier answer no longer applies. Decide again for its card.&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="33" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;card_prompt_relabelled&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese), &quot;sr&quot; (Serbian)" errorLine1="    &lt;string name=&quot;card_prompt_relabelled&quot;&gt;%1$s changed the name of its card since you decided. Decide again for it.&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="34" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;card_prompt_hint&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese), &quot;sr&quot; (Serbian)" errorLine1="    &lt;string name=&quot;card_prompt_hint&quot;&gt;You can change this later: hold OK on Settings.&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="35" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;card_prompt_identity&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese), &quot;sr&quot; (Serbian)" errorLine1="    &lt;string name=&quot;card_prompt_identity&quot;&gt;%1$s, key %2$s&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="36" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;card_keep_hidden&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese), &quot;sr&quot; (Serbian)" errorLine1="    &lt;string name=&quot;card_keep_hidden&quot;&gt;Keep hidden&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="37" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;card_show&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese), &quot;sr&quot; (Serbian)" errorLine1="    &lt;string name=&quot;card_show&quot;&gt;Show card&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="38" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;card_not_saved&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese), &quot;sr&quot; (Serbian)" errorLine1="    &lt;string name=&quot;card_not_saved&quot;&gt;Couldn\'t save the choice&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="39" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;module_cards&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese), &quot;sr&quot; (Serbian)" errorLine1="    &lt;string name=&quot;module_cards&quot;&gt;Module cards&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="40" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;no_module_cards&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese), &quot;sr&quot; (Serbian)" errorLine1="    &lt;string name=&quot;no_module_cards&quot;&gt;No module cards installed&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="41" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;card_app_name&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese), &quot;sr&quot; (Serbian)" errorLine1="    &lt;string name=&quot;card_app_name&quot;&gt;App: %1$s&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="42" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;card_state_shown&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese), &quot;sr&quot; (Serbian)" errorLine1="    &lt;string name=&quot;card_state_shown&quot;&gt;Shown&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="43" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;card_state_over_limit&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese), &quot;sr&quot; (Serbian)" errorLine1="    &lt;string name=&quot;card_state_over_limit&quot;&gt;Shown, over the limit of 8&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="44" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;card_state_hidden&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese), &quot;sr&quot; (Serbian)" errorLine1="    &lt;string name=&quot;card_state_hidden&quot;&gt;Hidden&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="45" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;card_state_new&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese), &quot;sr&quot; (Serbian)" errorLine1="    &lt;string name=&quot;card_state_new&quot;&gt;New&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="46" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;card_state_new_key&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese), &quot;sr&quot; (Serbian)" errorLine1="    &lt;string name=&quot;card_state_new_key&quot;&gt;New key&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="47" column="13" />
+    </issue>
+    <issue id="MissingTranslation" message="&quot;card_state_new_label&quot; is not translated in &quot;de&quot; (German), &quot;th&quot; (Thai), &quot;fr&quot; (French), &quot;ca&quot; (Catalan), &quot;es&quot; (Spanish), &quot;zh&quot; (Chinese), &quot;sr&quot; (Serbian)" errorLine1="    &lt;string name=&quot;card_state_new_label&quot;&gt;New name&lt;/string&gt;" errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/res/values/strings.xml" line="48" column="13" />
+    </issue>
+    <issue id="ByteOrderMark" message="Found byte-order-mark in the middle of a file" errorLine1="            if (text.startsWith(&quot;﻿&quot;)) text = text.substring(1);   // Windows editors add a BOM" errorLine2="                                 ~">
+        <location file="src/main/java/com/gathin/tvhome/Config.java" line="148" column="34" />
+    </issue>
+</issues>
