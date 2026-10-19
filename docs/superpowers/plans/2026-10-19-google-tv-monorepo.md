@@ -14,11 +14,11 @@ Do not publish build outputs, TV backups, SDK paths, or credentials.
 ## Tasks
 
 - [x] Create the fork and import the tested TV Clock source in a separate commit.
-- [ ] Move the Gradle build to the root and apps to apps/home and apps/clock.
-- [ ] Update installer paths and retain legacy launcher entry points.
-- [ ] Add installer tests with fake build and TV clients. No real TV calls.
-- [ ] Add monorepo documentation, upstream credit, and CI for both apps.
-- [ ] Build releases, run unit tests and lint, and run repository tests.
+- [x] Move the Gradle build to the root and apps to apps/home and apps/clock.
+- [x] Update installer paths and retain legacy launcher entry points.
+- [x] Add installer tests with fake build and TV clients. No real TV calls.
+- [x] Add monorepo documentation, upstream credit, and CI for both apps.
+- [x] Build releases, run unit tests and lint, and run repository tests.
 - [ ] Review changes, publish the tested commits, and inspect the remote state.
 
 ## Review focus
@@ -28,3 +28,14 @@ The clock installer must not change the home app.
 Both module APK paths must match their Gradle project names.
 Historical TV lists and font license links must remain usable.
 A fresh clone must build without local files from the previous checkout.
+
+## Local validation and review
+
+Both release APKs build. All 56 Android unit tests and eight repository tests pass.
+Clock device test sources compile. No device operations ran during this migration.
+TV Home is 278633 bytes. TV Clock is 62636 bytes.
+The home lint baseline records 29 existing errors. New lint errors remain fatal.
+Independent review found no blocking migration defects.
+The review found one stale documentation anchor. The anchor and related installer messages now point to the retained guides.
+The reviewer confirmed byte-identical home and clock source files.
+GitHub CI and publication to main remain the final steps.

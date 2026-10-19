@@ -50,7 +50,7 @@ if [ -z "${STOCK_LAUNCHER:-}" ]; then
       else
         echo "ERROR: Home currently resolves to '${HOME_PKG:-nothing}', which is not a stock launcher this script knows." >&2
         echo "  android                                  = Android's launcher chooser (two launchers tie); pick a default on the TV first" >&2
-        echo "  com.google.android.tungsten.setupwraith  = Google TV's setup wizard; see README, Troubleshooting" >&2
+        echo "  com.google.android.tungsten.setupwraith  = Google TV's setup wizard; see docs/TROUBLESHOOTING.md" >&2
         echo "  anything else                            = another launcher is the default" >&2
         echo "Run again with STOCK_LAUNCHER=<package to disable> or STOCK_LAUNCHER=none." >&2; exit 1
       fi ;;
@@ -88,7 +88,7 @@ case "$HOME_NOW" in
     [ "$STOCK_LAUNCHER" = none ] || "$PY" -I "$TOOLS/tv.py" "pm enable --user 0 $STOCK_LAUNCHER" >/dev/null || true
     echo "ERROR: Home resolves to ${HOME_NOW:-nothing}, not to the new launcher; $STOCK_LAUNCHER was re-enabled." >&2
     echo "On Google TV this usually means com.google.android.tungsten.setupwraith also claims Home: add it to" >&2
-    echo "your debloat list (see README, Troubleshooting), apply the list, then run this script again." >&2
+    echo "your debloat list (see docs/TROUBLESHOOTING.md), apply the list, then run this script again." >&2
     exit 1 ;;
 esac
 
