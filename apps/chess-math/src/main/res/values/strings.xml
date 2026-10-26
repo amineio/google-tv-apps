@@ -1,4 +1,5 @@
 <resources>
+    <string name="app_version">Versie %1$s</string>
     <string name="app_name">Schaak &amp; Reken</string>
     <string name="brand">S C H A A K  &amp;  R E K E N</string>
     <string name="start">Start</string><string name="continue_game">Verder spelen</string>

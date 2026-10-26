@@ -367,6 +367,10 @@ public final class MainActivity extends Activity {
     }
     private void parents(){
         title(R.string.parent_title);
+        TextView version=TvStyle.text(this,getString(R.string.app_version,BuildConfig.VERSION_NAME),14,false);
+        version.setTextColor(TvStyle.MUTED);
+        version.setTag("app-version");
+        content.addView(version,new LinearLayout.LayoutParams(-1,-2));
         ScrollView scroll=new ScrollView(this);
         LinearLayout list=new LinearLayout(this);
         list.setOrientation(LinearLayout.VERTICAL);

@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+    <string name="app_version">Version %1$s</string>
     <string name="app_name">Chess &amp; Maths</string>
     <string name="brand">C H E S S  &amp;  M A T H S</string>
     <string name="start">Start</string>
