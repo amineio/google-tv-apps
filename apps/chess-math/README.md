@@ -12,9 +12,9 @@ Open Schaak & Reken from the TV app grid. Select Start or Verder spelen.
 2. Use the arrows to choose a marked destination. Press OK to move.
 3. Press Back to cancel a piece selection. Press Back again to open Pause.
 
-The ivory corners mark focus. An amber inner border marks the selected piece. Dots mark empty legal destinations. Corner brackets mark legal captures. Hatching marks the last move. A checked king has a double border and an exclamation mark.
+An ivory outline marks focus. A sage inner border marks the selected piece. Dots mark empty legal destinations. Rings mark legal captures. A quiet sage overlay marks the last move. A checked king has a double border and an exclamation mark.
 
-Promotion offers Dame, Toren, Loper, and Paard. Use Left and Right to choose the piece. Press OK to confirm. Press Back to cancel the choice before the move commits.
+Promotion shows images and names for Dame, Toren, Loper, and Paard. Use Left and Right to choose the piece. Press OK to confirm. Press Back to cancel the choice before the move commits.
 
 The computer makes frequent mistakes. Its strength needs family playtesting. The app makes no rating or age-suitability claim.
 
@@ -24,7 +24,7 @@ The default rhythm is five foreground minutes of chess, then five foreground min
 
 A math round also requires at least three completed exercises. After five minutes, the child finishes the current exercise. Exercises continue throughout the math period, even after three correct answers. Foreground idle time counts as elapsed time, but it cannot complete the required exercises. The app does not measure thinking or prove attention.
 
-Use the large number pad to enter an answer. Wis deletes one digit. OK submits the answer. A wrong answer keeps the exercise and provides a hint. Hint offers a useful step, then the worked answer. An answer completed with help counts toward the round. Paper and pencil are welcome. There is no question countdown or speed penalty.
+Use the number pad to enter an answer. Wis deletes one digit. An exact answer shows Goed! and advances automatically after a short pause. There is no submit or Next action. Partial and wrong entries remain editable. Hint offers a useful step, then the worked answer. An answer completed with help counts toward the round. Paper and pencil are welcome. There is no question countdown or speed penalty.
 
 After a round, select Verder schaken to return to the saved chess position.
 
@@ -73,7 +73,7 @@ Install JDK 17, Android platform 34, and Android build tools 34. Set JAVA_HOME a
 
 The review APK is `apps/chess-math/build/outputs/apk/release/chessMath-release.apk`. It uses the repository's local debug signing key. Store publication and production signing are separate work.
 
-Instrumentation tests need a connected TV and the debug app. They are not run by the APK build. The test package is `com.amine.chessmath.test`. The parent and promotion tests use temporary memory fixtures. Other smoke tests change the test app's current session. Preserve existing family progress before operating the test suite.
+Instrumentation tests need a connected TV and the debug app. They are not run by the APK build. The test package is `com.amine.chessmath.test`. The math, parent, and promotion tests use temporary memory fixtures. Other smoke tests can change the test app's current session. Preserve existing family progress before operating the test suite.
 
 See the [verification record](../../docs/chess-math/verification.md) for actual build, test, screenshot, and device evidence. Design images are not app screenshots.
 

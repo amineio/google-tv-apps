@@ -2,7 +2,6 @@ package com.amine.chessmath;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.graphics.Typeface;
 import android.view.View;
 import android.widget.Button;
@@ -39,7 +38,6 @@ final class TvStyle {
     private static final class FocusSurface extends android.graphics.drawable.Drawable {
         private final Paint p=new Paint(3);
         private final float d;
-        private final Path corners=new Path();
         FocusSurface(Context c){
             d=c.getResources().getDisplayMetrics().density;
         }
@@ -58,28 +56,12 @@ final class TvStyle {
             }
             float left=getBounds().left+3*d,top=getBounds().top+3*d,right=getBounds().right-3*d,bottom=getBounds().bottom-3*d;
             p.setStyle(Paint.Style.FILL);
-            p.setColor(focus?0xff52734c:checked?0xff345c40:0x451c492e);
+            p.setColor(focus?0xff3e6046:checked?0xff34543d:0x451c492e);
             c.drawRoundRect(left,top,right,bottom,10*d,10*d,p);
             p.setStyle(Paint.Style.STROKE);
-            p.setStrokeWidth((focus?2:1.4f)*d);
-            p.setColor(focus?IVORY:checked?AMBER:0x88fff1d0);
+            p.setStrokeWidth((focus?2.5f:1.4f)*d);
+            p.setColor(focus?IVORY:checked?MUTED:0xaafff1d0);
             c.drawRoundRect(left,top,right,bottom,10*d,10*d,p);
-            if(focus){
-                p.setStrokeWidth(3*d);
-                p.setStrokeCap(Paint.Cap.ROUND);
-                corners.reset();
-                float len=13*d,radius=10*d;
-                for(int n=0;n<4;n++){
-                    float x=n%2==0?left:right,y=n/2==0?top:bottom;
-                    float sx=n%2==0?1:-1,sy=n/2==0?1:-1;
-                    corners.moveTo(x,y+sy*len);
-                    corners.lineTo(x,y+sy*radius);
-                    corners.quadTo(x,y,x+sx*radius,y);
-                    corners.lineTo(x+sx*len,y);
-                }
-                c.drawPath(corners,p);
-                p.setStrokeCap(Paint.Cap.BUTT);
-            }
         }
         @Override public void setAlpha(int a){
         }

@@ -10,6 +10,7 @@ import java.util.function.LongSupplier;
 
 /** All public actions and executor callbacks belong to one UI event queue. */
 public final class SessionController implements AutoCloseable {
+    public static final long SUCCESS_DELAY_MS=1200;
     public interface Persistence {
         Session load() throws Exception;
         void save(Session session) throws Exception;
@@ -23,6 +24,8 @@ public final class SessionController implements AutoCloseable {
     private ChessGame game;
     private boolean foreground, busy, pendingPause, corrupt, closed, workerRunning;
     private long anchor=-1, epoch, saveStarted;
+    private long successAnchor=-1, successShownMs;
+    private boolean successPending;
     private int latestFocus;
     private String error;
 
@@ -43,6 +46,7 @@ public final class SessionController implements AutoCloseable {
             error="Het opgeslagen spel kan niet worden geopend. Een ouder kan opnieuw beginnen.";
         }
         state.paused=true;
+        successPending=state.phase==Session.Phase.MATH&&state.solved;
         try { game=ChessGame.fromHistory(state.moves); }
         catch(RuntimeException invalid) { game=new ChessGame(); corrupt=true; error="Het opgeslagen spel is ongeldig. Vraag een ouder om hulp."; }
         latestFocus=state.focus;
@@ -75,6 +79,7 @@ public final class SessionController implements AutoCloseable {
     }
     public void pause() {
         if(closed)return;
+        successAnchor=-1;successShownMs=0;
         epoch++; workerRunning=false;
         if(busy) { pendingPause=true; anchor=-1; return; }
         if(state.paused) { anchor=-1; return; }
@@ -90,6 +95,13 @@ public final class SessionController implements AutoCloseable {
             return;
         }
         if(!active())return;
+        if(successPending&&state.phase==Session.Phase.MATH&&state.solved
+                &&successAnchor>=0&&successShownMs+Math.max(0,clock.getAsLong()-successAnchor)>=SUCCESS_DELAY_MS) {
+            successPending=false;
+            // The normal boundary check hands off instead of generating another
+            // exercise when both round requirements have been met.
+            action(this::generateExercise,false);return;
+        }
         Session next=settled();
         boundary(next);
         if(next.phase!=state.phase || next.chessPending!=state.chessPending
@@ -142,7 +154,14 @@ public final class SessionController implements AutoCloseable {
 
     public void digit(int digit) {
         if(!canMath()||state.solved)return;
-        action(s->{s.input=MathInput.append(s.input,digit); s.feedback="";},false);
+        action(s->{
+            s.input=MathInput.append(s.input,digit);s.feedback="";
+            if(MathInput.matches(s.input,s.exercise)) {
+                successPending=true;successShownMs=0;s.solved=true;s.correct++;s.feedback="Goed gedaan!";
+            } else if(s.input.length()>=Integer.toString(s.exercise.answer()).length()) {
+                s.feedback="Probeer nog eens.";
+            }
+        },false);
     }
     public void deleteDigit() {
         if(!canMath()||state.solved)return;
@@ -159,6 +178,7 @@ public final class SessionController implements AutoCloseable {
     }
     public void nextExercise() {
         if(!canMath()||!state.solved)return;
+        successPending=false;
         action(this::generateExercise,false);
     }
     public void hint() {
@@ -238,7 +258,7 @@ public final class SessionController implements AutoCloseable {
             }
         } else if(s.phase==Session.Phase.MATH) {
             s.mathPending=s.elapsedMs>=300000;
-            if(PhaseRules.mathComplete(s.elapsedMs,s.correct,s.solved)) {
+            if(!successPending&&PhaseRules.mathComplete(s.elapsedMs,s.correct,s.solved)) {
                 s.phase=Session.Phase.TO_CHESS;s.paused=true;
             }
         }
@@ -258,6 +278,7 @@ public final class SessionController implements AutoCloseable {
         generateExercise(s);
     }
     private void generateExercise(Session s) {
+        successPending=false;successAnchor=-1;successShownMs=0;
         MathGenerator generator=MathGenerator.restore(s.generatorState);
         s.exercise=generator.next(s.config);s.exerciseConfig=s.config.copy();
         s.generatorState=generator.snapshot();s.input="";s.hintLevel=0;s.solved=false;s.feedback="";
@@ -271,6 +292,8 @@ public final class SessionController implements AutoCloseable {
         if(next.focus!=state.focus)latestFocus=next.focus;
         next.revision=state.revision+1;
         busy=true;anchor=-1;saveStarted=clock.getAsLong();
+        if(successAnchor>=0)successShownMs+=Math.max(0,clock.getAsLong()-successAnchor);
+        successAnchor=-1;
         io.execute(()->{
             try {
                 storage.save(next);
@@ -285,12 +308,15 @@ public final class SessionController implements AutoCloseable {
                         pendingPause=false;Session paused=state.copy();paused.paused=true;commit(paused);return;
                     }
                     anchor=active()?clock.getAsLong():-1;
+                    if(active()&&state.phase==Session.Phase.MATH&&state.solved&&successPending)
+                        successAnchor=clock.getAsLong();
                     changed();scheduleComputer();
                 });
             } catch(Exception failure) {
                 main.execute(()->{
                     if(closed)return;
                     busy=false;pendingPause=false;state.paused=true;anchor=-1;
+                    successAnchor=-1;successShownMs=0;
                     failedSave=next.copy();failedSave.paused=true;
                     error="Opslaan is niet gelukt. De voortgang blijft staan. Probeer opnieuw.";
                     epoch++;workerRunning=false;changed();

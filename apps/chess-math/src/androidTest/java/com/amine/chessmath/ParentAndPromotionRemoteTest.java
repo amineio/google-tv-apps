@@ -8,6 +8,8 @@ import android.os.Looper;
 import android.os.SystemClock;
 import android.view.KeyEvent;
 import android.view.View;
+import android.widget.Button;
+import android.graphics.Canvas;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 import java.io.File;
@@ -80,6 +82,22 @@ public final class ParentAndPromotionRemoteTest {
             withFixture(fixture,()->{
                 launchAndStart();
                 assertFocus("promotion0");
+                instrumentation.runOnMainSync(()->{
+                    String[] names={activity.getString(R.string.queen),activity.getString(R.string.rook),activity.getString(R.string.bishop),activity.getString(R.string.knight)};
+                    for(int i=0;i<4;i++){
+                        Button choiceButton=(Button)activity.findViewById(android.R.id.content).findViewWithTag("promotion"+i);
+                        assertEquals(names[i],choiceButton.getText().toString());
+                        assertEquals(names[i],choiceButton.getContentDescription().toString());
+                        android.graphics.drawable.Drawable image=choiceButton.getCompoundDrawables()[1];
+                        assertNotNull("Each choice must show its matching piece",image);
+                        Bitmap actual=Bitmap.createBitmap(image.getBounds().width(),image.getBounds().height(),Bitmap.Config.ARGB_8888);
+                        Bitmap expected=Bitmap.createBitmap(actual.getWidth(),actual.getHeight(),Bitmap.Config.ARGB_8888);
+                        image.draw(new Canvas(actual));
+                        new PiecePainter(activity).draw(new Canvas(expected),Character.toUpperCase(choices[i]),0,0,actual.getWidth());
+                        assertTrue("Promotion image must match the named piece",actual.sameAs(expected));
+                        actual.recycle();expected.recycle();
+                    }
+                });
                 if(index==0){
                     screenshot("promotion");
                     key(KeyEvent.KEYCODE_BACK);
@@ -106,11 +124,23 @@ public final class ParentAndPromotionRemoteTest {
         math.phase=Session.Phase.MATH;
         math.exercise=new Exercise(19,24,5,Exercise.ADD);
         math.exerciseConfig=math.config.copy();
-        math.input="29";
-        math.hintLevel=1;
+        math.input="2";
         withFixture(math,()->{
             launchAndStart();
+            screenshot("math-compact");
+            instrumentation.runOnMainSync(controller::hint);
+            awaitSave();
             screenshot("math-hint");
+        });
+        Session solved=math.copy();
+        solved.input="29";
+        solved.correct=1;
+        solved.solved=true;
+        solved.feedback="Goed!";
+        withFixture(solved,()->{
+            launchAndStart();
+            assertTrue(controller.state().solved);
+            screenshot("math-success");
         });
     }
 

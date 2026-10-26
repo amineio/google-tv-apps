@@ -27,7 +27,7 @@ public final class MathLayoutTest {
     private MainActivity activity;
     private SessionController controller;
 
-    @Test public void hintAndRetryKeepThePromptAnchored() throws Exception {
+    @Test public void hintAndPartialInputKeepThePromptAnchored() throws Exception {
         Session fixture=math(new Exercise(19,24,5,Exercise.ADD));
         withFixture(fixture,()->{
             launchAndStart();
@@ -39,6 +39,7 @@ public final class MathLayoutTest {
             assertFocus("pad3");
             key(KeyEvent.KEYCODE_DPAD_RIGHT);
             assertFocus("pad4");
+            instrumentation.runOnMainSync(()->assertNull(activity.findViewById(android.R.id.content).findViewWithTag("math-hint")));
             Rect[] before=bounds();
             key(KeyEvent.KEYCODE_DPAD_UP);
             key(KeyEvent.KEYCODE_DPAD_UP);
@@ -51,17 +52,17 @@ public final class MathLayoutTest {
             key(KeyEvent.KEYCODE_DPAD_DOWN);
             assertFocus("pad1");
             key(KeyEvent.KEYCODE_DPAD_CENTER);
-            instrumentation.runOnMainSync(controller::submitAnswer);
-            awaitSave();
-            assertFalse(controller.state().feedback.isEmpty());
+            assertEquals("2",controller.state().input);
+            assertFalse("Partial input remains editable",controller.state().solved);
             assertFocus("pad1");
             assertBounds(before);
             instrumentation.runOnMainSync(()->{
-                assertTextVisible("math-feedback",controller.state().feedback);
-                for(int i=0;i<12;i++)assertNotNull(view("pad"+i));
+                for(int i=0;i<11;i++)assertNotNull(view("pad"+i));
+                assertNull(activity.findViewById(android.R.id.content).findViewWithTag("pad11"));
+                assertNull(activity.findViewById(android.R.id.content).findViewWithTag("next"));
                 assertFalse(view("answer").isFocusable());
                 assertTextVisible("math-title",activity.getString(R.string.math_title));
-                assertTextVisible("math-paper",activity.getString(R.string.paper));
+
             });
         });
     }
@@ -102,8 +103,20 @@ public final class MathLayoutTest {
                 awaitSave();
                 instrumentation.runOnMainSync(()->{
                     ScrollView reading=(ScrollView)view("math-reading");
+                    assertFalse("Compact content fits at font scale 1.6",reading.canScrollVertically(1));
+                    assertFalse("A reading pane that fits needs no remote focus",reading.isFocusable());
+                    assertTextVisible("math-hint",fixture.exercise.hint(1));
+                    Configuration largest=new Configuration(previous);
+                    largest.fontScale=2.0f;
+                    activity.getResources().updateConfiguration(largest,null);
+                    // Rebind the current question at the new scale without changing its hint.
+                    controller.deleteDigit();
+                });
+                awaitSave();
+                instrumentation.runOnMainSync(()->{
+                    ScrollView reading=(ScrollView)view("math-reading");
                     reading.setSmoothScrollingEnabled(false);
-                    assertTrue("Long text must overflow at the larger font",reading.canScrollVertically(1));
+                    assertTrue("Long text must overflow at font scale 2.0",reading.canScrollVertically(1));
                     assertTrue(reading.isFocusable());
                 });
                 assertFocus("pad4");
@@ -117,7 +130,6 @@ public final class MathLayoutTest {
                 assertFocus("math-reading");
                 instrumentation.runOnMainSync(()->{
                     assertTextVisible("math-hint",fixture.exercise.hint(1));
-                    assertTextVisible("math-paper",activity.getString(R.string.paper));
                 });
                 key(KeyEvent.KEYCODE_DPAD_RIGHT);
                 assertFocus("pad3");

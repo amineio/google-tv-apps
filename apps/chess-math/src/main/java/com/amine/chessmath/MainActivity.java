@@ -365,7 +365,14 @@ public final class MainActivity extends Activity {
             ;
             for(int i=0;i<4;i++){
                 final char piece=values[i];
-                row.addView(button(names[i],"promotion"+i,()->controller.promote(piece)),new LinearLayout.LayoutParams(0,dp(86),1));
+                Button choice=button(names[i],"promotion"+i,()->controller.promote(piece));
+                choice.setContentDescription(names[i]);
+                char image=controller.game().whiteToMove()?Character.toUpperCase(piece):piece;
+                choice.setCompoundDrawables(null,new PromotionPiece(image),null,null);
+                choice.setCompoundDrawablePadding(dp(10));
+                LinearLayout.LayoutParams bounds=new LinearLayout.LayoutParams(0,dp(182),1);
+                bounds.setMargins(dp(4),dp(20),dp(4),0);
+                row.addView(choice,bounds);
             }
             horizontalClamp(row);
             return;
@@ -399,10 +406,6 @@ public final class MainActivity extends Activity {
         side.setPadding(dp(30),dp(20),0,dp(20));
         side.setGravity(Gravity.CENTER_VERTICAL);
         row.addView(side,new LinearLayout.LayoutParams(0,-1,1));
-        TextView brand=TvStyle.text(this,s(R.string.brand),12,true);
-        brand.setTextColor(TvStyle.MUTED);
-        side.addView(brand);
-        space(side,30);
         chessHeading=TvStyle.text(this,"",35,true);
         side.addView(chessHeading);
         space(side,18);
@@ -412,9 +415,7 @@ public final class MainActivity extends Activity {
         space(side,18);
         chessDetail=TvStyle.text(this,"",18,false);
         side.addView(chessDetail);
-        space(side,40);
-        side.addView(TvStyle.text(this,s(R.string.board_help),17,false));
-        space(side,12);
+        space(side,24);
         side.addView(TvStyle.text(this,s(R.string.back_pause),16,false));
         board.setListener(new ChessBoardView.Listener(){
             public void focus(int square){
@@ -444,6 +445,22 @@ public final class MainActivity extends Activity {
         String detail=getString(R.string.square_description,ChessBoardView.coordinate(square),board.pieceName(game.pieceAt(square)));
         if(!st.feedback.isEmpty())detail+="\n"+st.feedback;
         chessDetail.setText(detail);
+    }
+    /** Uses the same artwork and color as the pawn that is being promoted. */
+    private final class PromotionPiece extends android.graphics.drawable.Drawable {
+        private final PiecePainter painter=new PiecePainter(MainActivity.this);
+        private final char piece;
+        PromotionPiece(char piece){
+            this.piece=piece;
+            setBounds(0,0,dp(94),dp(94));
+        }
+        @Override public void draw(android.graphics.Canvas canvas){
+            android.graphics.Rect bounds=getBounds();
+            painter.draw(canvas,piece,bounds.left,bounds.top,Math.min(bounds.width(),bounds.height()));
+        }
+        @Override public void setAlpha(int alpha){}
+        @Override public void setColorFilter(android.graphics.ColorFilter filter){}
+        @Override public int getOpacity(){return android.graphics.PixelFormat.TRANSLUCENT;}
     }
     private void math(){
         Session st=controller.state();
@@ -480,21 +497,21 @@ public final class MainActivity extends Activity {
             return k==KeyEvent.KEYCODE_DPAD_LEFT;
         });
         reading.setClipToPadding(false);
-        row.addView(reading,new LinearLayout.LayoutParams(0,-1,1.6f));
+        row.addView(reading,new LinearLayout.LayoutParams(0,-1,1));
         LinearLayout left=new LinearLayout(this);
         left.setOrientation(LinearLayout.VERTICAL);
         left.setGravity(Gravity.TOP);
-        left.setPadding(0,dp(26),dp(24),dp(8));
+        left.setPadding(0,dp(26),dp(34),dp(16));
         reading.addView(left,new ScrollView.LayoutParams(-1,-2));
-        TextView heading=TvStyle.text(this,s(R.string.math_title),44,true);
+        TextView heading=TvStyle.text(this,s(R.string.math_title),30,true);
         heading.setTag("math-title");
         left.addView(heading);
         space(left,8);
-        TextView count=TvStyle.text(this,getResources().getQuantityString(R.plurals.math_count,st.correct,st.correct),21,false);
+        TextView count=TvStyle.text(this,getResources().getQuantityString(R.plurals.math_count,st.correct,st.correct),17,false);
         count.setTag("math-count");
         count.setTextColor(TvStyle.MUTED);
         left.addView(count);
-        space(left,40);
+        space(left,28);
         LinearLayout equation=new LinearLayout(this);
         equation.setGravity(Gravity.CENTER_VERTICAL);
         left.addView(equation,new LinearLayout.LayoutParams(-1,-2));
@@ -522,74 +539,54 @@ public final class MainActivity extends Activity {
         answerBounds.setMargins(dp(12),0,0,0);
         equation.addView(answer,answerBounds);
         space(left,10);
-        // Invisible text still reserves its natural height, including scaled fonts.
-        TextView feedback=TvStyle.text(this,st.feedback.isEmpty()?"Vul je antwoord in.":st.feedback,22,true);
+        TextView feedback=TvStyle.text(this,st.solved?s(R.string.math_success):st.feedback,28,true);
         feedback.setTag("math-feedback");
         feedback.setTextColor(TvStyle.MINT);
-        feedback.setVisibility(st.feedback.isEmpty()?View.INVISIBLE:View.VISIBLE);
+        feedback.setVisibility(st.solved||!st.feedback.isEmpty()?View.VISIBLE:View.INVISIBLE);
         left.addView(feedback);
-        space(left,6);
-        FrameLayout hints=new FrameLayout(this);
-        left.addView(hints,new LinearLayout.LayoutParams(-1,-2));
-        if(st.exercise!=null)for(int level=1;level<=2;level++){
-            TextView explanation=TvStyle.text(this,st.exercise.hint(level),20,false);
+        if(st.hintLevel>0&&st.exercise!=null&&!st.solved){
+            space(left,12);
+            TextView explanation=TvStyle.text(this,st.exercise.hint(Math.min(2,st.hintLevel)),20,false);
             explanation.setTextColor(TvStyle.MUTED);
-            boolean shown=st.hintLevel==level||level==2&&st.hintLevel>2;
-            explanation.setVisibility(shown?View.VISIBLE:View.INVISIBLE);
-            if(shown)explanation.setTag("math-hint");
-            hints.addView(explanation,new FrameLayout.LayoutParams(-1,-2));
+            explanation.setTag("math-hint");
+            left.addView(explanation);
         }
-        space(left,8);
-        TextView paper=TvStyle.text(this,s(R.string.paper),19,false);
-        paper.setTag("math-paper");
-        paper.setTextColor(TvStyle.MUTED);
-        left.addView(paper);
         LinearLayout pad=new LinearLayout(this);
+        pad.setTag("math-keypad");
         pad.setOrientation(LinearLayout.VERTICAL);
-        row.addView(pad,new LinearLayout.LayoutParams(0,-1,1));
-        pad.setGravity(Gravity.CENTER_VERTICAL);
-        if(st.solved){
-            Button next=button(s(R.string.next),"next",()->controller.nextExercise());
-            pad.addView(next,new LinearLayout.LayoutParams(-1,dp(70)));
-            next.setOnKeyListener((v,k,event)->enterMathReading(reading,v,k,event));
-            next.requestFocus();
-            return;
-        }
+        row.addView(pad,new LinearLayout.LayoutParams(dp(240),-1));
+        pad.setGravity(Gravity.CENTER);
+        if(st.solved)return;
         Button hint=button(s(R.string.hint),"hint",()->controller.hint());
         pad.addView(hint,new LinearLayout.LayoutParams(-1,dp(48)));
-        space(pad,6);
-        Button[] keys=new Button[12];
-        String[] labels={
-            "1","2","3","4","5","6","7","8","9",s(R.string.delete),"0",s(R.string.ok)
-        }
-        ;
+        space(pad,8);
+        Button[] keys=new Button[11];
+        String[] labels={"1","2","3","4","5","6","7","8","9",s(R.string.delete),"0"};
         for(int r=0;r<4;r++){
             LinearLayout line=new LinearLayout(this);
-            pad.addView(line,new LinearLayout.LayoutParams(-1,0,1));
+            pad.addView(line,new LinearLayout.LayoutParams(-1,dp(56)));
             for(int col=0;col<3;col++){
                 int index=r*3+col;
-                Button b=button(labels[index],"pad"+index,()->{
-                    if(index==9)controller.deleteDigit();else if(index==11)controller.submitAnswer();else controller.digit(index==10?0:index+1);
-                }
-                );
-                b.setTextSize(index==9||index==11?23:34);
-                b.setOnFocusChangeListener((v,f)->{
-                    if(f)lastPad=index;
-                }
-                );
-                keys[index]=b;
                 LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,-1,1);
                 lp.setMargins(dp(2),dp(2),dp(2),dp(2));
+                if(index==11){line.addView(new View(this),lp);continue;}
+                Button b=button(labels[index],"pad"+index,()->{
+                    if(index==9)controller.deleteDigit();else controller.digit(index==10?0:index+1);
+                });
+                b.setTextSize(index==9?18:27);
+                b.setPadding(dp(6),0,dp(6),0);
+                b.setOnFocusChangeListener((v,f)->{if(f)lastPad=index;});
+                keys[index]=b;
                 line.addView(b,lp);
             }
         }
-        for(int i=0;i<12;i++){
+        for(int i=0;i<keys.length;i++){
             Button b=keys[i];
             int col=i%3,r=i/3;
             b.setNextFocusLeftId(keys[col==0?i:i-1].getId());
             if(col==0)b.setOnKeyListener((v,k,event)->enterMathReading(reading,v,k,event));
-            b.setNextFocusRightId(keys[col==2?i:i+1].getId());
-            b.setNextFocusDownId(keys[r==3?i:i+3].getId());
+            b.setNextFocusRightId(keys[col==2||i==10?i:i+1].getId());
+            b.setNextFocusDownId(keys[r==3?i:Math.min(10,i+3)].getId());
             b.setNextFocusUpId(r==0?hint.getId():keys[i-3].getId());
         }
         hint.setNextFocusUpId(hint.getId());
@@ -601,12 +598,8 @@ public final class MainActivity extends Activity {
                 keys[lastPad].requestFocus();return true;
             }
             return false;
-        }
-        );
+        });
         keys[lastPad].requestFocus();
-        TextView remote=TvStyle.text(this,s(R.string.math_remote)+" · "+s(R.string.back_pause),14,false);
-        remote.setTextColor(TvStyle.MUTED);
-        content.addView(remote);
     }
     private boolean enterMathReading(ScrollView reading,View origin,int key,KeyEvent event){
         if(key!=KeyEvent.KEYCODE_DPAD_LEFT||!reading.isFocusable())return false;

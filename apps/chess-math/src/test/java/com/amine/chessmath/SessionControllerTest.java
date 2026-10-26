@@ -145,6 +145,8 @@ public class SessionControllerTest {
         assertEquals(Session.Phase.MATH, f.c.state().phase);
         f.c.nextExercise(); answer(f.c);
         f.c.nextExercise(); answer(f.c);
+        assertEquals(Session.Phase.MATH, f.c.state().phase);
+        f.now+=1200;f.c.tick();
         assertEquals(Session.Phase.TO_CHESS, f.c.state().phase);
     }
 
@@ -203,5 +205,131 @@ public class SessionControllerTest {
     private static void answer(SessionController c) {
         for(char digit:Integer.toString(c.state().exercise.answer()).toCharArray()) c.digit(digit-'0');
         c.submitAnswer();
+    }
+
+    private static Fixture mathWithAnswer(int value) {
+        Fixture f=new Fixture();
+        Session saved=new Session();saved.phase=Session.Phase.MATH;
+        saved.exercise=new Exercise(123,value,0,Exercise.ADD);
+        saved.exerciseConfig=saved.config.copy();
+        f.store.saved=saved;f.c.close();f.c=f.controller(Runnable::run);
+        f.c.foreground(true);f.c.resume();return f;
+    }
+
+    @Test public void numericEntrySolvesZeroOneTwoAndThreeDigitAnswersWithoutSubmit() {
+        for(int value:new int[]{0,7,25,100}) {
+            Fixture f=mathWithAnswer(value);
+            String digits=Integer.toString(value);
+            for(int i=0;i<digits.length();i++) {
+                f.c.digit(digits.charAt(i)-'0');
+                assertEquals(i==digits.length()-1,f.c.state().solved);
+                if(!f.c.state().solved)assertEquals("",f.c.state().feedback);
+            }
+            assertEquals(1,f.c.state().correct);
+            assertEquals("Goed gedaan!",f.c.state().feedback);
+            f.c.digit(0);f.c.submitAnswer();assertEquals(1,f.c.state().correct);
+            f.now=1199;f.c.tick();assertEquals(123,f.c.state().exercise.id);
+            f.now=1200;f.c.tick();assertNotEquals(123,f.c.state().exercise.id);
+            assertFalse(f.c.state().solved);assertEquals(1,f.c.state().correct);
+        }
+    }
+
+    @Test public void wrongCompleteAnswerStaysEditableAndShortPrefixesHaveNoError() {
+        Fixture f=mathWithAnswer(25);
+        f.c.digit(2);assertEquals("",f.c.state().feedback);assertEquals(0,f.c.state().hintLevel);
+        f.c.digit(4);assertEquals("Probeer nog eens.",f.c.state().feedback);
+        assertEquals(0,f.c.state().hintLevel);
+        assertFalse(f.c.state().solved);assertEquals(0,f.c.state().correct);
+        f.c.deleteDigit();assertEquals("2",f.c.state().input);
+        f.c.digit(5);assertTrue(f.c.state().solved);assertEquals(1,f.c.state().correct);
+    }
+
+    @Test public void pauseAndBackgroundRequireFreshVisibleSuccessDelay() {
+        Fixture f=mathWithAnswer(7);f.c.digit(7);
+        f.now=1000;f.c.pause();f.now=100000;f.c.tick();
+        assertEquals(123,f.c.state().exercise.id);
+        f.c.resume();f.now+=1199;f.c.tick();assertEquals(123,f.c.state().exercise.id);
+        f.c.foreground(false);f.now+=100000;f.c.tick();assertEquals(123,f.c.state().exercise.id);
+        f.c.foreground(true);f.c.resume();f.now+=1200;f.c.tick();
+        assertNotEquals(123,f.c.state().exercise.id);assertEquals(1,f.c.state().correct);
+    }
+
+    @Test public void restoredSolvedExerciseGetsFreshDelayAndNoSecondCredit() {
+        Fixture f=mathWithAnswer(7);f.c.digit(7);f.c.close();
+        f.now=100000;f.c=f.controller(Runnable::run);f.c.foreground(true);
+        f.c.tick();assertEquals(123,f.c.state().exercise.id);
+        f.c.resume();f.c.digit(7);f.c.submitAnswer();
+        f.now+=1199;f.c.tick();assertEquals(123,f.c.state().exercise.id);
+        f.now++;f.c.tick();assertNotEquals(123,f.c.state().exercise.id);
+        assertEquals(1,f.c.state().correct);
+    }
+
+    @Test public void delayedSaveAndDuplicateDigitsCannotSkipOrCreditExerciseTwice() {
+        Fixture f=mathWithAnswer(7);f.c.close();
+        List<Runnable> saves=new ArrayList<>();f.c=f.controller(saves::add);
+        f.c.foreground(true);f.c.resume();saves.remove(0).run();
+        f.c.digit(7);f.c.digit(7);f.now=10000;f.c.tick();
+        assertEquals(0,f.c.state().correct);assertEquals(1,saves.size());
+        saves.remove(0).run();assertEquals(1,f.c.state().correct);
+        f.now+=1199;f.c.tick();assertEquals(123,f.c.state().exercise.id);
+        f.now++;f.c.tick();f.c.tick();f.c.digit(7);
+        assertEquals(1,saves.size());saves.remove(0).run();
+        assertNotEquals(123,f.c.state().exercise.id);assertEquals(1,f.c.state().correct);
+    }
+
+    @Test public void failedAutomaticSolveStaysPausedUntilDurableRetryAndFreshDelay() {
+        Fixture f=mathWithAnswer(7);f.store.fail=true;f.c.digit(7);
+        assertNotNull(f.c.error());assertFalse(f.c.state().solved);assertEquals(0,f.c.state().correct);
+        f.now=100000;f.c.tick();assertEquals(123,f.c.state().exercise.id);
+        f.store.fail=false;f.c.retrySave();assertTrue(f.c.state().paused);
+        assertTrue(f.c.state().solved);assertEquals(1,f.c.state().correct);
+        f.c.resume();f.now+=1200;f.c.tick();
+        assertNotEquals(123,f.c.state().exercise.id);assertEquals(1,f.c.state().correct);
+    }
+
+    @Test public void finalAutomaticAnswerShowsSuccessBeforeHandoffWithoutAnotherExercise() {
+        Fixture f=mathWithAnswer(7);
+        f.c.state().correct=2;f.c.state().elapsedMs=299999;
+        f.now=1;f.c.digit(7);
+        assertEquals(Session.Phase.MATH,f.c.state().phase);
+        assertTrue(f.c.state().solved);assertEquals(3,f.c.state().correct);
+        assertEquals("Goed gedaan!",f.c.state().feedback);
+        f.now+=1199;f.c.tick();assertEquals(Session.Phase.MATH,f.c.state().phase);
+        f.now++;f.c.tick();assertEquals(Session.Phase.TO_CHESS,f.c.state().phase);
+        assertEquals(123,f.c.state().exercise.id);assertTrue(f.c.state().paused);
+        f.c.tick();f.c.digit(7);assertEquals(3,f.c.state().correct);
+    }
+
+    @Test public void timeBoundaryDuringSuccessFinishesCurrentExerciseAfterDelay() {
+        Fixture f=mathWithAnswer(7);
+        f.c.state().correct=2;f.c.state().elapsedMs=299500;f.c.digit(7);
+        f.now=500;f.c.tick();assertEquals(Session.Phase.MATH,f.c.state().phase);
+        f.now=1200;f.c.tick();assertEquals(Session.Phase.TO_CHESS,f.c.state().phase);
+        assertEquals(123,f.c.state().exercise.id);assertEquals(3,f.c.state().correct);
+    }
+
+    @Test public void boundaryCheckpointExcludesSaveLatencyFromVisibleSuccessDelay() {
+        Fixture f=mathWithAnswer(7);f.c.close();
+        List<Runnable> saves=new ArrayList<>();f.c=f.controller(saves::add);
+        f.c.foreground(true);f.c.resume();saves.remove(0).run();
+        f.c.state().correct=2;f.c.state().elapsedMs=299500;
+        f.c.digit(7);saves.remove(0).run();
+        f.now=500;f.c.tick();assertTrue(f.c.busy());
+        f.now=10000;f.c.tick();assertEquals(Session.Phase.MATH,f.c.state().phase);
+        saves.remove(0).run();
+        f.now=10699;f.c.tick();assertFalse(f.c.busy());
+        f.now=10700;f.c.tick();assertTrue(f.c.busy());
+        saves.remove(0).run();assertEquals(Session.Phase.TO_CHESS,f.c.state().phase);
+    }
+
+    @Test public void failedAutomaticAdvanceRetainsSolvedExerciseAndOneCredit() {
+        Fixture f=mathWithAnswer(7);f.c.digit(7);f.store.fail=true;
+        f.now=1200;f.c.tick();
+        assertNotNull(f.c.error());assertTrue(f.c.state().paused);
+        assertTrue(f.c.state().solved);assertEquals(123,f.c.state().exercise.id);
+        assertEquals(1,f.c.state().correct);
+        f.store.fail=false;f.c.retrySave();
+        assertNotEquals(123,f.c.state().exercise.id);assertTrue(f.c.state().paused);
+        assertEquals(1,f.c.state().correct);
     }
 }

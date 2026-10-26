@@ -89,44 +89,42 @@ public final class ChessBoardView extends View {
             paint.setStyle(Paint.Style.FILL);
             c.drawRect(x,y,x+cell,y+cell,paint);
             if(lastMove.length()>=4&&(coordinate(i).equals(lastMove.substring(0,2))||coordinate(i).equals(lastMove.substring(2,4)))) {
-                c.save();
-                c.clipRect(x,y,x+cell,y+cell);
-                paint.setColor(0x465bbca3);
-                paint.setStrokeWidth(2);
-                for(float d=-cell;d<cell*2;d+=10)c.drawLine(x+d,y,x+d+cell,y+cell,paint);
-                c.restore();
+                paint.setColor(0x26b5ceb0);
+                c.drawRect(x,y,x+cell,y+cell,paint);
+            }
+            if(i==selected){
+                paint.setColor(0x40b5ceb0);
+                c.drawRect(x,y,x+cell,y+cell,paint);
             }
             char piece=game==null?'.':game.pieceAt(i);
             pieces.draw(c,piece,x,y,cell);
             if(selected>=0)for(String move:legal)if(move.startsWith(coordinate(selected)+coordinate(i))) {
-                paint.setColor(0xff183729);
+                boolean light=(i/8+i%8)%2==0;
                 if(piece=='.'){
                     paint.setStyle(Paint.Style.FILL);
-                    c.drawCircle(x+cell/2,y+cell/2,cell*.135f,paint);
-                    paint.setColor(TvStyle.MINT);
+                    paint.setColor(TvStyle.FOREST);
+                    c.drawCircle(x+cell/2,y+cell/2,cell*.14f,paint);
+                    paint.setColor(light?TvStyle.FOREST:TvStyle.IVORY);
                     c.drawCircle(x+cell/2,y+cell/2,cell*.11f,paint);
                 } else {
+                    paint.setStyle(Paint.Style.STROKE);
+                    paint.setColor(TvStyle.FOREST);
                     paint.setStrokeWidth(cell*.1f);
-                    corners(c,x+cell*.12f,y+cell*.12f,cell*.76f,cell*.18f);
-                    paint.setColor(TvStyle.MINT);
+                    c.drawCircle(x+cell/2,y+cell/2,cell*.42f,paint);
+                    paint.setColor(TvStyle.IVORY);
                     paint.setStrokeWidth(cell*.055f);
-                    corners(c,x+cell*.12f,y+cell*.12f,cell*.76f,cell*.18f);
+                    c.drawCircle(x+cell/2,y+cell/2,cell*.42f,paint);
                 }
                 break;
             }
             if(i==selected){
-                paint.setColor(0xff183729);
+                paint.setColor(TvStyle.FOREST);
                 paint.setStyle(Paint.Style.STROKE);
-                paint.setStrokeWidth(cell*.1f);
-                c.drawRect(x+cell*.1f,y+cell*.1f,x+cell*.9f,y+cell*.9f,paint);
-                paint.setStyle(Paint.Style.FILL);
-                c.drawCircle(x+cell*.18f,y+cell*.18f,cell*.085f,paint);
-                paint.setColor(TvStyle.AMBER);
-                paint.setStyle(Paint.Style.STROKE);
-                paint.setStrokeWidth(cell*.055f);
-                c.drawRect(x+cell*.1f,y+cell*.1f,x+cell*.9f,y+cell*.9f,paint);
-                paint.setStyle(Paint.Style.FILL);
-                c.drawCircle(x+cell*.18f,y+cell*.18f,cell*.06f,paint);
+                paint.setStrokeWidth(cell*.08f);
+                c.drawRect(x+cell*.14f,y+cell*.14f,x+cell*.86f,y+cell*.86f,paint);
+                paint.setColor(TvStyle.MUTED);
+                paint.setStrokeWidth(cell*.04f);
+                c.drawRect(x+cell*.14f,y+cell*.14f,x+cell*.86f,y+cell*.86f,paint);
             }
             if(checkSquare==i){
                 paint.setColor(0xffff817b);
@@ -142,22 +140,14 @@ public final class ChessBoardView extends View {
                 c.drawText("!",x+cell*.8f,y+cell*.29f,paint);
             }
             if(i==square&&hasFocus()){
-                paint.setColor(0xff183729);
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setColor(TvStyle.FOREST);
                 paint.setStrokeWidth(cell*.1f);
-                corners(c,x+3,y+3,cell-6,cell*.22f);
+                c.drawRect(x+cell*.045f,y+cell*.045f,x+cell*.955f,y+cell*.955f,paint);
                 paint.setColor(TvStyle.IVORY);
                 paint.setStrokeWidth(cell*.055f);
-                corners(c,x+3,y+3,cell-6,cell*.22f);
+                c.drawRect(x+cell*.045f,y+cell*.045f,x+cell*.955f,y+cell*.955f,paint);
             }
-        }
-    }
-    private void corners(Canvas c,float x,float y,float size,float length) {
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeCap(Paint.Cap.ROUND);
-        for(int n=0;n<4;n++){
-            float xx=x+(n%2)*size,yy=y+(n/2)*size;
-            c.drawLine(xx,yy,xx+(n%2==0?length:-length),yy,paint);
-            c.drawLine(xx,yy,xx,yy+(n/2==0?length:-length),paint);
         }
     }
 }

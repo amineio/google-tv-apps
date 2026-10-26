@@ -84,4 +84,48 @@ public final class ArtworkTest {
             rendered.recycle();
         });
     }
+
+    @Test public void legalMarkersContrastWithBothSquareColorsAndSelectionUsesSage() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
+            Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+            ChessBoardView board = new ChessBoardView(context);
+            int spec = android.view.View.MeasureSpec.makeMeasureSpec(810,
+                    android.view.View.MeasureSpec.EXACTLY);
+            board.measure(spec, spec);
+            board.layout(0, 0, 810, 810);
+            board.bind(new ChessGame(), 52, 52, "");
+            Bitmap rendered = Bitmap.createBitmap(810, 810, Bitmap.Config.ARGB_8888);
+            board.draw(new Canvas(rendered));
+            assertEquals("e4 marker contrasts with the ivory square", TvStyle.FOREST,
+                    rendered.getPixel(455, 455));
+            assertEquals("e3 marker contrasts with the green square", TvStyle.IVORY,
+                    rendered.getPixel(455, 555));
+            assertEquals("Selected e2 keeps a continuous sage border", TvStyle.MUTED,
+                    rendered.getPixel(455, 619));
+            assertTrue(board.getContentDescription().toString().contains("e2"));
+            rendered.recycle();
+        });
+    }
+
+    @Test public void legalCaptureUsesAContinuousIvoryRing() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
+            Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+            ChessBoardView board = new ChessBoardView(context);
+            int spec = android.view.View.MeasureSpec.makeMeasureSpec(810,
+                    android.view.View.MeasureSpec.EXACTLY);
+            board.measure(spec, spec);
+            board.layout(0, 0, 810, 810);
+            ChessGame game = new ChessGame();
+            game.play("e2e4");
+            game.play("d7d5");
+            board.bind(game, 36, 36, "d7d5");
+            Bitmap rendered = Bitmap.createBitmap(810, 810, Bitmap.Config.ARGB_8888);
+            board.draw(new Canvas(rendered));
+            assertEquals("The d5 capture ring crosses its top midpoint", TvStyle.IVORY,
+                    rendered.getPixel(355, 313));
+            assertEquals("The d5 capture ring crosses its left midpoint", TvStyle.IVORY,
+                    rendered.getPixel(313, 355));
+            rendered.recycle();
+        });
+    }
 }

@@ -10,8 +10,9 @@
     <string-array name="piece_names"><item>pion</item><item>paard</item><item>loper</item><item>toren</item><item>dame</item><item>koning</item></string-array>
     <string name="board_help">Pijltjes kiezen · OK selecteren</string><string name="back_pause">Terug: pauze</string>
     <string name="check">Schaak: bescherm je koning</string><string name="finish_move">Maak je zet af. Daarna gaan we rekenen.</string>
-    <string name="math_title">Even rekenen</string><plurals name="math_count"><item quantity="one">%1$d van minstens 3 goed</item><item quantity="other">%1$d van minstens 3 goed</item></plurals>
+    <string name="math_title">Even rekenen</string><plurals name="math_count"><item quantity="one">%1$d / 3 goed</item><item quantity="other">%1$d / 3 goed</item></plurals>
     <string name="paper">Je mag papier gebruiken.\nNeem rustig de tijd.</string>
+    <string name="math_success">Goed!</string>
     <string name="hint">Hint</string><string name="delete">Wis</string><string name="ok">OK</string><string name="next">Volgende</string>
     <string name="pause">Even pauze</string><string name="resume">Verdergaan</string><string name="parents">Voor ouders</string><string name="hold_parents">Houd OK 3 seconden vast</string>
     <string name="parent_title">Voor ouders</string><string name="settings">Rekeninstellingen</string><string name="to_math">Naar rekenen</string><string name="to_chess">Naar schaken</string><string name="restart_chess">Nieuw schaakspel</string><string name="reset">Alles opnieuw beginnen</string><string name="exit">App sluiten</string><string name="licenses">Licenties</string>
