@@ -30,7 +30,11 @@ public final class ChessBoardView extends View {
         beforeLastFrom=moveSquare(event.beforeLastMove,0);beforeLastTo=moveSquare(event.beforeLastMove,2);describe();
         animator=android.animation.ValueAnimator.ofFloat(0,1);
         animator.setDuration(event.durationMs);
-        animator.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());
+        // Smootherstep starts and ends with zero velocity and acceleration.
+        animator.setInterpolator(input->{
+            double t=input;
+            return (float)(t*t*t*(t*(6*t-15)+10));
+        });
         animator.addUpdateListener(a->{progress=(float)a.getAnimatedValue();invalidate();});
         animator.addListener(new android.animation.AnimatorListenerAdapter(){
             @Override public void onAnimationEnd(android.animation.Animator a){
@@ -121,68 +125,32 @@ public final class ChessBoardView extends View {
         int shownFrom=transition==null?lastFrom:beforeLastFrom,shownTo=transition==null?lastTo:beforeLastTo;
         for(int i=0;i<64;i++) {
             float x=margin+i%8*cell,y=margin+i/8*cell;
-            paint.setColor((i/8+i%8)%2==0?0xffeee3c8:0xff486a4d);
+            boolean light=(i/8+i%8)%2==0;
+            paint.setColor(light?0xffeee3c8:0xff486a4d);
             paint.setStyle(Paint.Style.FILL);
             c.drawRect(x,y,x+cell,y+cell,paint);
-            if(i==shownFrom||i==shownTo) {
-                paint.setColor(0x26b5ceb0);
-                c.drawRect(x,y,x+cell,y+cell,paint);
-            }
-            if(i==selected){
-                paint.setColor(0x40c9c58a);
-                c.drawRect(x,y,x+cell,y+cell,paint);
-            }
             char piece=transition!=null?transition.beforePiece(i):game==null?'.':game.pieceAt(i);
             if(transition!=null&&(i==transition.from||i==transition.rookFrom))piece='.';
-            pieces.draw(c,piece,x,y,cell);
+            // One background per state keeps the piece art clear and avoids stacked frames.
+            int wash=i==shownFrom||i==shownTo?0x38acc2a1:0;
             if(selected>=0)for(String move:legal)if(move.startsWith(coordinate(selected)+coordinate(i))) {
-                if(piece=='.'){
-                    paint.setStyle(Paint.Style.FILL);
-                    paint.setColor(TvStyle.FOREST);
-                    c.drawCircle(x+cell/2,y+cell/2,cell*.14f,paint);
-                    paint.setColor(TvStyle.LEGAL_TEAL);
-                    c.drawCircle(x+cell/2,y+cell/2,cell*.11f,paint);
-                } else {
-                    paint.setStyle(Paint.Style.STROKE);
-                    paint.setColor(TvStyle.FOREST);
-                    paint.setStrokeWidth(cell*.1f);
-                    c.drawCircle(x+cell/2,y+cell/2,cell*.42f,paint);
-                    paint.setColor(TvStyle.LEGAL_TEAL);
-                    paint.setStrokeWidth(cell*.055f);
-                    c.drawCircle(x+cell/2,y+cell/2,cell*.42f,paint);
-                }
+                wash=piece=='.'?(light?0x667d956f:0x7af4e5bf)
+                        :(light?0xa3e6b85c:0xc2e6b85c);
                 break;
             }
-            if(i==selected){
-                paint.setColor(TvStyle.FOREST);
-                paint.setStyle(Paint.Style.STROKE);
-                paint.setStrokeWidth(cell*.08f);
-                c.drawRect(x+cell*.14f,y+cell*.14f,x+cell*.86f,y+cell*.86f,paint);
-                paint.setColor(TvStyle.SELECTED_SAGE_GOLD);
-                paint.setStrokeWidth(cell*.04f);
-                c.drawRect(x+cell*.14f,y+cell*.14f,x+cell*.86f,y+cell*.86f,paint);
+            if(i==selected)wash=light?0x7ae6b85c:0x9ee6b85c;
+            if(checkSquare==i)wash=0x94b95746;
+            if(wash!=0){
+                paint.setColor(wash);
+                c.drawRect(x,y,x+cell,y+cell,paint);
             }
-            if(checkSquare==i){
-                paint.setColor(0xffff817b);
-                paint.setStyle(Paint.Style.STROKE);
-                paint.setStrokeWidth(3);
-                c.drawRect(x+4,y+4,x+cell-4,y+cell-4,paint);
-                c.drawRect(x+8,y+8,x+cell-8,y+cell-8,paint);
-                paint.setStyle(Paint.Style.FILL);
-                c.drawCircle(x+cell*.8f,y+cell*.2f,cell*.15f,paint);
-                paint.setColor(TvStyle.FOREST);
-                paint.setTextSize(cell*.25f);
-                paint.setTextAlign(Paint.Align.CENTER);
-                c.drawText("!",x+cell*.8f,y+cell*.29f,paint);
-            }
+            pieces.draw(c,piece,x,y,cell);
             if(i==square&&hasFocus()){
                 paint.setStyle(Paint.Style.STROKE);
-                paint.setColor(TvStyle.FOREST);
-                paint.setStrokeWidth(cell*.1f);
-                c.drawRect(x+cell*.045f,y+cell*.045f,x+cell*.955f,y+cell*.955f,paint);
-                paint.setColor(TvStyle.AMBER);
-                paint.setStrokeWidth(cell*.055f);
-                c.drawRect(x+cell*.045f,y+cell*.045f,x+cell*.955f,y+cell*.955f,paint);
+                paint.setColor(light?0xff173d2a:0xfffff1d0);
+                paint.setStrokeWidth(cell*.035f);
+                c.drawRoundRect(x+cell*.05f,y+cell*.05f,x+cell*.95f,y+cell*.95f,
+                        cell*.06f,cell*.06f,paint);
             }
         }
         if(transition!=null){

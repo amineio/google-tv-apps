@@ -25,6 +25,29 @@ public final class Exercise {
         return a + (ADD.equals(operation) ? " + " : SUBTRACT.equals(operation) ? " − " : " × ") + b;
     }
 
+    public String hint(int level, String language) {
+        if (!"en".equals(language)) return hint(level);
+        if (level >= 2) return expression() + " = " + answer();
+        if (MULTIPLY.equals(operation))
+            return "Draw " + a + " groups of " + b + ". Add the groups together.";
+        if (ADD.equals(operation)) {
+            int toTen = 10 - a % 10;
+            if (a % 10 + b % 10 >= 10)
+                return "Split " + b + " into " + toTen + " and " + (b - toTen)
+                        + ". First add " + toTen + " to " + a + ". Then add the rest.";
+            return "Split " + b + " into " + (b / 10 * 10) + " and " + (b % 10)
+                    + ". First add the tens to " + a + ". Then add the ones.";
+        }
+        int toTen = a % 10;
+        if (toTen > 0 && a % 10 < b % 10)
+            return "Split " + b + " into " + toTen + " and " + (b - toTen)
+                    + ". First subtract " + toTen + " from " + a + ". Then subtract the rest.";
+        if (toTen == 0 && b % 10 != 0)
+            return "Start at " + a + ". Count back " + b + " steps. Use paper if you like.";
+        return "Split " + b + " into " + (b / 10 * 10) + " and " + (b % 10)
+                + ". First subtract the tens from " + a + ". Then subtract the ones.";
+    }
+
     public String hint(int level) {
         if (level >= 2) return expression() + " = " + answer();
         if (MULTIPLY.equals(operation))

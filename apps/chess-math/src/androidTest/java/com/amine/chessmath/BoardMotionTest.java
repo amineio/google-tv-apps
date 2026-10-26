@@ -11,6 +11,34 @@ import static org.junit.Assert.*;
 /** Presentation-only views and memory snapshots. Never opens or changes saved progress. */
 @RunWith(AndroidJUnit4.class)
 public class BoardMotionTest {
+    @Test public void movingPieceStartsAndEndsGentlyAndCrossesCenterHalfway() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(()->{
+            Context context=InstrumentationRegistry.getInstrumentation().getTargetContext();
+            Session before=new Session(),after=before.copy();after.moves.add("e2e4");after.revision=2;
+            ChessBoardView view=new ChessBoardView(context);
+            view.bind(ChessGame.fromHistory(after.moves),52,-1,"e2e4");
+            if(!ValueAnimator.areAnimatorsEnabled())return;
+            view.slide(PresentationEvent.committed(1,before,after),true,()->{},()->{});
+            try {
+                java.lang.reflect.Field field=ChessBoardView.class.getDeclaredField("animator");
+                field.setAccessible(true);
+                android.animation.TimeInterpolator easing=((ValueAnimator)field.get(view)).getInterpolator();
+                assertEquals(0f,easing.getInterpolation(0f),.00001f);
+                assertEquals(1f,easing.getInterpolation(1f),.00001f);
+                assertEquals(.5f,easing.getInterpolation(.5f),.00001f);
+                // Gentle endpoint acceleration avoids a visible initial or final jump.
+                assertTrue(easing.getInterpolation(.1f)<.015f);
+                assertTrue(easing.getInterpolation(.9f)>.985f);
+                float previous=0;
+                for(int i=1;i<=100;i++) {
+                    float current=easing.getInterpolation(i/100f);
+                    assertTrue(current>=previous&&current<=1);
+                    previous=current;
+                }
+            } catch(ReflectiveOperationException e) {throw new AssertionError(e);}
+            finally {view.cancelMotion();}
+        });
+    }
     @Test public void disabledMotionLandsSynchronouslyWithoutChangingCommittedFacts(){
         InstrumentationRegistry.getInstrumentation().runOnMainSync(()->{
             Context context=InstrumentationRegistry.getInstrumentation().getTargetContext();

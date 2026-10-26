@@ -31,15 +31,13 @@ public final class ParentAndPromotionRemoteTest {
     private MainActivity activity;
     private SessionController controller;
 
-    @Test public void parentHoldAndSettingsSaveCancelUseRemoteOnly() throws Exception {
-        withFixture(new Session(),()->{
+    @Test public void settingsOpenWithOnePressAndSaveCancelUseRemoteOnly() throws Exception {
+        withFixture(chessSession(),()->{
             launchAndStart();
             key(KeyEvent.KEYCODE_BACK);
             key(KeyEvent.KEYCODE_DPAD_DOWN);
             assertFocus(activity.getString(R.string.parents));
-            holdOk(300);
-            assertFocus(activity.getString(R.string.parents));
-            holdOk(3100);
+            key(KeyEvent.KEYCODE_DPAD_CENTER);
             assertFocus(activity.getString(R.string.settings));
             key(KeyEvent.KEYCODE_DPAD_CENTER);
             assertFocus(activity.getString(R.string.addition));
@@ -74,7 +72,7 @@ public final class ParentAndPromotionRemoteTest {
         char[] choices={'q','r','b','n'};
         for(int choice=0;choice<choices.length;choice++){
             final int index=choice;
-            Session fixture=new Session();
+            Session fixture=chessSession();
             fixture.moves=Arrays.asList("a2a4","h7h5","a4a5","h5h4","a5a6","h4h3","a6b7","h3g2");
             fixture.selected=9;
             fixture.focus=0;
@@ -114,7 +112,7 @@ public final class ParentAndPromotionRemoteTest {
                 assertEquals("b7a8"+choices[index],controller.state().moves.get(8));
             });
         }
-        Session selected=new Session();
+        Session selected=chessSession();
         selected.selected=52;
         withFixture(selected,()->{
             launchAndStart();
@@ -145,7 +143,7 @@ public final class ParentAndPromotionRemoteTest {
     }
 
     @Test public void remoteMoveGetsOneLegalComputerReply() throws Exception {
-        withFixture(new Session(),()->{
+        withFixture(chessSession(),()->{
             launchAndStart();
             key(KeyEvent.KEYCODE_DPAD_CENTER);
             assertEquals(52,controller.state().selected);
@@ -167,8 +165,8 @@ public final class ParentAndPromotionRemoteTest {
     }
 
     @Test public void soundAndMotionChoicesUseRemoteAndSurviveProgressReset() throws Exception {
-        withFixture(new Session(),()->{
-            launchAndStart();key(KeyEvent.KEYCODE_BACK);key(KeyEvent.KEYCODE_DPAD_DOWN);holdOk(3100);
+        withFixture(chessSession(),()->{
+            launchAndStart();key(KeyEvent.KEYCODE_BACK);key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_CENTER);
             key(KeyEvent.KEYCODE_DPAD_DOWN);assertFocus("sound-effects");
             key(KeyEvent.KEYCODE_DPAD_CENTER);
             key(KeyEvent.KEYCODE_DPAD_DOWN);assertFocus("piece-motion");
@@ -181,13 +179,112 @@ public final class ParentAndPromotionRemoteTest {
         });
     }
 
+    @Test public void languageSwitchAndRestartKeepGameAndExercise() throws Exception {
+        Session fixture=chessSession();
+        fixture.moves=Arrays.asList("e2e4","e7e5");
+        fixture.phase=Session.Phase.MATH;
+        fixture.elapsedMs=42000;
+        fixture.exercise=new Exercise(71,32,7,Exercise.SUBTRACT);
+        fixture.exerciseConfig=fixture.config.copy();
+        fixture.input="2";fixture.hintLevel=1;
+        withFixture(fixture,()->{
+            launchAndStart();key(KeyEvent.KEYCODE_BACK);
+            long elapsed=controller.state().elapsedMs;
+            key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_CENTER);
+            key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_DOWN);
+            assertFocus("language");
+            key(KeyEvent.KEYCODE_DPAD_CENTER);key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_CENTER);
+            assertEquals("Settings",activity.getString(R.string.parent_title));
+            screenshot("settings-english");
+            assertFocus("language");
+            assertEquals(fixture.moves,controller.state().moves);
+            assertEquals(elapsed,controller.state().elapsedMs);
+            assertEquals(71,controller.state().exercise.id);
+            assertEquals("2",controller.state().input);
+            assertEquals(1,controller.state().hintLevel);
+            assertTrue(controller.state().paused);
+            finishAndAwaitDestroyed();
+            awaitSave();
+            launchAndStart();
+            assertEquals("Time for maths",activity.getString(R.string.math_title));
+            screenshot("math-english");
+            assertEquals(fixture.moves,controller.state().moves);
+            assertEquals(71,controller.state().exercise.id);
+            instrumentation.runOnMainSync(()->{
+                android.widget.TextView hint=(android.widget.TextView)activity.findViewById(android.R.id.content).findViewWithTag("math-hint");
+                assertNotNull(hint);
+                assertTrue(hint.getText().toString().startsWith("Split 7 into 2 and 5"));
+            });
+            key(KeyEvent.KEYCODE_BACK);key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_CENTER);
+            key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_DOWN);
+            key(KeyEvent.KEYCODE_DPAD_CENTER);key(KeyEvent.KEYCODE_DPAD_UP);key(KeyEvent.KEYCODE_DPAD_CENTER);
+            assertEquals("Instellingen",activity.getString(R.string.parent_title));
+            assertEquals(fixture.moves,controller.state().moves);
+            assertEquals(71,controller.state().exercise.id);
+        });
+    }
+
+    @Test public void newChessGameStartsDirectlyAndKeepsRoundTime() throws Exception {
+        Session fixture=chessSession();fixture.moves=Arrays.asList("e2e4","e7e5");fixture.elapsedMs=73000;
+        withFixture(fixture,()->{
+            launchAndStart();key(KeyEvent.KEYCODE_BACK);
+            long elapsed=controller.state().elapsedMs;
+            key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_CENTER);
+            for(int i=0;i<6;i++)key(KeyEvent.KEYCODE_DPAD_DOWN);
+            assertFocus(activity.getString(R.string.restart_chess));
+            key(KeyEvent.KEYCODE_DPAD_CENTER);
+            assertTrue(controller.state().moves.isEmpty());
+            assertEquals(elapsed,controller.state().elapsedMs);
+            instrumentation.runOnMainSync(()->assertTrue(activity.getCurrentFocus() instanceof ChessBoardView));
+        });
+    }
+
+    @Test public void breakCountdownPausesAndStartsChessWithoutAnExtraAction() throws Exception {
+        Session fixture=new Session();fixture.phase=Session.Phase.BREAK;fixture.elapsedMs=59000;
+        java.util.concurrent.atomic.AtomicLong clock=new java.util.concurrent.atomic.AtomicLong(1000);
+        withFixture(fixture,clock::get,()->{
+            launchAndStart();
+            instrumentation.runOnMainSync(()->{
+                android.widget.TextView countdown=(android.widget.TextView)activity.findViewById(android.R.id.content).findViewWithTag("break-countdown");
+                assertNotNull(countdown);assertEquals("00:01",countdown.getText().toString());
+                assertEquals(0,activity.findViewById(android.R.id.content).getTouchables().size());
+            });
+            screenshot("break-countdown");
+            key(KeyEvent.KEYCODE_BACK);
+            assertTrue(controller.state().paused);
+            clock.addAndGet(5000);
+            instrumentation.runOnMainSync(controller::tick);awaitSave();
+            assertEquals(1000,controller.breakRemainingMs());
+            key(KeyEvent.KEYCODE_DPAD_CENTER);
+            clock.addAndGet(1000);
+            instrumentation.runOnMainSync(controller::tick);awaitSave();
+            assertEquals(Session.Phase.CHESS,controller.state().phase);
+            assertFalse(controller.state().paused);
+            instrumentation.runOnMainSync(()->assertTrue(activity.getCurrentFocus() instanceof ChessBoardView));
+        });
+    }
+
+    private Session chessSession(){
+        Session session=new Session();session.phase=Session.Phase.CHESS;return session;
+    }
+
     private interface Checked { void run() throws Exception; }
     private void withFixture(Session fixture,Checked test) throws Exception {
+        withFixture(fixture,SystemClock::elapsedRealtime,test);
+    }
+    private void withFixture(Session fixture,java.util.function.LongSupplier clock,Checked test) throws Exception {
         Field shared=MainActivity.class.getDeclaredField("sharedController");
         shared.setAccessible(true);
         SessionController previous=(SessionController)shared.get(null);
         Field effectField=MainActivity.class.getDeclaredField("sharedEffects");effectField.setAccessible(true);
         Object previousEffects=effectField.get(null);
+        Field languageField=MainActivity.class.getDeclaredField("sharedLanguage");languageField.setAccessible(true);
+        Object previousLanguage=languageField.get(null);
+        final String[] savedLanguage={"nl"};
+        languageField.set(null,new LanguagePreferences(new LanguagePreferences.Storage(){
+            public String read(){return savedLanguage[0];}
+            public boolean write(String value){savedLanguage[0]=value;return true;}
+        }));
         java.util.Map<String,Boolean> choices=new java.util.HashMap<>();
         effectField.set(null,new EffectPreferences(new EffectPreferences.Storage(){
             public boolean read(String key,boolean fallback){return choices.getOrDefault(key,fallback);}
@@ -198,7 +295,7 @@ public final class ParentAndPromotionRemoteTest {
             public Session load(){return saved.copy();}
             public void save(Session state){saved=state.copy();}
         };
-        controller=new SessionController(memory,SystemClock::elapsedRealtime,MAIN::post,null);
+        controller=new SessionController(memory,clock,MAIN::post,null);
         shared.set(null,controller);
         try { test.run(); }
         finally {
@@ -208,6 +305,7 @@ public final class ParentAndPromotionRemoteTest {
             controller.close();
             shared.set(null,previous);
             effectField.set(null,previousEffects);
+            languageField.set(null,previousLanguage);
             activity=null;
         }
     }
@@ -224,20 +322,29 @@ public final class ParentAndPromotionRemoteTest {
             if(!focused.get())SystemClock.sleep(20);
         } while(!focused.get()&&SystemClock.elapsedRealtime()<until);
         assertTrue("Window must have focus before Start",focused.get());
+        // A previous Activity can still be saving its onPause checkpoint. The
+        // Start action intentionally ignores input until that save completes.
+        awaitSave();
+        assertFocus(activity.getString(controller.state().revision==0?R.string.start:R.string.continue_game));
         key(KeyEvent.KEYCODE_DPAD_CENTER);
+        instrumentation.runOnMainSync(()->assertFalse("Start must resume the fixture",controller.state().paused));
+    }
+
+    private void finishAndAwaitDestroyed() throws Exception {
+        MainActivity previous=activity;
+        instrumentation.runOnMainSync(previous::finish);
+        AtomicBoolean destroyed=new AtomicBoolean();
+        long until=SystemClock.elapsedRealtime()+5000;
+        do {
+            instrumentation.waitForIdleSync();
+            instrumentation.runOnMainSync(()->destroyed.set(previous.isDestroyed()));
+            if(!destroyed.get())SystemClock.sleep(20);
+        } while(!destroyed.get()&&SystemClock.elapsedRealtime()<until);
+        assertTrue("Previous Activity must finish teardown before relaunch",destroyed.get());
     }
 
     private void key(int code) throws Exception {
         instrumentation.sendKeyDownUpSync(code);
-        instrumentation.waitForIdleSync();
-        awaitSave();
-    }
-
-    private void holdOk(long duration) throws Exception {
-        long down=SystemClock.uptimeMillis();
-        instrumentation.sendKeySync(new KeyEvent(down,down,KeyEvent.ACTION_DOWN,KeyEvent.KEYCODE_DPAD_CENTER,0));
-        SystemClock.sleep(duration);
-        instrumentation.sendKeySync(new KeyEvent(down,SystemClock.uptimeMillis(),KeyEvent.ACTION_UP,KeyEvent.KEYCODE_DPAD_CENTER,0));
         instrumentation.waitForIdleSync();
         awaitSave();
     }

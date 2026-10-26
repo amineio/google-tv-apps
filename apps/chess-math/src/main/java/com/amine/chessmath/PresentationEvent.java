@@ -58,7 +58,7 @@ public final class PresentationEvent {
         promotionPiece=move.length()==5?after[to]:'.';
         beforeCheck=a.checkSquare();afterCheck=b.checkSquare();beforeWhiteToMove=a.whiteToMove();
         int distance=Math.max(Math.abs(from/8-to/8),Math.abs(from%8-to%8));
-        durationMs=castle?240:distance<=2?180:220;
+        durationMs=castle?420:distance<=2?320:380;
         cue=afterCheck>=0?Cue.CHECK:capturedSquare>=0?Cue.CAPTURE:Cue.MOVE;
     }
     public char beforePiece(int square){return before[square];}

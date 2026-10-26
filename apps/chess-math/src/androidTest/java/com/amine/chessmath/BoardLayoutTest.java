@@ -28,7 +28,8 @@ public final class BoardLayoutTest {
     private SessionController controller;
 
     @Test public void boardIsAtTheTvCenterWithCompactStatus() throws Exception {
-        withFixture(new Session(),()->{
+        Session fresh=new Session();fresh.phase=Session.Phase.CHESS;
+        withFixture(fresh,()->{
             launchAndStart();
             instrumentation.runOnMainSync(()->{
                 assertGeometry();
@@ -50,7 +51,7 @@ public final class BoardLayoutTest {
     }
 
     @Test public void largerFontsWrapBesideTheBoardWithoutOverlap() throws Exception {
-        Session fixture=new Session();
+        Session fixture=new Session();fixture.phase=Session.Phase.CHESS;
         fixture.selected=52;
         fixture.feedback="Deze zet kan niet.";
         withFixture(fixture,()->{

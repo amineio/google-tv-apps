@@ -1,6 +1,6 @@
 # Schaak & Reken
 
-Schaak & Reken is a free, offline chess and arithmetic app for Google TV. The Dutch interface works with a standard TV remote. The child plays White against a deliberately easy computer. The app needs Android 8 or later.
+Schaak & Reken is a free, offline chess and arithmetic app for Google TV. The Dutch and English interfaces work with a standard TV remote. Dutch is the default. Select the language in Settings. The child plays White against a deliberately easy computer. The app needs Android 8 or later.
 
 The app uses no permissions, network connection, account, advertisements, purchases, analytics, or background service. It keeps one game and its practice round in local app storage. It stores no child name or profile. Cloud backup and device transfer are disabled.
 
@@ -12,12 +12,12 @@ Open Schaak & Reken from the TV app grid. Select Start or Verder spelen.
 2. Use the arrows to choose a marked destination. Press OK to move.
 3. Press Back to cancel a piece selection. Press Back again to open Pause.
 
-A honey outline marks focus. A sage-gold inner border marks the selected piece. Muted teal dots mark empty legal destinations. Teal rings mark legal captures. A quiet sage overlay marks the last move. A checked king has a double border and an exclamation mark.
+Honey backgrounds mark the selected piece and legal captures. Sage or cream backgrounds mark legal empty destinations. A quiet sage background marks the last move. A brick background marks check. One square outline marks remote focus.
 
-Live moves slide once for 180–240 ms. Captured pieces remain visible until landing.
+Live moves slide once for 320–420 ms with smooth acceleration and deceleration. Captured pieces remain visible until landing.
 Castling moves both pieces together. Promotion lands as the chosen piece.
 A wooden tap confirms a move. Captures use a fuller knock. Check and correct
-arithmetic answers use gentle two-note cues. Wrong answers and navigation have
+arithmetic answers use a warm notice and a cheerful four-note phrase, respectively. Wrong answers and navigation have
 no custom sound. Quiet playback still depends on the TV volume.
 
 Pause, focus loss, and recreation stop effects. Resume never replays a saved
@@ -30,17 +30,17 @@ The computer makes frequent mistakes. Its strength needs family playtesting. The
 
 ## Arithmetic rounds
 
-The default rhythm is five foreground minutes of chess, then five foreground minutes of arithmetic. The app pauses time while hidden, in standby, in parent controls, or on a pause screen. It finishes a selected chess turn and the computer reply before the handoff. It never removes pieces after a wrong answer.
+A fresh session starts with five foreground minutes of arithmetic. Foreground time is time while the app is visible and active. The app pauses time while hidden, in standby, in parent controls, or on a pause screen. It never removes pieces after a wrong answer.
 
-A math round also requires at least three completed exercises. After five minutes, the child finishes the current exercise. Exercises continue throughout the math period, even after three correct answers. Foreground idle time counts as elapsed time, but it cannot complete the required exercises. The app does not measure thinking or prove attention.
+A math round also requires at least three correct answers. After five minutes, the child finishes the current exercise. Exercises continue throughout the math period, even after three correct answers. Foreground idle time counts as elapsed time, but it cannot complete the required exercises. The app does not measure thinking or prove attention.
 
 Use the number pad to enter an answer. Wis deletes one digit. An exact answer shows Goed! and advances automatically after a short pause. There is no submit or Next action. Partial and wrong entries remain editable. Hint offers a useful step, then the worked answer. An answer completed with help counts toward the round. Paper and pencil are welcome. There is no question countdown or speed penalty.
 
-After a round, select Verder schaken to return to the saved chess position.
+After arithmetic, a one-minute break shows the remaining time. Only foreground time advances the countdown. Chess starts automatically when the break ends. The chess game continues until checkmate or a draw. It has no phase time limit. After the result, select Start to begin arithmetic for the next cycle. The next chess phase starts a new game.
 
 ## Parent controls
 
-Open Pause. Focus Voor ouders. Hold OK for three seconds. The visible bar shows the hold duration. This action separates the controls but does not authenticate an adult. Home always leaves the app.
+Open Pause. Select Settings with one press. Home always leaves the app.
 
 Rekeninstellingen contains these controls:
 
@@ -60,7 +60,7 @@ Pause also offers immediate sound mute. These choices survive progress reset
 and app restart. System animation Off disables slides. Android menu sounds
 follow the TV system setting.
 
-Parents can skip to chess or math, restart the chess game, reset progress, read help and licenses, or exit. A phase skip bypasses that round's time and answer requirements. A new chess game preserves the current round time. Reset requires confirmation.
+Parents can skip to chess or math, restart the chess game, reset progress, read help and licenses, or exit. A phase skip bypasses the normal cycle requirements. A new chess game starts directly. Chess continues until its result, without a phase time limit. Full progress reset requires confirmation.
 
 ## Chess rules and accepted limit
 

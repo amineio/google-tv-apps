@@ -25,7 +25,7 @@ public final class PiecePainter {
     private static synchronized Atlas loadAtlas(Resources resources, String packageName) {
         if (atlasLoaded) return sharedAtlas;
         atlasLoaded = true;
-        int resource = resources.getIdentifier("chess_pieces_v2", "drawable", packageName);
+        int resource = resources.getIdentifier("chess_pieces_v4", "drawable", packageName);
         if (resource == 0) return null;
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inScaled = false;
@@ -57,6 +57,10 @@ public final class PiecePainter {
             bounds[index] = new Rect(originX + left, originY + top,
                     originX + right + 1, originY + bottom + 1);
         }
+        // Typical pieces are drawn below half their source size. Let hardware use
+        // prefiltered mip levels when supported, without changing the source pixels.
+        // This is a renderer hint; the source artwork still defines the contours.
+        bitmap.setHasMipMap(true);
         sharedAtlas = new Atlas(bitmap, bounds);
         return sharedAtlas;
     }

@@ -18,8 +18,12 @@ public class PresentationEventTest {
     }
     @Test public void castleSlidesBothPiecesForOneDuration() {
         PresentationEvent e=event("e2e4 e7e5 g1f3 b8c6 f1c4 g8f6","e1g1");
-        assertEquals(63,e.rookFrom);assertEquals(61,e.rookTo);assertEquals(240,e.durationMs);
+        assertEquals(63,e.rookFrom);assertEquals(61,e.rookTo);assertEquals(420,e.durationMs);
         assertEquals('K',e.movingPiece);assertEquals(PresentationEvent.Cue.MOVE,e.cue);
+    }
+    @Test public void shortAndLongMovesAllowTimeForGentleAccelerationAndDeceleration() {
+        assertEquals(320,event("","e2e4").durationMs);
+        assertEquals(380,event("e2e4 e7e5","f1c4").durationMs);
     }
     @Test public void allCapturePromotionsTravelAsPawnAndLandAsChosenPiece() {
         for(char p:new char[]{'q','r','b','n'}) {

@@ -64,6 +64,7 @@ public final class LiveEffectsTest {
         Object prior=shared.get(null),priorEffects=effect.get(null);
         controller=new SessionController(new SessionController.Persistence(){
             private Session saved=new Session();
+            {saved.phase=Session.Phase.CHESS;}
             public Session load(){return saved.copy();}
             public void save(Session state){saved=state.copy();}
         },SystemClock::elapsedRealtime,MAIN::post,null);

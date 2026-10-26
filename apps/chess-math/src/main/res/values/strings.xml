@@ -2,7 +2,7 @@
     <string name="app_name">Schaak &amp; Reken</string>
     <string name="brand">S C H A A K  &amp;  R E K E N</string>
     <string name="start">Start</string><string name="continue_game">Verder spelen</string>
-    <string name="intro">Ongeveer 5 minuten schaken, dan rekenen.\nReken 5 minuten en maak minstens 3 sommen goed.</string>
+    <string name="intro">Reken 5 minuten en maak minstens 3 sommen goed.\nNeem 1 minuut pauze. Speel daarna een heel schaakspel.</string>
     <string name="your_turn">Jij bent aan zet</string><string name="computer_turn">De computer is aan zet</string>
     <string name="choose_piece">Kies een stuk</string><string name="choose_target">Kies een vak voor je stuk</string>
     <string name="square_description">%1$s · %2$s</string>
@@ -14,8 +14,8 @@
     <string name="paper">Je mag papier gebruiken.\nNeem rustig de tijd.</string>
     <string name="math_success">Goed!</string>
     <string name="hint">Hint</string><string name="delete">Wis</string><string name="ok">OK</string><string name="next">Volgende</string>
-    <string name="pause">Even pauze</string><string name="resume">Verdergaan</string><string name="parents">Voor ouders</string><string name="hold_parents">Houd OK 3 seconden vast</string>
-    <string name="parent_title">Voor ouders</string><string name="settings">Rekeninstellingen</string><string name="to_math">Naar rekenen</string><string name="to_chess">Naar schaken</string><string name="restart_chess">Nieuw schaakspel</string><string name="reset">Alles opnieuw beginnen</string><string name="exit">App sluiten</string><string name="licenses">Licenties</string>
+    <string name="pause">Even pauze</string><string name="resume">Verdergaan</string><string name="parents">Instellingen</string>
+    <string name="parent_title">Instellingen</string><string name="settings">Rekeninstellingen</string><string name="to_math">Naar rekenen</string><string name="to_chess">Naar schaken</string><string name="restart_chess">Nieuw schaakspel</string><string name="reset">Alles opnieuw beginnen</string><string name="exit">App sluiten</string><string name="licenses">Licenties</string>
     <string name="skip_help">Hiermee sla je de tijd en het aantal goede antwoorden over.</string>
     <string name="confirm_reset">Opnieuw beginnen?</string><string name="reset_help">Je opgeslagen voortgang wordt gewist.</string><string name="restart_help">Het schaakbord begint opnieuw. De rondetijd blijft bewaard.</string>
     <string name="cancel">Annuleren</string><string name="save">Opslaan</string><string name="settings_next">Nieuwe instellingen gelden vanaf de volgende som.</string>
@@ -30,7 +30,7 @@
     <string name="saving">Opslaan…</string>
     <string name="table_help">Tafel 5: 1 × 5 tot en met 10 × 5. De tafel is het tweede getal.</string>
     <string name="about_game">Over het spel</string>
-    <string name="parent_help">Schaken en rekenen duren elk ongeveer vijf minuten. Bij rekenen zijn ook minstens drie goede antwoorden nodig. De huidige zet of som mag eerst af.\n\nAlleen tijd in de zichtbare, actieve app telt mee. Menu’s en pauzes tellen niet mee. De app meet niet of een kind nadenkt. Een goed antwoord met een hint telt ook mee.\n\nDe app herkent niet elke dode stelling. In sommige zeldzame, geblokkeerde stellingen gaat het spel verder, terwijl geen speler nog mat kan zetten.\n\nDe computer speelt bewust eenvoudig. Zijn speelsterkte en het leereffect van de app zijn niet vastgesteld. De ouderknop met drie seconden vasthouden is geen beveiliging.</string>
+    <string name="parent_help">Begin met vijf minuten rekenen en minstens drie goede antwoorden. Maak de huidige som af. Daarna volgt een pauze van één minuut. Schaken begint vanzelf. Speel het schaakspel uit. Ga daarna verder met rekenen.\n\nAlleen tijd in de zichtbare, actieve app telt mee. Menu’s en pauzes stoppen de tijd. De pauzeteller loopt alleen op het pauzescherm. Een goed antwoord met een hint telt ook mee. De app meet niet of een kind nadenkt.\n\nDe app herkent niet elke dode stelling. In zeldzame, geblokkeerde stellingen kan het spel doorgaan terwijl geen speler nog mat kan zetten.\n\nDe computer speelt bewust eenvoudig. Zijn speelsterkte en het leereffect zijn niet vastgesteld.</string>
     <string name="sound_effects">Geluidseffecten</string>
     <string name="piece_motion">Stukbewegingen</string>
     <string name="on">Aan</string><string name="off">Uit</string>
@@ -38,4 +38,10 @@
     <string name="sound_on">Geluid aan · uitzetten</string>
     <string name="sound_off">Geluid uit · aanzetten</string>
     <string name="preference_error">De instelling is niet opgeslagen. Probeer opnieuw.</string>
+    <string name="language">Taal</string>
+    <string name="dutch">Nederlands</string>
+    <string name="english">English</string>
+    <string name="break_title">Even pauze</string>
+    <string name="break_help">Schaken begint zo</string>
+    <string name="break_remaining">Nog %1$d seconden</string>
 </resources>

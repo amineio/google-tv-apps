@@ -44,8 +44,10 @@ public final class EffectPlayer implements AutoCloseable {
                 .setOnAudioFocusChangeListener(change->{if(change<0&&generation==token)stop();},handler).build();
         focus=request;
         if(audio.requestAudioFocus(request)!=AudioManager.AUDIOFOCUS_REQUEST_GRANTED){stop();return;}
-        float gain=cue==PresentationEvent.Cue.CAPTURE?.55f:cue==PresentationEvent.Cue.MATH_SUCCESS?.50f:.45f;
-        int duration=cue==PresentationEvent.Cue.MOVE?105:cue==PresentationEvent.Cue.CAPTURE?145:cue==PresentationEvent.Cue.CHECK?236:265;
+        // Cues have balanced source levels; reward energy comes from its melody and layers.
+        float gain=cue==PresentationEvent.Cue.MATH_SUCCESS?.46f:cue==PresentationEvent.Cue.CHECK?.42f:.50f;
+        // Full WAV lengths include the quiet reflection tails (tools/generate_audio.py).
+        int duration=cue==PresentationEvent.Cue.MOVE?160:cue==PresentationEvent.Cue.CAPTURE?220:cue==PresentationEvent.Cue.CHECK?420:680;
         stream=pool.play(samples.get(cue),gain,gain,rank,0,1);priority=rank;
         until=SystemClock.elapsedRealtime()+duration;
         handler.postDelayed(()->{if(generation==token)stop();},duration+15);

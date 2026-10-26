@@ -1,0 +1,101 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Chess &amp; Maths</string>
+    <string name="brand">C H E S S  &amp;  M A T H S</string>
+    <string name="start">Start</string>
+    <string name="continue_game">Continue</string>
+    <string name="intro">Practise maths for 5 minutes and solve at least 3 exercises.\nTake a 1-minute break. Then play a full chess game.</string>
+    <string name="your_turn">Your turn</string>
+    <string name="computer_turn">The computer is thinking</string>
+    <string name="choose_piece">Choose a piece</string>
+    <string name="choose_target">Choose a square for your piece</string>
+    <string name="square_description">%1$s · %2$s</string>
+    <string name="white_piece">white %1$s</string>
+    <string name="black_piece">black %1$s</string>
+    <string name="empty_square">empty square</string>
+    <string-array name="piece_names">
+        <item>pawn</item>
+        <item>knight</item>
+        <item>bishop</item>
+        <item>rook</item>
+        <item>queen</item>
+        <item>king</item>
+    </string-array>
+    <string name="board_help">Arrows to choose · OK to select</string>
+    <string name="back_pause">Back: pause</string>
+    <string name="check">Check: protect your king</string>
+    <string name="finish_move">Finish your move. Then we will practise maths.</string>
+    <string name="math_title">Time for maths</string>
+    <plurals name="math_count">
+        <item quantity="one">%1$d / 3 correct</item>
+        <item quantity="other">%1$d / 3 correct</item>
+    </plurals>
+    <string name="paper">You can use paper.\nTake your time.</string>
+    <string name="math_success">Correct!</string>
+    <string name="hint">Hint</string>
+    <string name="delete">Delete</string>
+    <string name="ok">OK</string>
+    <string name="next">Next</string>
+    <string name="pause">Paused</string>
+    <string name="resume">Resume</string>
+    <string name="parents">Settings</string>
+    <string name="parent_title">Settings</string>
+    <string name="settings">Maths settings</string>
+    <string name="to_math">Go to maths</string>
+    <string name="to_chess">Go to chess</string>
+    <string name="restart_chess">New chess game</string>
+    <string name="reset">Reset all progress</string>
+    <string name="exit">Close app</string>
+    <string name="licenses">Licences</string>
+    <string name="skip_help">This skips the time and correct answer requirements.</string>
+    <string name="confirm_reset">Reset all progress?</string>
+    <string name="reset_help">This deletes your saved progress.</string>
+    <string name="restart_help">The chess board starts again. The round time is kept.</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="settings_next">New settings apply from the next exercise.</string>
+    <string name="addition">Addition</string>
+    <string name="subtraction">Subtraction</string>
+    <string name="multiplication">Multiplication</string>
+    <string name="number_limit">Numbers up to</string>
+    <string name="crossing">Crossing ten</string>
+    <string name="crossing_help">Off: excludes 8 + 2 and 30 − 1. Allows 20 + 10 and 23 − 3.</string>
+    <string name="tables">Times tables</string>
+    <string name="selected">✓ %1$s</string>
+    <string name="unselected">○ %1$s</string>
+    <string name="handoff_math">Time for maths</string>
+    <string name="handoff_chess">Time for chess</string>
+    <string name="math_action">Start maths</string>
+    <string name="chess_action">Continue chess</string>
+    <string name="handoff_help">Your chess game is kept.</string>
+    <string name="promotion">Choose your new piece</string>
+    <string name="queen">Queen</string>
+    <string name="rook">Rook</string>
+    <string name="bishop">Bishop</string>
+    <string name="knight">Knight</string>
+    <string name="claim_draw">Claim a draw</string>
+    <string name="play_move">Play move</string>
+    <string name="claim_title">You can claim a draw</string>
+    <string name="error_title">Please wait</string>
+    <string name="retry">Try again</string>
+    <string name="load_error">Could not open the saved game. For adults: reset progress or close the app.</string>
+    <string name="math_remote">Arrows to choose · OK to enter</string>
+    <string name="saving">Saving…</string>
+    <string name="table_help">Table 5: 1 × 5 through 10 × 5. The table is the second number.</string>
+    <string name="about_game">About the game</string>
+    <string name="parent_help">Start with five minutes of maths and at least three correct answers. Finish the current exercise. Then take a one-minute break. Chess starts automatically. Finish the chess game. Then continue with maths.\n\nOnly time in the visible, active app counts. Menus and pauses stop the timer. The break timer runs only on the break screen. A correct answer with a hint also counts. The app cannot measure whether a child is thinking.\n\nThe app does not detect every dead position. In rare blocked positions, play can continue even though neither player can give checkmate.\n\nThe computer plays simple moves by design. Its playing strength and learning effect have not been established.</string>
+    <string name="sound_effects">Sound effects</string>
+    <string name="piece_motion">Piece motion</string>
+    <string name="on">On</string>
+    <string name="off">Off</string>
+    <string name="effect_value">%1$s: %2$s</string>
+    <string name="sound_on">Sound on · mute</string>
+    <string name="sound_off">Sound off · unmute</string>
+    <string name="preference_error">Could not save this setting. Try again.</string>
+    <string name="language">Language</string>
+    <string name="dutch">Nederlands</string>
+    <string name="english">English</string>
+    <string name="break_title">Take a break</string>
+    <string name="break_help">Chess starts soon</string>
+    <string name="break_remaining">%1$d seconds remaining</string>
+</resources>

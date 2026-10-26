@@ -6,10 +6,10 @@ import java.util.UUID;
 
 /** One locally saved game and practice round. The controller owns mutations. */
 public final class Session {
-    public enum Phase { CHESS, TO_MATH, MATH, TO_CHESS }
+    public enum Phase { CHESS, TO_MATH, MATH, TO_CHESS, BREAK }
     public String id = UUID.randomUUID().toString();
     public long revision, elapsedMs;
-    public Phase phase = Phase.CHESS;
+    public Phase phase = Phase.MATH;
     public boolean paused = true, chessPending, mathPending, solved;
     public int correct, selected = -1, focus = 52, promotionTo = -1, hintLevel;
     public String intendedMove, input = "", feedback = "", result = "";
@@ -20,8 +20,15 @@ public final class Session {
     public long opponentSeed = System.nanoTime();
     public String generatorState = new MathGenerator(opponentSeed ^ 0x51a7L).snapshot();
 
+    public Session(){this(true);}
+    Session(boolean prepareMath){
+        if(prepareMath){
+            MathGenerator generator=MathGenerator.restore(generatorState);
+            exercise=generator.next(config);exerciseConfig=config.copy();generatorState=generator.snapshot();
+        }
+    }
     public Session copy() {
-        Session s = new Session();
+        Session s = new Session(false);
         s.id=id; s.revision=revision; s.elapsedMs=elapsedMs; s.phase=phase;
         s.paused=paused; s.chessPending=chessPending; s.mathPending=mathPending; s.solved=solved;
         s.correct=correct; s.selected=selected; s.focus=focus; s.promotionTo=promotionTo;

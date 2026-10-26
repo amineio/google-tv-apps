@@ -10,7 +10,7 @@ public final class SessionCodec {
 
     public static String encode(Session s) throws JSONException {
         JSONObject j=new JSONObject();
-        j.put("schema",1).put("id",s.id).put("revision",s.revision)
+        j.put("schema",2).put("id",s.id).put("revision",s.revision)
                 .put("phase",s.phase.name()).put("paused",s.paused).put("elapsedMs",s.elapsedMs)
                 .put("chessPending",s.chessPending).put("mathPending",s.mathPending)
                 .put("solved",s.solved).put("correct",s.correct).put("selected",s.selected)
@@ -30,8 +30,8 @@ public final class SessionCodec {
     public static Session decode(String raw) throws JSONException {
         if(raw.length()>2000000) throw new IllegalArgumentException("Snapshot too large");
         JSONObject j=new JSONObject(raw);
-        require(j.getInt("schema")==1,"Unsupported save version");
-        Session s=new Session();
+        int schema=j.getInt("schema");require(schema==1||schema==2,"Unsupported save version");
+        Session s=new Session(false);
         s.id=j.getString("id"); require(s.id.length()==36,"Invalid session id");
         s.revision=j.getLong("revision"); s.elapsedMs=j.getLong("elapsedMs");
         require(s.revision>=0 && s.elapsedMs>=0 && s.elapsedMs<=31536000000L,"Invalid elapsed time");
@@ -71,6 +71,12 @@ public final class SessionCodec {
         if(s.solved) require(s.exercise!=null && s.correct>0 && MathInput.matches(s.input,s.exercise),"Invalid completed answer");
         if(s.phase==Session.Phase.TO_CHESS) require(PhaseRules.mathComplete(s.elapsedMs,s.correct,s.solved),"Incomplete math handoff");
         if(s.phase==Session.Phase.TO_MATH) require(s.elapsedMs>=300000 && (game.whiteToMove()||!s.result.isEmpty()) && s.selected<0 && s.promotionTo<0,"Unstable chess handoff");
+        if(schema==1){
+            // Old chess cutoffs never discard an unfinished game. Completed math gets its new break.
+            if(s.phase==Session.Phase.TO_MATH)s.phase=Session.Phase.CHESS;
+            else if(s.phase==Session.Phase.TO_CHESS){s.phase=Session.Phase.BREAK;s.elapsedMs=0;s.mathPending=false;}
+            s.chessPending=false;s.paused=true;
+        }else require(s.phase!=Session.Phase.TO_MATH&&s.phase!=Session.Phase.TO_CHESS,"Legacy handoff in new save");
         return s;
     }
 

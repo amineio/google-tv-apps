@@ -85,7 +85,7 @@ public final class ArtworkTest {
         });
     }
 
-    @Test public void legalMarkersUseTealOnBothSquareColorsAndSelectionUsesSageGold() {
+    @Test public void legalDestinationsAndSelectedSourceUseCellBackgrounds() {
         InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
             Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
             ChessBoardView board = new ChessBoardView(context);
@@ -96,22 +96,24 @@ public final class ArtworkTest {
             board.bind(new ChessGame(), 52, 52, "");
             Bitmap rendered = Bitmap.createBitmap(810, 810, Bitmap.Config.ARGB_8888);
             board.draw(new Canvas(rendered));
-            assertEquals("e4 marker uses muted teal on the ivory square", 0xff95c4b5,
+            for (int y : new int[]{455, 555}) {
+                assertEquals("A legal square has one wash, without a central dot",
+                        rendered.getPixel(417, y), rendered.getPixel(455, y));
+                assertEquals("The wash extends across the empty destination",
+                        rendered.getPixel(455, y), rendered.getPixel(493, y));
+            }
+            assertNotEquals("e4 differs from an ordinary ivory square", 0xffeee3c8,
                     rendered.getPixel(455, 455));
-            assertEquals("e3 marker uses muted teal on the green square", 0xff95c4b5,
+            assertNotEquals("e3 differs from an ordinary green square", 0xff486a4d,
                     rendered.getPixel(455, 555));
-            assertEquals("Legal disc keeps a forest outline against ivory", TvStyle.FOREST,
-                    rendered.getPixel(467, 455));
-            assertEquals("Legal disc keeps a forest outline against green", TvStyle.FOREST,
-                    rendered.getPixel(467, 555));
-            assertEquals("Selected e2 keeps a continuous sage-gold border", 0xffc9c58a,
-                    rendered.getPixel(455, 619));
+            assertEquals("Selected source has no inner border",
+                    rendered.getPixel(417, 619), rendered.getPixel(435, 619));
             assertTrue(board.getContentDescription().toString().contains("e2"));
             rendered.recycle();
         });
     }
 
-    @Test public void honeyFocusAndSageSelectionRemainDistinctOnBothSquareColors() {
+    @Test public void remoteFocusUsesOneOutlineAboveTheSelectedCellWash() {
         InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
             Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
             for (int source : new int[]{52, 51}) {
@@ -126,18 +128,56 @@ public final class ArtworkTest {
                 Bitmap rendered = Bitmap.createBitmap(810, 810, Bitmap.Config.ARGB_8888);
                 board.draw(new Canvas(rendered));
                 int x = 5 + source % 8 * 100, y = 5 + source / 8 * 100;
-                assertEquals("Focus has a continuous honey outline", 0xffffcf70,
+                int focus = source == 52 ? 0xff173d2a : 0xfffff1d0;
+                assertEquals("Focus adapts to the original square color", focus,
                         rendered.getPixel(x + 50, y + 5));
-                assertEquals("Selected piece has a separate inner sage-gold border", 0xffc9c58a,
-                        rendered.getPixel(x + 50, y + 14));
-                assertEquals("Forest understroke separates focus from either square", TvStyle.FOREST,
-                        rendered.getPixel(x + 50, y + 8));
+                assertEquals("Below focus there is only the source wash, without an understroke",
+                        rendered.getPixel(x + 12, y + 14), rendered.getPixel(x + 50, y + 14));
+                assertEquals("No second inner selection frame remains",
+                        rendered.getPixel(x + 12, y + 14), rendered.getPixel(x + 30, y + 14));
                 rendered.recycle();
             }
         });
     }
 
-    @Test public void buttonFocusUsesTheSameHoneyAsTheBoard() {
+    @Test public void previousMoveAndCheckStayBehindThePieces() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
+            Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+            ChessBoardView board = new ChessBoardView(context);
+            int spec = android.view.View.MeasureSpec.makeMeasureSpec(810,
+                    android.view.View.MeasureSpec.EXACTLY);
+            board.measure(spec, spec);
+            board.layout(0, 0, 810, 810);
+            Bitmap rendered = Bitmap.createBitmap(810, 810, Bitmap.Config.ARGB_8888);
+            ChessGame game = new ChessGame();
+            game.play("e2e4");
+            board.bind(game, 0, -1, "e2e4");
+            board.draw(new Canvas(rendered));
+            assertNotEquals("The previous source has a background wash", 0xffeee3c8,
+                    rendered.getPixel(417, 619));
+            assertNotEquals("The previous target has a background wash", 0xffeee3c8,
+                    rendered.getPixel(417, 419));
+            game = new ChessGame();
+            game.play("f2f3");
+            game.play("e7e5");
+            game.play("g2g4");
+            game.play("d8h4");
+            board.bind(game, 0, -1, "");
+            board.draw(new Canvas(rendered));
+            int checkWash = rendered.getPixel(417, 717);
+            assertTrue("Check uses a brick background on the green king square",
+                    android.graphics.Color.red(checkWash) > android.graphics.Color.green(checkWash));
+            assertNotEquals("The king remains visible above check", checkWash,
+                    rendered.getPixel(455, 755));
+            board.bind(game, 0, -1, "e1e2");
+            board.draw(new Canvas(rendered));
+            assertEquals("Check replaces previous-move wash instead of stacking it", checkWash,
+                    rendered.getPixel(417, 717));
+            rendered.recycle();
+        });
+    }
+
+    @Test public void buttonFocusRetainsItsHoneyOutline() {
         InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
             Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
             android.graphics.drawable.Drawable background = TvStyle.button(context, "OK").getBackground();
@@ -147,13 +187,13 @@ public final class ArtworkTest {
             background.setState(new int[]{android.R.attr.state_focused});
             Bitmap rendered = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
             background.draw(new Canvas(rendered));
-            assertEquals("Button focus shares the honey board outline", 0xffffcf70,
+            assertEquals("Button focus retains its honey outline", 0xffffcf70,
                     rendered.getPixel(width / 2, Math.round(3 * density)));
             rendered.recycle();
         });
     }
 
-    @Test public void legalCaptureUsesAContinuousTealRing() {
+    @Test public void legalCaptureUsesAFullHoneyBackgroundBehindThePiece() {
         InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
             Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
             ChessBoardView board = new ChessBoardView(context);
@@ -171,10 +211,15 @@ public final class ArtworkTest {
                 board.bind(game, source, source, reply);
                 Bitmap rendered = Bitmap.createBitmap(810, 810, Bitmap.Config.ARGB_8888);
                 board.draw(new Canvas(rendered));
-                assertEquals("Capture ring crosses its top midpoint on either square color", 0xff95c4b5,
-                        rendered.getPixel(centerX, 313));
-                assertEquals("Capture ring crosses its left midpoint on either square color", 0xff95c4b5,
-                        rendered.getPixel(centerX - 42, 355));
+                int wash = rendered.getPixel(centerX - 38, 317);
+                assertEquals("The capture background fills the cell instead of drawing a ring",
+                        wash, rendered.getPixel(centerX, 317));
+                assertEquals("No ring crosses the left side of the target piece",
+                        wash, rendered.getPixel(centerX - 42, 355));
+                assertNotEquals("A capture differs from the underlying square",
+                        light ? 0xffeee3c8 : 0xff486a4d, wash);
+                assertNotEquals("The target piece remains visible above the wash",
+                        wash, rendered.getPixel(centerX, 355));
                 rendered.recycle();
             }
         });

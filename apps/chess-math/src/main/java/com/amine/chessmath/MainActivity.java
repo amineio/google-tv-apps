@@ -14,7 +14,10 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
+import android.content.Context;
+import android.content.res.Configuration;
+import android.content.res.Resources;
+import java.util.Locale;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import java.io.BufferedReader;
@@ -67,11 +70,35 @@ public final class MainActivity extends Activity {
     private boolean started, alive, foreground;
     private String menu="", screen="";
     private ChessBoardView board;
-    private TextView chessHeading,chessHelp,chessDetail,savingText;
+    private TextView chessHeading,chessHelp,chessDetail,savingText,breakCountdown;
+    private long displayedBreakSecond=-1;
     private MathConfig draft;
-    private Button parentButton;
-    private ProgressBar holdProgress;
-    private long holdStart;
+    private static LanguagePreferences sharedLanguage;
+    private LanguagePreferences language;
+    private Context languageContext;
+    @Override protected void attachBaseContext(Context base){
+        if(sharedLanguage==null)sharedLanguage=new LanguagePreferences(base);
+        language=sharedLanguage;
+        languageContext=localizedContext(base,language.language());
+        super.attachBaseContext(languageContext);
+    }
+    private static Context localizedContext(Context base,String language){
+        Configuration configuration=new Configuration(base.getResources().getConfiguration());
+        configuration.setLocale(Locale.forLanguageTag(language));
+        return base.createConfigurationContext(configuration);
+    }
+    @Override public Resources getResources(){
+        return languageContext==null?super.getResources():languageContext.getResources();
+    }
+    private String localized(String text){return LocalizedText.message(text,language.language());}
+    private void changeLanguage(String value){
+        if(!language.setLanguage(value)){
+            new AlertDialog.Builder(this).setMessage(R.string.preference_error).setPositiveButton(R.string.ok,null).show();
+            return;
+        }
+        languageContext=localizedContext(getBaseContext(),value);
+        screen="";render();
+    }
     private int lastPad=4;
     private final int[] settingsMemory={
         -1,-1,-1,-1,-1,-1
@@ -82,22 +109,9 @@ public final class MainActivity extends Activity {
             if(alive&&controller!=null){
                 controller.tick();
                 updateSaving();
+                updateBreakCountdown();
                 handler.postDelayed(this,250);
             }
-        }
-    }
-    ;
-    private final Runnable hold=new Runnable(){
-        public void run(){
-            if(holdStart==0||parentButton==null||!parentButton.hasFocus())return;
-            long duration=SystemClock.elapsedRealtime()-holdStart;
-            holdProgress.setProgress((int)Math.min(100,duration/30));
-            if(duration>=3000){
-                holdStart=0;
-                menu="parents";
-                render();
-            }
-            else handler.postDelayed(this,40);
         }
     }
     ;
@@ -110,6 +124,18 @@ public final class MainActivity extends Activity {
                     SystemClock::elapsedRealtime,MAIN_HANDLER::post,null);
         }
         controller=sharedController;
+        if(saved!=null){
+            started=saved.getBoolean("started",false);menu=saved.getString("menu","");
+            lastPad=saved.getInt("pad",4);
+            if(saved.containsKey("draft-limit")){
+                draft=controller.state().config.copy();
+                draft.limit=saved.getInt("draft-limit");
+                draft.addition=saved.getBoolean("draft-add");draft.subtraction=saved.getBoolean("draft-sub");
+                draft.multiplication=saved.getBoolean("draft-mul");draft.crossingTen=saved.getBoolean("draft-cross");
+                boolean[] tables=saved.getBooleanArray("draft-tables");
+                if(tables!=null&&tables.length==draft.tables.length)System.arraycopy(tables,0,draft.tables,0,tables.length);
+            }
+        }
         if(sharedEffects==null)sharedEffects=new EffectPreferences(getApplicationContext());
         effects=sharedEffects;player=new EffectPlayer(this);
         controller.setListener(this::render);
@@ -119,6 +145,15 @@ public final class MainActivity extends Activity {
         render();
         handler.post(tick);
     }
+    @Override protected void onSaveInstanceState(Bundle saved){
+        saved.putBoolean("started",started);saved.putString("menu",menu);saved.putInt("pad",lastPad);
+        if(draft!=null){
+            saved.putInt("draft-limit",draft.limit);saved.putBoolean("draft-add",draft.addition);
+            saved.putBoolean("draft-sub",draft.subtraction);saved.putBoolean("draft-mul",draft.multiplication);
+            saved.putBoolean("draft-cross",draft.crossingTen);saved.putBooleanArray("draft-tables",draft.tables.clone());
+        }
+        super.onSaveInstanceState(saved);
+    }
     @Override protected void onResume(){
         super.onResume();
         foreground=true;
@@ -127,14 +162,13 @@ public final class MainActivity extends Activity {
     @Override protected void onPause(){
         foreground=false;
         interruptEffects();
-        cancelHold();
         if(controller!=null)controller.foreground(false);
         super.onPause();
     }
     @Override public void onWindowFocusChanged(boolean focus){
         super.onWindowFocusChanged(focus);
         if(controller!=null)controller.foreground(focus&&foreground);
-        if(!focus){interruptEffects();cancelHold();}
+        if(!focus){interruptEffects();}
     }
     @Override protected void onDestroy(){
         alive=false;
@@ -169,9 +203,9 @@ public final class MainActivity extends Activity {
             shell();
             screen="error";
             title(R.string.error_title);
-            body(controller.corruptSave()?s(R.string.load_error):controller.error());
+            body(controller.corruptSave()?s(R.string.load_error):localized(controller.error()));
             if(!controller.corruptSave())action(R.string.retry,()->controller.retrySave());
-            action(R.string.reset,()->confirm(true));
+            action(R.string.reset,()->confirmReset());
             action(R.string.exit,this::finish);
             focusFirst();
             return;
@@ -180,6 +214,9 @@ public final class MainActivity extends Activity {
         if(target.equals("CHESS")&&screen.equals("CHESS")&&state.promotionTo<0&&state.intendedMove==null&&(state.result.isEmpty()||presenting!=null)&&board!=null){
             bindBoard();
             return;
+        }
+        if(target.equals("BREAK")&&screen.equals("BREAK")&&breakCountdown!=null){
+            updateBreakCountdown();return;
         }
         Object focusTag=getCurrentFocus()==null?null:getCurrentFocus().getTag();
         shell();
@@ -201,6 +238,8 @@ public final class MainActivity extends Activity {
             break;
             case "MATH":math();
             break;
+            case "BREAK":breakTime();
+            break;
             case "TO_MATH":handoff(true);
             break;
             case "TO_CHESS":handoff(false);
@@ -218,15 +257,14 @@ public final class MainActivity extends Activity {
     }
     private void updateSaving(){
         if(savingText!=null){
-            savingText.setText(hasError()?controller.error():s(R.string.saving));
+            savingText.setText(hasError()?localized(controller.error()):s(R.string.saving));
             savingText.setVisibility(controller.busy()?View.VISIBLE:View.GONE);
         }
     }
     private void shell(){
         if(board!=null)board.cancelMotion();
         board=null;
-        parentButton=null;
-        holdProgress=null;
+        breakCountdown=null;displayedBreakSecond=-1;
         FrameLayout frame=new FrameLayout(this);
         frame.addView(new TvStyle.Backdrop(this),new FrameLayout.LayoutParams(-1,-1));
         content=new LinearLayout(this);
@@ -320,38 +358,12 @@ public final class MainActivity extends Activity {
         }
         );
         if(controller.state().phase==Session.Phase.CHESS&&controller.game().claimableDraw())action(R.string.claim_draw,()->controller.claimDraw());
-        parentButton=action(R.string.parents,()->{
-        }
-        );
-        parentButton.setOnKeyListener((v,key,event)->{
-            if(key!=KeyEvent.KEYCODE_DPAD_CENTER&&key!=KeyEvent.KEYCODE_ENTER)return false;if(event.getAction()==KeyEvent.ACTION_DOWN){
-                if(event.getRepeatCount()==0){
-                    holdStart=SystemClock.elapsedRealtime();handler.post(hold);
-                }
-                return true;
-            }
-            cancelHold();return true;
-        }
-        );
-        parentButton.setOnFocusChangeListener((v,focus)->{
-            if(!focus){interruptEffects();cancelHold();}
-        }
-        );
-        holdProgress=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);
-        holdProgress.setMax(100);
-        holdProgress.setProgressTintList(android.content.res.ColorStateList.valueOf(TvStyle.AMBER));
-        content.addView(holdProgress,new LinearLayout.LayoutParams(dp(350),dp(7)));
-        body(s(R.string.hold_parents));
+        action(R.string.parents,()->{menu="parents";render();});
         Button mute=button(getString(effects.sound()?R.string.sound_on:R.string.sound_off),"pause-sound",()->changeEffect(true));
         content.addView(mute,new LinearLayout.LayoutParams(dp(350),dp(49)));
         space(content,6);
         action(R.string.exit,this::finish);
         verticalClamp(content);
-    }
-    private void cancelHold(){
-        holdStart=0;
-        handler.removeCallbacks(hold);
-        if(holdProgress!=null)holdProgress.setProgress(0);
     }
     private void parents(){
         title(R.string.parent_title);
@@ -370,10 +382,16 @@ public final class MainActivity extends Activity {
         list.addView(sound,new LinearLayout.LayoutParams(dp(350),dp(49)));
         Button motion=button(getString(R.string.effect_value,s(R.string.piece_motion),s(effects.motion()?R.string.on:R.string.off)),"piece-motion",()->changeEffect(false));
         list.addView(motion,new LinearLayout.LayoutParams(dp(350),dp(49)));
+        Button languageChoice=button(getString(R.string.effect_value,s(R.string.language),s("en".equals(language.language())?R.string.english:R.string.dutch)),"language",()->{
+            new AlertDialog.Builder(this).setTitle(R.string.language)
+                .setSingleChoiceItems(new String[]{s(R.string.dutch),s(R.string.english)},"en".equals(language.language())?1:0,
+                    (dialog,which)->{dialog.dismiss();changeLanguage(which==1?"en":"nl");}).show();
+        });
+        list.addView(languageChoice,new LinearLayout.LayoutParams(dp(350),dp(49)));
         action(R.string.to_math,()->confirmSkip(true));
         action(R.string.to_chess,()->confirmSkip(false));
-        action(R.string.restart_chess,()->confirm(false));
-        action(R.string.reset,()->confirm(true));
+        action(R.string.restart_chess,()->{menu="";controller.restartGame();render();});
+        action(R.string.reset,()->confirmReset());
         action(R.string.about_game,()->{menu="help";render();});
         action(R.string.licenses,()->{
             menu="licenses";render();
@@ -391,16 +409,12 @@ public final class MainActivity extends Activity {
         }
         ).show().getButton(AlertDialog.BUTTON_NEGATIVE).requestFocus();
     }
-    private void confirm(boolean all){
-        new AlertDialog.Builder(this).setTitle(R.string.confirm_reset).setMessage(all?R.string.reset_help:R.string.restart_help).setNegativeButton(R.string.cancel,(d,w)->{
-        }
-        ).setPositiveButton(R.string.ok,(d,w)->{
-            menu="";if(all){
-                controller.resetSession();started=true;
-            }
-            else controller.restartGame();render();
-        }
-        ).show().getButton(AlertDialog.BUTTON_NEGATIVE).requestFocus();
+    private void confirmReset(){
+        new AlertDialog.Builder(this).setTitle(R.string.confirm_reset).setMessage(R.string.reset_help)
+            .setNegativeButton(R.string.cancel,(d,w)->{})
+            .setPositiveButton(R.string.ok,(d,w)->{
+                menu="";controller.resetSession();started=true;render();
+            }).show().getButton(AlertDialog.BUTTON_NEGATIVE).requestFocus();
     }
     private void chess(){
         Session st=controller.state();
@@ -439,11 +453,8 @@ public final class MainActivity extends Activity {
         }
         if(!st.result.isEmpty()&&presenting==null){
             TextView result=title(R.string.app_name);
-            result.setText(st.result);
-            action(st.chessPending?R.string.math_action:R.string.restart_chess,()->{
-                if(st.chessPending)controller.resume();else controller.restartGame();
-            }
-            );
+            result.setText(localized(st.result));
+            action(R.string.math_action,()->controller.resume());
             return;
         }
         // Equal space on both sides keeps the board at the center of the TV.
@@ -513,7 +524,7 @@ public final class MainActivity extends Activity {
     private void updateBoardDetail(int square){
         if(board==null||chessDetail==null)return;
         Session st=controller.state();
-        chessDetail.setText(st.feedback);
+        chessDetail.setText(localized(st.feedback));
         chessDetail.setVisibility(st.feedback.isEmpty()?View.GONE:View.VISIBLE);
     }
     /** Uses the same artwork and color as the pawn that is being promoted. */
@@ -621,14 +632,14 @@ public final class MainActivity extends Activity {
         answerBounds.setMargins(dp(12),0,0,0);
         equation.addView(answer,answerBounds);
         space(left,10);
-        TextView feedback=TvStyle.text(this,st.solved?s(R.string.math_success):st.feedback,28,true);
+        TextView feedback=TvStyle.text(this,st.solved?s(R.string.math_success):localized(st.feedback),28,true);
         feedback.setTag("math-feedback");
         feedback.setTextColor(TvStyle.MINT);
         feedback.setVisibility(st.solved||!st.feedback.isEmpty()?View.VISIBLE:View.INVISIBLE);
         left.addView(feedback);
         if(st.hintLevel>0&&st.exercise!=null&&!st.solved){
             space(left,12);
-            TextView explanation=TvStyle.text(this,st.exercise.hint(Math.min(2,st.hintLevel)),20,false);
+            TextView explanation=TvStyle.text(this,st.exercise.hint(Math.min(2,st.hintLevel),language.language()),20,false);
             explanation.setTextColor(TvStyle.MUTED);
             explanation.setTag("math-hint");
             left.addView(explanation);
@@ -692,6 +703,32 @@ public final class MainActivity extends Activity {
         }
         return true;
     }
+    private void breakTime(){
+        LinearLayout center=new LinearLayout(this);
+        center.setOrientation(LinearLayout.VERTICAL);
+        center.setGravity(Gravity.CENTER);
+        content.addView(center,new LinearLayout.LayoutParams(-1,0,1));
+        TextView heading=TvStyle.text(this,s(R.string.break_title),38,true);
+        heading.setTag("break-title");heading.setGravity(Gravity.CENTER);
+        center.addView(heading,new LinearLayout.LayoutParams(-1,-2));
+        space(center,18);
+        breakCountdown=TvStyle.text(this,"",76,true);
+        breakCountdown.setTag("break-countdown");breakCountdown.setGravity(Gravity.CENTER);
+        center.addView(breakCountdown,new LinearLayout.LayoutParams(-1,-2));
+        space(center,18);
+        TextView help=TvStyle.text(this,s(R.string.break_help),22,false);
+        help.setTextColor(TvStyle.MUTED);help.setGravity(Gravity.CENTER);
+        center.addView(help,new LinearLayout.LayoutParams(-1,-2));
+        updateBreakCountdown();
+    }
+    private void updateBreakCountdown(){
+        if(breakCountdown==null||!"BREAK".equals(screen))return;
+        long seconds=(controller.breakRemainingMs()+999)/1000;
+        if(seconds==displayedBreakSecond)return;
+        displayedBreakSecond=seconds;
+        breakCountdown.setText(String.format(Locale.ROOT,"%02d:%02d",seconds/60,seconds%60));
+        breakCountdown.setContentDescription(getString(R.string.break_remaining,seconds));
+    }
     private void handoff(boolean math){
         title(math?R.string.handoff_math:R.string.handoff_chess);
         body(s(R.string.handoff_help));
@@ -753,7 +790,7 @@ public final class MainActivity extends Activity {
                 draft.validate();controller.saveConfig(draft);menu="parents";render();
             }
             catch(IllegalArgumentException e){
-                new AlertDialog.Builder(this).setMessage(e.getMessage()).setPositiveButton(R.string.ok,null).show();
+                new AlertDialog.Builder(this).setMessage(localized(e.getMessage())).setPositiveButton(R.string.ok,null).show();
             }
         }
         ));
@@ -858,7 +895,6 @@ public final class MainActivity extends Activity {
         }
     }
     @Override public void onBackPressed(){
-        cancelHold();
         if(presenting!=null){
             interruptEffects();menu="pause";controller.pause();render();return;
         }
