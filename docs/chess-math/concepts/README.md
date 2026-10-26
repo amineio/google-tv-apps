@@ -1,5 +1,7 @@
 # Schaak & Reken — proposed screens
 
+See the newer [ImageGen visual exploration](imagegen/README.md) for a proposed forest-green and ivory direction. The images provide visual inspiration. The SVG concepts below describe the remote interaction states.
+
 These static SVG concepts show layout, copy, and remote focus. They are not screenshots or implemented Android screens. Dutch and the visual direction remain proposals. The parent settings summary on screen 6 illustrates the controls behind the hold action; it is not simultaneously interactive with Pause.
 
 1. [Start](01-start.svg) — saved session and disclosed round requirements.

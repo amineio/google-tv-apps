@@ -1,0 +1,62 @@
+plugins {
+    id 'com.android.application'
+}
+
+dependencies {
+    implementation 'com.github.bhlangonijr:chesslib:1.3.7'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20240303'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+}
+
+android {
+    namespace 'com.amine.chessmath'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'com.amine.chessmath'
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName '0.1'
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.debug
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+// Enforce the inspected runtime artifacts, including the JitPack build.
+tasks.register('verifyChessLibraries') {
+    doLast {
+        def expected = [
+            'chesslib-1.3.7.jar': 'a5ac968a30bc91bee4a19d24981c40815d5140bde518524fef2a3679f965ad31',
+            'commons-lang3-3.18.0.jar': '4eeeae8d20c078abb64b015ec158add383ac581571cddc45c68f0c9ae0230720'
+        ]
+        def found = [] as Set
+        configurations.releaseRuntimeClasspath.files.each { artifact ->
+            if (!expected.containsKey(artifact.name)) {
+                throw new GradleException("Unreviewed runtime dependency: ${artifact.name}")
+            }
+            def digest = java.security.MessageDigest.getInstance('SHA-256')
+            artifact.withInputStream { stream ->
+                byte[] buffer = new byte[8192]
+                int count
+                while ((count = stream.read(buffer)) != -1) digest.update(buffer, 0, count)
+            }
+            if (digest.digest().encodeHex().toString() != expected[artifact.name]) {
+                throw new GradleException("Runtime dependency checksum mismatch: ${artifact.name}")
+            }
+            found.add(artifact.name)
+        }
+        if (found != expected.keySet()) throw new GradleException('Missing reviewed chess dependency')
+    }
+}
+tasks.named('preBuild').configure { dependsOn tasks.named('verifyChessLibraries') }

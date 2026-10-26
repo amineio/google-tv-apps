@@ -10,6 +10,10 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven {
+            url = uri('https://jitpack.io')
+            content { includeGroup 'com.github.bhlangonijr' }
+        }
     }
 }
 rootProject.name = "google-tv-apps"
@@ -17,3 +21,5 @@ include ':home'
 project(':home').projectDir = file('apps/home')
 include ':clock'
 project(':clock').projectDir = file('apps/clock')
+include ':chessMath'
+project(':chessMath').projectDir = file('apps/chess-math')

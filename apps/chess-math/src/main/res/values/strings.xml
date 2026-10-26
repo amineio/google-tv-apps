@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">Schaak &amp; Reken</string>
+    <string name="brand">S C H A A K  &amp;  R E K E N</string>
+    <string name="start">Start</string><string name="continue_game">Verder spelen</string>
+    <string name="intro">Ongeveer 5 minuten schaken, dan rekenen.\nReken 5 minuten en maak minstens 3 sommen goed.</string>
+    <string name="your_turn">Jij bent aan zet</string><string name="computer_turn">De computer is aan zet</string>
+    <string name="choose_piece">Kies een stuk</string><string name="choose_target">Kies een vak voor je stuk</string>
+    <string name="square_description">%1$s · %2$s</string>
+    <string name="white_piece">witte %1$s</string><string name="black_piece">zwarte %1$s</string><string name="empty_square">leeg vak</string>
+    <string-array name="piece_names"><item>pion</item><item>paard</item><item>loper</item><item>toren</item><item>dame</item><item>koning</item></string-array>
+    <string name="board_help">Pijltjes kiezen · OK selecteren</string><string name="back_pause">Terug: pauze</string>
+    <string name="check">Schaak: bescherm je koning</string><string name="finish_move">Maak je zet af. Daarna gaan we rekenen.</string>
+    <string name="math_title">Even rekenen</string><plurals name="math_count"><item quantity="one">%1$d van minstens 3 goed</item><item quantity="other">%1$d van minstens 3 goed</item></plurals>
+    <string name="paper">Je mag papier gebruiken.\nNeem rustig de tijd.</string>
+    <string name="hint">Hint</string><string name="delete">Wis</string><string name="ok">OK</string><string name="next">Volgende</string>
+    <string name="pause">Even pauze</string><string name="resume">Verdergaan</string><string name="parents">Voor ouders</string><string name="hold_parents">Houd OK 3 seconden vast</string>
+    <string name="parent_title">Voor ouders</string><string name="settings">Rekeninstellingen</string><string name="to_math">Naar rekenen</string><string name="to_chess">Naar schaken</string><string name="restart_chess">Nieuw schaakspel</string><string name="reset">Alles opnieuw beginnen</string><string name="exit">App sluiten</string><string name="licenses">Licenties</string>
+    <string name="skip_help">Hiermee sla je de tijd en het aantal goede antwoorden over.</string>
+    <string name="confirm_reset">Opnieuw beginnen?</string><string name="reset_help">Je opgeslagen voortgang wordt gewist.</string><string name="restart_help">Het schaakbord begint opnieuw. De rondetijd blijft bewaard.</string>
+    <string name="cancel">Annuleren</string><string name="save">Opslaan</string><string name="settings_next">Nieuwe instellingen gelden vanaf de volgende som.</string>
+    <string name="addition">Optellen</string><string name="subtraction">Aftrekken</string><string name="multiplication">Vermenigvuldigen</string><string name="number_limit">Getallen tot</string><string name="crossing">Over het tiental</string><string name="crossing_help">Uit: geen 8 + 2 of 30 − 1. Wel 20 + 10 en 23 − 3.</string><string name="tables">Tafels</string>
+    <string name="selected">✓ %1$s</string><string name="unselected">○ %1$s</string>
+    <string name="handoff_math">Tijd om te rekenen</string><string name="handoff_chess">Tijd om te schaken</string><string name="math_action">Rekenen</string><string name="chess_action">Verder schaken</string><string name="handoff_help">Je schaakspel blijft bewaard.</string>
+    <string name="promotion">Kies je nieuwe stuk</string><string name="queen">Dame</string><string name="rook">Toren</string><string name="bishop">Loper</string><string name="knight">Paard</string>
+    <string name="claim_draw">Remise vragen</string><string name="play_move">Zet spelen</string><string name="claim_title">Je kunt remise vragen</string>
+    <string name="error_title">Even wachten</string><string name="retry">Opnieuw proberen</string><string name="load_error">Het opgeslagen spel kan niet worden geopend. Voor ouders: begin opnieuw of sluit de app.</string>
+    <string name="math_remote">Pijltjes kiezen · OK invoeren</string>
+
+    <string name="saving">Opslaan…</string>
+    <string name="table_help">Tafel 5: 1 × 5 tot en met 10 × 5. De tafel is het tweede getal.</string>
+    <string name="about_game">Over het spel</string>
+    <string name="parent_help">Schaken en rekenen duren elk ongeveer vijf minuten. Bij rekenen zijn ook minstens drie goede antwoorden nodig. De huidige zet of som mag eerst af.\n\nAlleen tijd in de zichtbare, actieve app telt mee. Menu’s en pauzes tellen niet mee. De app meet niet of een kind nadenkt. Een goed antwoord met een hint telt ook mee.\n\nDe app herkent niet elke dode stelling. In sommige zeldzame, geblokkeerde stellingen gaat het spel verder, terwijl geen speler nog mat kan zetten.\n\nDe computer speelt bewust eenvoudig. Zijn speelsterkte en het leereffect van de app zijn niet vastgesteld. De ouderknop met drie seconden vasthouden is geen beveiliging.</string>
+</resources>

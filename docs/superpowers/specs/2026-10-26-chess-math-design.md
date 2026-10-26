@@ -1,6 +1,6 @@
 # Chess + Math for Google TV
 
-Date: 2026-10-26. Status: proposed design for review. No implementation is approved by this document.
+Date: 2026-10-26. Status: approved for first-version development by the parent on 2026-10-26. The later ImageGen forest-green and ivory concepts replace the original navy visual direction. The parent also accepted incomplete detection of rare general dead positions for this version. See the implementation verification record for the remaining evidence and limits.
 
 ## Intent
 

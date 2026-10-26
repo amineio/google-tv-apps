@@ -1,0 +1,18 @@
+Schaak & Reken — third-party notices
+
+chesslib 1.3.7
+https://github.com/bhlangonijr/chesslib/tree/1.3.7
+Copyright 2017 Ben-Hur Carlos Vieira Langoni Junior
+Licensed under the Apache License, Version 2.0.
+See chesslib-LICENSE.txt.
+The resolved chesslib JAR contains no LICENSE or NOTICE entry. The license
+is reproduced from the official 1.3.7 source tag. The copyright above is
+preserved from that tag's Board.java source header. The library is unmodified.
+
+Apache Commons Lang 3.18.0
+https://commons.apache.org/proper/commons-lang/
+Licensed under the Apache License, Version 2.0.
+See commons-lang3-LICENSE.txt and commons-lang3-NOTICE.txt, extracted
+unchanged from the resolved 3.18.0 JAR.
+
+The application code and original piece drawings use the repository MIT license.

@@ -27,7 +27,7 @@ jobs:
         run: python3 -m unittest discover -s tests -v
 
   android-apps:
-    name: Build and test both Android apps
+    name: Build and test Android apps
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -41,14 +41,15 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Unit tests, lint, releases, and device test compilation
         run: |
-          ./gradlew --no-daemon :home:testReleaseUnitTest :clock:testReleaseUnitTest :home:lintRelease :clock:lintRelease :home:assembleRelease :clock:assembleRelease :clock:assembleDebugAndroidTest
-      - name: Keep both apps small
+          ./gradlew --no-daemon :home:testReleaseUnitTest :clock:testReleaseUnitTest :chessMath:testReleaseUnitTest :home:lintRelease :clock:lintRelease :chessMath:lintRelease :home:assembleRelease :clock:assembleRelease :chessMath:assembleRelease :clock:assembleDebugAndroidTest :chessMath:assembleDebugAndroidTest
+      - name: Keep apps small
         shell: python
         run: |
           from pathlib import Path
           limits = {
               'apps/home/build/outputs/apk/release/home-release.apk': 409600,
               'apps/clock/build/outputs/apk/release/clock-release.apk': 131072,
+              'apps/chess-math/build/outputs/apk/release/chessMath-release.apk': 2097152,
           }
           for name, limit in limits.items():
               size = Path(name).stat().st_size
@@ -61,6 +62,7 @@ jobs:
           path: |
             apps/home/build/outputs/apk/release/home-release.apk
             apps/clock/build/outputs/apk/release/clock-release.apk
+            apps/chess-math/build/outputs/apk/release/chessMath-release.apk
           if-no-files-found: error
       - name: Save test and lint reports
         if: always()

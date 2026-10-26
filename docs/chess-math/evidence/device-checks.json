@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-26",
+  "device": {
+    "model": "Chromecast",
+    "device": "sabrina",
+    "sdk": 34,
+    "width": 1920,
+    "height": 1080,
+    "density": 320
+  },
+  "mathIdle": {
+    "phase": "MATH",
+    "paused": false,
+    "elapsedMs": 315446,
+    "correct": 0,
+    "boundaryPending": true,
+    "passed": true
+  },
+  "lifecycle": {
+    "homePaused": true,
+    "hiddenTimeStable": true,
+    "processDeathRestored": true,
+    "standbyPaused": true,
+    "standbyTimeStable": true,
+    "power": [
+      "  mWakefulness=Asleep"
+    ]
+  }
+}

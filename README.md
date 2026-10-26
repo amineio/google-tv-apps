@@ -7,6 +7,7 @@ Each app has its own package, version, permissions, tests, and APK.
 | --- | --- | --- | --- |
 | [TV Home](apps/home/) | `:home` | `com.gathin.tvhome` | A home screen with an app dock, grid, themes, and screensaver. |
 | [TV Clock](apps/clock/) | `:clock` | `com.amine.tvclock` | A clock overlay, session timer, daily bedtime, and viewing reminders. |
+| [Schaak & Reken](apps/chess-math/) | `:chessMath` | `com.amine.chessmath` | Offline chess and arithmetic with remote controls and local progress. |
 
 TV Clock works independently of TV Home. Its stop screen supports voluntary viewing limits.
 It remains dismissible and does not guarantee that another app pauses playback.
@@ -15,10 +16,10 @@ It remains dismissible and does not guarantee that another app pauses playback.
 
 Install JDK 17, Android SDK platform 34, and build tools 34.0.0.
 Set `JAVA_HOME` and `ANDROID_HOME` to their installed locations.
-From the repository root, build both apps:
+From the repository root, build the apps:
 
 ```sh
-./gradlew :home:assembleRelease :clock:assembleRelease
+./gradlew :home:assembleRelease :clock:assembleRelease :chessMath:assembleRelease
 ```
 
 The APKs appear at:
@@ -26,11 +27,12 @@ The APKs appear at:
 ```text
 apps/home/build/outputs/apk/release/home-release.apk
 apps/clock/build/outputs/apk/release/clock-release.apk
+apps/chess-math/build/outputs/apk/release/chessMath-release.apk
 ```
 
 These local release builds use the existing Android debug signing configuration.
 Store publishing and production signing require separate configuration.
-TV Home supports Android 8 and later. TV Clock requires Android 14 and later.
+TV Home and Schaak & Reken support Android 8 and later. TV Clock requires Android 14 and later.
 
 ## Install
 
@@ -43,11 +45,11 @@ Both apps install separately. Building an app does not change the TV.
 From the repository root, run local tests and Android lint:
 
 ```sh
-./gradlew :home:testReleaseUnitTest :clock:testReleaseUnitTest :home:lintRelease :clock:lintRelease
+./gradlew :home:testReleaseUnitTest :clock:testReleaseUnitTest :chessMath:testReleaseUnitTest :home:lintRelease :clock:lintRelease :chessMath:lintRelease
 python3 -m unittest discover -s tests -v
 ```
 
-GitHub Actions builds both releases, runs these checks, and retains APK artifacts.
+GitHub Actions builds the releases, runs these checks, and retains APK artifacts.
 TV Home retains a baseline for 29 existing upstream lint errors. New lint errors still fail the build.
 See [the lint record](docs/upstream-lint.md) for the scope.
 Device tests require a connected TV and run separately.
@@ -58,6 +60,7 @@ Local tests do not establish playback behavior inside every streaming app.
 ```text
 apps/home/       TV Home app, resources, and unit tests
 apps/clock/      TV Clock app, resources, and device tests
+apps/chess-math/ Offline chess and arithmetic app
 gradle/          Shared Gradle wrapper
 tools/           App installers and existing TV tools
 tests/           Repository and installer tests
