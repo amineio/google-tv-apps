@@ -332,4 +332,80 @@ public class SessionControllerTest {
         assertNotEquals(123,f.c.state().exercise.id);assertTrue(f.c.state().paused);
         assertEquals(1,f.c.state().correct);
     }
+    @Test public void presentationGateWaitsForLandingAndForegroundGap() {
+        Fixture f=new Fixture(); List<PresentationEvent> events=new ArrayList<>();
+        f.c.setPresenter(events::add); f.c.foreground(true); f.c.resume();
+        f.c.chooseSquare(52);f.c.chooseSquare(36);
+        assertEquals(1,events.size());assertTrue(f.computer.isEmpty());
+        PresentationEvent event=events.get(0);
+        assertEquals("e2e4",event.move); assertEquals('P',event.beforePiece(52));
+        assertEquals('.',event.beforePiece(36));assertEquals('P',event.afterPiece(36));
+        f.c.focusSquare(35);f.c.completePresentation(event.id);f.c.completePresentation(event.id);
+        f.now=99;f.c.tick();assertTrue(f.computer.isEmpty());
+        f.now=100;f.c.tick();assertEquals(1,f.computer.size());
+    }
+    @Test public void missingLandingTimesOutAndStaleAckCannotRestartAfterPause() {
+        Fixture f=new Fixture(); List<PresentationEvent> events=new ArrayList<>();
+        f.c.setPresenter(events::add);f.c.foreground(true);f.c.resume();
+        f.c.chooseSquare(52);f.c.chooseSquare(36);
+        f.now=2000;f.c.tick();assertNull(f.c.presentation());
+        f.c.pause();f.c.completePresentation(events.get(0).id);
+        f.now=5000;f.c.tick();assertTrue(f.computer.isEmpty());
+        f.c.resume();assertEquals(1,f.computer.size());
+    }
+    @Test public void failedMoveAndSilentRetryEmitNoPresentation() {
+        Fixture f=new Fixture();List<PresentationEvent> events=new ArrayList<>();
+        f.c.setPresenter(events::add);f.c.foreground(true);f.c.resume();
+        f.c.chooseSquare(52);f.store.fail=true;f.c.chooseSquare(36);
+        assertTrue(events.isEmpty());f.store.fail=false;f.c.retrySave();assertTrue(events.isEmpty());
+    }
+    @Test public void correctMathEmitsOneTypedEventWithoutReplayingResume() {
+        Fixture f=mathWithAnswer(7);List<PresentationEvent> events=new ArrayList<>();
+        f.c.setPresenter(events::add);f.c.digit(7);f.c.digit(7);
+        assertEquals(1,events.size());assertEquals(PresentationEvent.Kind.MATH_SUCCESS,events.get(0).kind);
+        f.c.pause();f.c.resume();assertEquals(1,events.size());
+    }
+    @Test public void presenterDetachesWithoutLosingOwedTurn() {
+        Fixture f=new Fixture();f.c.setPresenter(e->{});f.c.foreground(true);f.c.resume();
+        f.c.chooseSquare(52);f.c.chooseSquare(36);assertTrue(f.computer.isEmpty());
+        f.c.setPresenter(null);assertNull(f.c.presentation());assertEquals(1,f.computer.size());
+    }
+    @Test public void focusLossDuringMoveSaveDoesNotEmitLateEvent() {
+        Fixture f=new Fixture();List<Runnable> saves=new ArrayList<>();List<PresentationEvent> events=new ArrayList<>();
+        f.c.close();f.c=f.controller(saves::add);f.c.setPresenter(events::add);
+        f.c.foreground(true);f.c.resume();saves.remove(0).run();
+        f.c.chooseSquare(52);saves.remove(0).run();f.c.chooseSquare(36);
+        f.c.foreground(false);saves.remove(0).run();saves.remove(0).run();
+        assertTrue(events.isEmpty());assertEquals(1,f.c.state().moves.size());assertTrue(f.c.state().paused);
+    }
+    @Test public void synchronousPresenterCompletionStillSchedulesExactlyOneReply() {
+        Fixture f=new Fixture();f.c.setPresenter(e->f.c.completePresentation(e.id));
+        f.c.foreground(true);f.c.resume();f.c.chooseSquare(52);f.c.chooseSquare(36);
+        assertNull(f.c.presentation());assertTrue(f.computer.isEmpty());
+        f.now=100;f.c.tick();f.c.tick();assertEquals(1,f.computer.size());
+        f.computer.get(0).run();assertEquals(2,f.c.state().moves.size());assertNull(f.c.presentation());
+    }
+    @Test public void resetDuringGateRejectsStaleCompletionAndReplacesGeneration() {
+        Fixture f=new Fixture();List<PresentationEvent> events=new ArrayList<>();
+        f.c.setPresenter(events::add);f.c.foreground(true);f.c.resume();
+        f.c.chooseSquare(52);f.c.chooseSquare(36);PresentationEvent old=events.get(0);
+        f.c.resetSession();f.c.completePresentation(old.id);f.now=3000;f.c.tick();
+        assertTrue(f.computer.isEmpty());assertTrue(f.c.state().moves.isEmpty());
+        f.c.resume();f.c.chooseSquare(52);f.c.chooseSquare(36);
+        assertTrue(events.get(1).id.generation>old.id.generation);
+        f.c.completePresentation(old.id);assertEquals(events.get(1),f.c.presentation());
+    }
+    @Test public void finalBlackSaveKeepsDurableHandoffAndOffersLandingEvent() {
+        Fixture f=new Fixture();List<PresentationEvent> events=new ArrayList<>();
+        f.c.setPresenter(events::add);f.c.foreground(true);f.c.resume();f.c.chooseSquare(52);
+        f.now=300000;f.c.chooseSquare(36);PresentationEvent white=events.get(0);
+        f.c.completePresentation(white.id);f.now+=100;f.c.tick();f.computer.get(0).run();
+        assertEquals(Session.Phase.TO_MATH,f.c.state().phase);assertTrue(f.c.state().paused);
+        assertEquals(2,events.size());assertEquals(events.get(1),f.c.presentation());
+        assertFalse(events.get(1).beforeWhiteToMove);
+        assertEquals(1,events.get(0).id.subject);assertEquals(2,events.get(1).id.subject);
+        f.c.completePresentation(events.get(1).id);f.now+=1000;f.c.tick();
+        assertEquals(1,f.computer.size());assertNull(f.c.presentation());
+        assertEquals(Session.Phase.TO_MATH,f.c.state().phase);
+    }
 }

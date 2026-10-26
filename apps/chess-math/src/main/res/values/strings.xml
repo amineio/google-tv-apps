@@ -31,4 +31,11 @@
     <string name="table_help">Tafel 5: 1 × 5 tot en met 10 × 5. De tafel is het tweede getal.</string>
     <string name="about_game">Over het spel</string>
     <string name="parent_help">Schaken en rekenen duren elk ongeveer vijf minuten. Bij rekenen zijn ook minstens drie goede antwoorden nodig. De huidige zet of som mag eerst af.\n\nAlleen tijd in de zichtbare, actieve app telt mee. Menu’s en pauzes tellen niet mee. De app meet niet of een kind nadenkt. Een goed antwoord met een hint telt ook mee.\n\nDe app herkent niet elke dode stelling. In sommige zeldzame, geblokkeerde stellingen gaat het spel verder, terwijl geen speler nog mat kan zetten.\n\nDe computer speelt bewust eenvoudig. Zijn speelsterkte en het leereffect van de app zijn niet vastgesteld. De ouderknop met drie seconden vasthouden is geen beveiliging.</string>
+    <string name="sound_effects">Geluidseffecten</string>
+    <string name="piece_motion">Stukbewegingen</string>
+    <string name="on">Aan</string><string name="off">Uit</string>
+    <string name="effect_value">%1$s: %2$s</string>
+    <string name="sound_on">Geluid aan · uitzetten</string>
+    <string name="sound_off">Geluid uit · aanzetten</string>
+    <string name="preference_error">De instelling is niet opgeslagen. Probeer opnieuw.</string>
 </resources>

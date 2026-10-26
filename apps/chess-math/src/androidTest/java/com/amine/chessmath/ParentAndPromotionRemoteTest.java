@@ -166,11 +166,33 @@ public final class ParentAndPromotionRemoteTest {
         });
     }
 
+    @Test public void soundAndMotionChoicesUseRemoteAndSurviveProgressReset() throws Exception {
+        withFixture(new Session(),()->{
+            launchAndStart();key(KeyEvent.KEYCODE_BACK);key(KeyEvent.KEYCODE_DPAD_DOWN);holdOk(3100);
+            key(KeyEvent.KEYCODE_DPAD_DOWN);assertFocus("sound-effects");
+            key(KeyEvent.KEYCODE_DPAD_CENTER);
+            key(KeyEvent.KEYCODE_DPAD_DOWN);assertFocus("piece-motion");
+            key(KeyEvent.KEYCODE_DPAD_CENTER);
+            Field effectsField=MainActivity.class.getDeclaredField("sharedEffects");effectsField.setAccessible(true);
+            EffectPreferences choices=(EffectPreferences)effectsField.get(null);
+            assertFalse(choices.sound());assertFalse(choices.motion());
+            instrumentation.runOnMainSync(controller::resetSession);awaitSave();
+            assertFalse(choices.sound());assertFalse(choices.motion());assertTrue(controller.state().moves.isEmpty());
+        });
+    }
+
     private interface Checked { void run() throws Exception; }
     private void withFixture(Session fixture,Checked test) throws Exception {
         Field shared=MainActivity.class.getDeclaredField("sharedController");
         shared.setAccessible(true);
         SessionController previous=(SessionController)shared.get(null);
+        Field effectField=MainActivity.class.getDeclaredField("sharedEffects");effectField.setAccessible(true);
+        Object previousEffects=effectField.get(null);
+        java.util.Map<String,Boolean> choices=new java.util.HashMap<>();
+        effectField.set(null,new EffectPreferences(new EffectPreferences.Storage(){
+            public boolean read(String key,boolean fallback){return choices.getOrDefault(key,fallback);}
+            public boolean write(String key,boolean value){choices.put(key,value);return true;}
+        }));
         SessionController.Persistence memory=new SessionController.Persistence(){
             private Session saved=fixture.copy();
             public Session load(){return saved.copy();}
@@ -185,6 +207,7 @@ public final class ParentAndPromotionRemoteTest {
             awaitSave();
             controller.close();
             shared.set(null,previous);
+            effectField.set(null,previousEffects);
             activity=null;
         }
     }

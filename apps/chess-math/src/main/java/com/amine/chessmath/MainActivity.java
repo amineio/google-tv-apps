@@ -27,6 +27,42 @@ public final class MainActivity extends Activity {
     private static SessionController sharedController;
     private final Handler handler=new Handler(Looper.getMainLooper());
     private SessionController controller;
+    private static EffectPreferences sharedEffects;
+    private EffectPreferences effects;
+    private EffectPlayer player;
+    private final PresentationEvent.Consumption consumed=new PresentationEvent.Consumption();
+    private PresentationEvent presenting;
+    private void interruptEffects(){
+        presenting=null;
+        if(board!=null)board.cancelMotion();
+        if(player!=null)player.stop();
+    }
+    private void present(PresentationEvent event){
+        if(!alive||!foreground||!hasWindowFocus()||!consumed.take(event)){
+            controller.completePresentation(event.id);return;
+        }
+        if(event.kind==PresentationEvent.Kind.MATH_SUCCESS){
+            if(effects.sound())player.play(event.cue);
+            return;
+        }
+        presenting=event;render();
+        if(board==null){presenting=null;controller.completePresentation(event.id);return;}
+        board.slide(event,effects.motion(),()->{
+            if(presenting!=event)return;
+            presenting=null;
+            if(foreground&&hasWindowFocus()&&effects.sound())player.play(event.cue);
+            controller.completePresentation(event.id);render();
+        },()->{
+            if(presenting==event){presenting=null;controller.completePresentation(event.id);}
+        });
+    }
+    private void changeEffect(boolean sound){
+        boolean saved=sound?effects.setSound(!effects.sound()):effects.setMotion(!effects.motion());
+        if(!saved)new AlertDialog.Builder(this).setTitle(R.string.error_title)
+                .setMessage(R.string.preference_error).setPositiveButton(R.string.ok,null).show();
+        if(!effects.sound())player.stop();
+        render();
+    }
     private LinearLayout content;
     private boolean started, alive, foreground;
     private String menu="", screen="";
@@ -74,8 +110,11 @@ public final class MainActivity extends Activity {
                     SystemClock::elapsedRealtime,MAIN_HANDLER::post,null);
         }
         controller=sharedController;
+        if(sharedEffects==null)sharedEffects=new EffectPreferences(getApplicationContext());
+        effects=sharedEffects;player=new EffectPlayer(this);
         controller.setListener(this::render);
         alive=true;
+        controller.setPresenter(this::present);
         if(controller.busy()){shell();title(R.string.app_name);body(s(R.string.saving));}
         render();
         handler.post(tick);
@@ -87,6 +126,7 @@ public final class MainActivity extends Activity {
     }
     @Override protected void onPause(){
         foreground=false;
+        interruptEffects();
         cancelHold();
         if(controller!=null)controller.foreground(false);
         super.onPause();
@@ -94,12 +134,14 @@ public final class MainActivity extends Activity {
     @Override public void onWindowFocusChanged(boolean focus){
         super.onWindowFocusChanged(focus);
         if(controller!=null)controller.foreground(focus&&foreground);
-        if(!focus)cancelHold();
+        if(!focus){interruptEffects();cancelHold();}
     }
     @Override protected void onDestroy(){
         alive=false;
         handler.removeCallbacksAndMessages(null);
-        if(controller!=null)controller.setListener(null);
+        if(controller!=null){controller.setPresenter(null);controller.setListener(null);}
+        interruptEffects();
+        if(player!=null)player.close();
         super.onDestroy();
     }
     private String s(int id){
@@ -119,6 +161,9 @@ public final class MainActivity extends Activity {
     private void render(){
         if(controller==null||isFinishing())return;
         Session state=controller.state();
+        if(presenting!=null&&controller.presentation()!=presenting){
+            presenting=null;if(board!=null)board.cancelMotion();
+        }
         if(controller.busy()){updateSaving();return;}
         if(hasError()){
             shell();
@@ -131,8 +176,8 @@ public final class MainActivity extends Activity {
             focusFirst();
             return;
         }
-        String target=!started?"start":!menu.isEmpty()?menu:(state.phase==Session.Phase.TO_MATH||state.phase==Session.Phase.TO_CHESS)?state.phase.name():state.paused?"pause":state.phase.name();
-        if(target.equals("CHESS")&&screen.equals("CHESS")&&state.promotionTo<0&&state.intendedMove==null&&state.result.isEmpty()&&board!=null){
+        String target=presenting!=null?"CHESS":!started?"start":!menu.isEmpty()?menu:(state.phase==Session.Phase.TO_MATH||state.phase==Session.Phase.TO_CHESS)?state.phase.name():state.paused?"pause":state.phase.name();
+        if(target.equals("CHESS")&&screen.equals("CHESS")&&state.promotionTo<0&&state.intendedMove==null&&(state.result.isEmpty()||presenting!=null)&&board!=null){
             bindBoard();
             return;
         }
@@ -178,6 +223,7 @@ public final class MainActivity extends Activity {
         }
     }
     private void shell(){
+        if(board!=null)board.cancelMotion();
         board=null;
         parentButton=null;
         holdProgress=null;
@@ -288,7 +334,7 @@ public final class MainActivity extends Activity {
         }
         );
         parentButton.setOnFocusChangeListener((v,focus)->{
-            if(!focus)cancelHold();
+            if(!focus){interruptEffects();cancelHold();}
         }
         );
         holdProgress=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);
@@ -296,6 +342,9 @@ public final class MainActivity extends Activity {
         holdProgress.setProgressTintList(android.content.res.ColorStateList.valueOf(TvStyle.AMBER));
         content.addView(holdProgress,new LinearLayout.LayoutParams(dp(350),dp(7)));
         body(s(R.string.hold_parents));
+        Button mute=button(getString(effects.sound()?R.string.sound_on:R.string.sound_off),"pause-sound",()->changeEffect(true));
+        content.addView(mute,new LinearLayout.LayoutParams(dp(350),dp(49)));
+        space(content,6);
         action(R.string.exit,this::finish);
         verticalClamp(content);
     }
@@ -317,6 +366,10 @@ public final class MainActivity extends Activity {
             draft=controller.state().config.copy();java.util.Arrays.fill(settingsMemory,-1);menu="settings";render();
         }
         );
+        Button sound=button(getString(R.string.effect_value,s(R.string.sound_effects),s(effects.sound()?R.string.on:R.string.off)),"sound-effects",()->changeEffect(true));
+        list.addView(sound,new LinearLayout.LayoutParams(dp(350),dp(49)));
+        Button motion=button(getString(R.string.effect_value,s(R.string.piece_motion),s(effects.motion()?R.string.on:R.string.off)),"piece-motion",()->changeEffect(false));
+        list.addView(motion,new LinearLayout.LayoutParams(dp(350),dp(49)));
         action(R.string.to_math,()->confirmSkip(true));
         action(R.string.to_chess,()->confirmSkip(false));
         action(R.string.restart_chess,()->confirm(false));
@@ -351,7 +404,7 @@ public final class MainActivity extends Activity {
     }
     private void chess(){
         Session st=controller.state();
-        if(st.promotionTo>=0){
+        if(st.promotionTo>=0&&presenting==null){
             title(R.string.promotion);
             LinearLayout row=new LinearLayout(this);
             content.addView(row);
@@ -367,6 +420,7 @@ public final class MainActivity extends Activity {
                 final char piece=values[i];
                 Button choice=button(names[i],"promotion"+i,()->controller.promote(piece));
                 choice.setContentDescription(names[i]);
+                choice.setSoundEffectsEnabled(false);
                 char image=controller.game().whiteToMove()?Character.toUpperCase(piece):piece;
                 choice.setCompoundDrawables(null,new PromotionPiece(image),null,null);
                 choice.setCompoundDrawablePadding(dp(10));
@@ -383,7 +437,7 @@ public final class MainActivity extends Activity {
             action(R.string.claim_draw,()->controller.claimDraw());
             return;
         }
-        if(!st.result.isEmpty()){
+        if(!st.result.isEmpty()&&presenting==null){
             TextView result=title(R.string.app_name);
             result.setText(st.result);
             action(st.chessPending?R.string.math_action:R.string.restart_chess,()->{
@@ -451,8 +505,9 @@ public final class MainActivity extends Activity {
         Session st=controller.state();
         ChessGame game=controller.game();
         board.bind(game,st.focus,st.selected,st.moves.isEmpty()?"":st.moves.get(st.moves.size()-1));
-        chessHeading.setText(s(game.whiteToMove()?R.string.your_turn:R.string.computer_turn));
-        chessHelp.setText(game.checkSquare()>=0?s(R.string.check):st.chessPending?s(R.string.finish_move):s(st.selected>=0?R.string.choose_target:R.string.choose_piece));
+        boolean white=presenting==null?game.whiteToMove():presenting.beforeWhiteToMove;
+        chessHeading.setText(s(white?R.string.your_turn:R.string.computer_turn));
+        chessHelp.setText((presenting==null?game.checkSquare():presenting.beforeCheck)>=0?s(R.string.check):st.chessPending?s(R.string.finish_move):s(st.selected>=0?R.string.choose_target:R.string.choose_piece));
         updateBoardDetail(st.focus);
     }
     private void updateBoardDetail(int square){
@@ -600,6 +655,7 @@ public final class MainActivity extends Activity {
                 Button b=button(labels[index],"pad"+index,()->{
                     if(index==9)controller.deleteDigit();else controller.digit(index==10?0:index+1);
                 });
+                if(index!=9)b.setSoundEffectsEnabled(!controller.previewSolvedDigit(index==10?0:index+1));
                 b.setTextSize(index==9?18:27);
                 b.setPadding(dp(6),0,dp(6),0);
                 b.setOnFocusChangeListener((v,f)->{if(f)lastPad=index;});
@@ -803,6 +859,9 @@ public final class MainActivity extends Activity {
     }
     @Override public void onBackPressed(){
         cancelHold();
+        if(presenting!=null){
+            interruptEffects();menu="pause";controller.pause();render();return;
+        }
         if(controller.busy())return;
         if(!menu.isEmpty()){
             if(menu.equals("pause")){menu="";controller.resume();render();return;}
@@ -815,7 +874,7 @@ public final class MainActivity extends Activity {
             return;
         }
         Session st=controller.state();
-        if(st.phase==Session.Phase.TO_MATH||st.phase==Session.Phase.TO_CHESS){menu="pause";render();return;}
+        if(st.phase==Session.Phase.TO_MATH||st.phase==Session.Phase.TO_CHESS){interruptEffects();menu="pause";render();return;}
         if(st.paused){
             controller.resume();
             return;
@@ -824,6 +883,7 @@ public final class MainActivity extends Activity {
             controller.cancelSelection();
             return;
         }
+        interruptEffects();
         menu="pause";
         controller.pause();
         render();

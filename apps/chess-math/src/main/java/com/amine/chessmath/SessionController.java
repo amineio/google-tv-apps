@@ -19,6 +19,24 @@ public final class SessionController implements AutoCloseable {
     private final LongSupplier clock;
     private final Executor main, io, computer;
     private Runnable listener;
+    private Consumer<PresentationEvent> presenter;
+    private PresentationEvent presentation;
+    private long generation=1, presentationDeadline=-1, replyAt=-1;
+    public PresentationEvent presentation(){return presentation;}
+    public void setPresenter(Consumer<PresentationEvent> value){
+        presenter=value;
+        if(value==null){cancelPresentation();main.execute(this::scheduleComputer);}
+    }
+    public void completePresentation(PresentationEvent.Id id){
+        if(presentation==null||!presentation.id.equals(id))return;
+        presentation=null;presentationDeadline=-1;
+        replyAt=foreground&&!state.paused?clock.getAsLong()+100:-1;
+        changed();
+    }
+    private void cancelPresentation(){presentation=null;presentationDeadline=-1;replyAt=-1;}
+    public boolean previewSolvedDigit(int digit){
+        return canMath()&&!state.solved&&MathInput.matches(MathInput.append(state.input,digit),state.exercise);
+    }
     private final boolean ownExecutors;
     private Session state, failedSave;
     private ChessGame game;
@@ -57,7 +75,10 @@ public final class SessionController implements AutoCloseable {
     public boolean busy() { return busy; }
     public String error() { return error; }
     public boolean corruptSave() { return corrupt; }
-    public void setListener(Runnable listener) { this.listener=listener; }
+    public void setListener(Runnable listener) {
+        this.listener=listener;
+        if(listener==null){cancelPresentation();main.execute(this::scheduleComputer);}
+    }
     private void changed() { if(listener!=null)listener.run(); }
 
     public void foreground(boolean visible) {
@@ -80,6 +101,7 @@ public final class SessionController implements AutoCloseable {
     public void pause() {
         if(closed)return;
         successAnchor=-1;successShownMs=0;
+        cancelPresentation();
         epoch++; workerRunning=false;
         if(busy) { pendingPause=true; anchor=-1; return; }
         if(state.paused) { anchor=-1; return; }
@@ -88,6 +110,8 @@ public final class SessionController implements AutoCloseable {
 
     public void tick() {
         if(closed)return;
+        if(presentation!=null&&clock.getAsLong()>=presentationDeadline)completePresentation(presentation.id);
+        if(replyAt>=0&&clock.getAsLong()>=replyAt){replyAt=-1;scheduleComputer();}
         if(busy) {
             if(clock.getAsLong()-saveStarted>2000 && error==null) {
                 error="Opslaan duurt langer. De tijd staat stil."; changed();
@@ -203,12 +227,12 @@ public final class SessionController implements AutoCloseable {
     }
     public void restartGame() {
         if(!canAct())return;
-        epoch++;workerRunning=false;
+        epoch++;workerRunning=false;generation++;cancelPresentation();
         action(this::clearBoard,true);
     }
     public void resetSession() {
         if(busy||closed)return;
-        epoch++; workerRunning=false;
+        epoch++; workerRunning=false;generation++;cancelPresentation();
         Session fresh=new Session(); fresh.config=state.config.copy();
         fresh.revision=state.revision; corrupt=false;error=null;failedSave=null;
         commit(fresh);
@@ -223,7 +247,7 @@ public final class SessionController implements AutoCloseable {
 
     private boolean canAct() { return !busy && !closed && error==null && !corrupt; }
     private boolean canPlay() {
-        return canAct()&&!state.paused&&foreground&&state.phase==Session.Phase.CHESS
+        return canAct()&&presentation==null&&!state.paused&&foreground&&state.phase==Session.Phase.CHESS
                 && state.result.isEmpty()&&game.whiteToMove()&&state.intendedMove==null;
     }
     private boolean canMath() {
@@ -289,6 +313,8 @@ public final class SessionController implements AutoCloseable {
     }
 
     private void commit(Session next) {
+        final boolean effectsAllowed=foreground&&!state.paused&&!next.paused;
+        final boolean liveMove=foreground&&!state.paused&&next.moves.size()==state.moves.size()+1;
         if(next.focus!=state.focus)latestFocus=next.focus;
         next.revision=state.revision+1;
         busy=true;anchor=-1;saveStarted=clock.getAsLong();
@@ -300,6 +326,8 @@ public final class SessionController implements AutoCloseable {
                 main.execute(()->{
                     if(closed)return;
                     boolean boardChanged=!state.moves.equals(next.moves);
+                    Session previous=state;
+                    if(next.moves.size()<previous.moves.size())generation++;
                     state=next;
                     state.focus=latestFocus;
                     if(boardChanged)game=ChessGame.fromHistory(state.moves);
@@ -310,6 +338,14 @@ public final class SessionController implements AutoCloseable {
                     anchor=active()?clock.getAsLong():-1;
                     if(active()&&state.phase==Session.Phase.MATH&&state.solved&&successPending)
                         successAnchor=clock.getAsLong();
+                    PresentationEvent event=foreground&&(effectsAllowed||liveMove)
+                            ?PresentationEvent.committed(generation,previous,state):null;
+                    if(event!=null&&presenter!=null){
+                        if(event.kind==PresentationEvent.Kind.MOVE){
+                            presentation=event;presentationDeadline=clock.getAsLong()+2000;
+                        }
+                        try{presenter.accept(event);}catch(RuntimeException ignored){cancelPresentation();}
+                    }
                     changed();scheduleComputer();
                 });
             } catch(Exception failure) {
@@ -325,7 +361,7 @@ public final class SessionController implements AutoCloseable {
         });
     }
     private void scheduleComputer() {
-        if(!canAct()||state.paused||!foreground||state.phase!=Session.Phase.CHESS
+        if(presentation!=null||replyAt>=0||!canAct()||state.paused||!foreground||state.phase!=Session.Phase.CHESS
                 ||!state.result.isEmpty()||game.whiteToMove()||workerRunning)return;
         long token=epoch,revision=state.revision,seed=state.opponentSeed;
         List<String> history=new ArrayList<>(state.moves);
@@ -353,7 +389,7 @@ public final class SessionController implements AutoCloseable {
         });
     }
     @Override public void close() {
-        closed=true;epoch++;anchor=-1;
+        closed=true;epoch++;anchor=-1;cancelPresentation();presenter=null;
         if(ownExecutors) {
             ((ExecutorService)io).shutdown();((ExecutorService)computer).shutdownNow();
         }

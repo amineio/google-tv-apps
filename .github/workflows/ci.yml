@@ -49,7 +49,7 @@ jobs:
           limits = {
               'apps/home/build/outputs/apk/release/home-release.apk': 409600,
               'apps/clock/build/outputs/apk/release/clock-release.apk': 131072,
-              'apps/chess-math/build/outputs/apk/release/chessMath-release.apk': 2097152,
+              'apps/chess-math/build/outputs/apk/release/chessMath-release.apk': 2621440,
           }
           for name, limit in limits.items():
               size = Path(name).stat().st_size

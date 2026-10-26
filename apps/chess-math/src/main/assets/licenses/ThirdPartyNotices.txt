@@ -16,3 +16,10 @@ See commons-lang3-LICENSE.txt and commons-lang3-NOTICE.txt, extracted
 unchanged from the resolved 3.18.0 JAR.
 
 The application code and original piece drawings use the repository MIT license.
+
+Original sound effects (2026-10-26)
+wood_move.wav, wood_capture.wav, gentle_check.wav, math_success.wav
+Created for Schaak & Reken with tools/generate_audio.py using deterministic
+mathematical synthesis. No sampled recording or third-party audio was used.
+Dedicated to the public domain under CC0 1.0 Universal.
+https://creativecommons.org/publicdomain/zero/1.0/

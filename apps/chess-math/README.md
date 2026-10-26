@@ -14,6 +14,16 @@ Open Schaak & Reken from the TV app grid. Select Start or Verder spelen.
 
 A honey outline marks focus. A sage-gold inner border marks the selected piece. Muted teal dots mark empty legal destinations. Teal rings mark legal captures. A quiet sage overlay marks the last move. A checked king has a double border and an exclamation mark.
 
+Live moves slide once for 180–240 ms. Captured pieces remain visible until landing.
+Castling moves both pieces together. Promotion lands as the chosen piece.
+A wooden tap confirms a move. Captures use a fuller knock. Check and correct
+arithmetic answers use gentle two-note cues. Wrong answers and navigation have
+no custom sound. Quiet playback still depends on the TV volume.
+
+Pause, focus loss, and recreation stop effects. Resume never replays a saved
+move or sound. Sound loading or audio focus refusal keeps the action silent.
+Motion can end early after two seconds if a completion callback is missing.
+
 Promotion shows images and names for Dame, Toren, Loper, and Paard. Use Left and Right to choose the piece. Press OK to confirm. Press Back to cancel the choice before the move commits.
 
 The computer makes frequent mistakes. Its strength needs family playtesting. The app makes no rating or age-suitability claim.
@@ -44,6 +54,11 @@ Defaults are all three operations, limit 100, crossing ten off, and only tables 
 A selected table is the second operand. Table 5 means 1 × 5 through 10 × 5. An unchecked table 3 does not exclude 3 × 5. It excludes exercises with 3 as the second operand. The number limit does not shorten an enabled multiplication table.
 
 Save applies new choices from the next exercise. Back or Annuleren discards unsaved choices. At least one valid operation must remain enabled. Multiplication requires at least one table.
+
+Geluidseffecten and Stukbewegingen are separate parent choices. Both start On.
+Pause also offers immediate sound mute. These choices survive progress reset
+and app restart. System animation Off disables slides. Android menu sounds
+follow the TV system setting.
 
 Parents can skip to chess or math, restart the chess game, reset progress, read help and licenses, or exit. A phase skip bypasses that round's time and answer requirements. A new chess game preserves the current round time. Reset requires confirmation.
 

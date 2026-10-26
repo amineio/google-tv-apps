@@ -1,0 +1,16 @@
+--------- beginning of main
+10-26 21:09:44.739 18620 18620 I ChessMathEffectsTest: moving ply=1 move=e2e4 savedMoves=1
+10-26 21:09:45.172 18620 18620 I ChessMathEffectsTest: moving ply=2 move=e7e5 savedMoves=2
+10-26 21:09:45.651 18620 18620 I ChessMathEffectsTest: slideWindowFrames count=8 medianMs=20.826 p95Ms=27.322 maxMs=27.322 dropped=0 metric=TOTAL_DURATION filter=board.moving
+10-26 21:09:48.526 18620 18620 I ChessMathEffectsTest: moving ply=1 move=e2e4 savedMoves=1
+10-26 21:09:49.043 18620 18620 I ChessMathEffectsTest: moving ply=2 move=b7b5 savedMoves=2
+10-26 21:09:50.158 18620 18620 I ChessMathEffectsTest: cue=MOVE decoded=4 stream=1 focus=true
+10-26 21:09:50.298 18620 18620 I ChessMathEffectsTest: cue=CAPTURE decoded=4 stream=2 focus=true
+10-26 21:09:50.479 18620 18620 I ChessMathEffectsTest: cue=CHECK decoded=4 stream=3 focus=true
+10-26 21:09:50.777 18620 18620 I ChessMathEffectsTest: cue=MATH_SUCCESS decoded=4 stream=4 focus=true
+10-26 21:09:52.013 18620 18620 I ChessMathEffectsTest: moving ply=1 move=e2e4 savedMoves=1
+10-26 21:09:52.496 18620 18620 I ChessMathEffectsTest: moving ply=2 move=f7f6 savedMoves=2
+10-26 21:09:53.514 18620 18620 I ChessMathEffectsTest: moving ply=1 move=e2e4 savedMoves=1
+10-26 21:09:53.650 18620 18620 I ChessMathEffectsTest: actualHome hidden=true paused=true gate=false stream=0 savedMoves=1
+10-26 21:09:54.398 18620 18620 I ChessMathEffectsTest: moving ply=2 move=d7d5 savedMoves=2
+10-26 21:09:54.876 18620 18620 I ChessMathEffectsTest: actualHome resumed=true savedMoves=2 presentationEvents=2 whiteReplayed=false
