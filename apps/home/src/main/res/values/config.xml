@@ -74,4 +74,6 @@
          tiles that zoom without overshoot, shorter fades and no tile entrance when Home comes back. Set it
          here or with "reduced_motion": true in a theme's config.json; false keeps the normal motion. -->
     <bool name="reduced_motion">false</bool>
+    <!-- Optional stock HOME redirect through HomeKeyService. Keep Google packages enabled for Cast. -->
+    <string name="stock_home_redirect" translatable="false"></string>
 </resources>

@@ -1,5 +1,7 @@
 # TV Home
 
+For Chromecast with Google TV, use [the Cast-compatible installer](../../docs/CAST-HOME.md). Keep setupwraith and Google TV Home enabled.
+
 TV Home is the native launcher inherited from CleanYourTV.
 Its app package remains `com.gathin.tvhome`.
 The source and resources live in this directory. The shared Gradle build lives at the repository root.

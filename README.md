@@ -38,6 +38,9 @@ Read the [home installation guide](apps/home/README.md) before changing the defa
 The [clock guide](apps/clock/README.md) covers overlay permission, timers, and bedtime.
 Both apps install separately. Building an app does not change the TV.
 
+For Chromecast with Google TV, use [the Cast-compatible Home installer](docs/CAST-HOME.md).
+It keeps the Google packages enabled so that the custom Home screen and casting can work together.
+
 ## Test
 
 From the repository root, run local tests and Android lint:
