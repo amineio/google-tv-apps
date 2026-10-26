@@ -41,6 +41,7 @@ public final class MathLayoutTest {
             assertFocus("pad4");
             instrumentation.runOnMainSync(()->assertNull(activity.findViewById(android.R.id.content).findViewWithTag("math-hint")));
             Rect[] before=bounds();
+            instrumentation.runOnMainSync(this::assertEquationGroup);
             key(KeyEvent.KEYCODE_DPAD_UP);
             key(KeyEvent.KEYCODE_DPAD_UP);
             assertFocus("hint");
@@ -57,6 +58,7 @@ public final class MathLayoutTest {
             assertFocus("pad1");
             assertBounds(before);
             instrumentation.runOnMainSync(()->{
+                assertEquationGroup();
                 for(int i=0;i<11;i++)assertNotNull(view("pad"+i));
                 assertNull(activity.findViewById(android.R.id.content).findViewWithTag("pad11"));
                 assertNull(activity.findViewById(android.R.id.content).findViewWithTag("next"));
@@ -73,6 +75,7 @@ public final class MathLayoutTest {
         withFixture(fixture,()->{
             launchAndStart();
             instrumentation.runOnMainSync(()->{
+                assertEquationGroup();
                 assertTextVisible("problem",fixture.exercise.expression()+" =");
                 assertTextVisible("answer","100");
                 TextView equation=(TextView)view("problem");
@@ -84,6 +87,35 @@ public final class MathLayoutTest {
                     assertTrue(expression,equation.getPaint().measureText(expression)<=equation.getWidth());
                 }
             });
+        });
+    }
+
+    @Test public void centeredLongEquationFitsAtLargerFontScales() throws Exception {
+        Session fixture=math(new Exercise(20,100,100,Exercise.SUBTRACT));
+        fixture.input="100";
+        withFixture(fixture,()->{
+            launchAndStart();
+            Configuration previous=new Configuration(activity.getResources().getConfiguration());
+            try {
+                for(float scale:new float[]{1.6f,2.0f}){
+                    instrumentation.runOnMainSync(()->{
+                        Configuration larger=new Configuration(previous);
+                        larger.fontScale=scale;
+                        activity.getResources().updateConfiguration(larger,null);
+                        controller.hint();
+                    });
+                    awaitSave();
+                    instrumentation.runOnMainSync(()->{
+                        assertEquationGroup();
+                        assertTextVisible("problem",fixture.exercise.expression()+" =");
+                        assertTextVisible("answer","100");
+                        TextView equation=(TextView)view("problem");
+                        assertTrue(equation.getPaint().measureText(equation.getText().toString())<=equation.getWidth());
+                    });
+                }
+            } finally {
+                instrumentation.runOnMainSync(()->activity.getResources().updateConfiguration(previous,null));
+            }
         });
     }
 
@@ -180,6 +212,17 @@ public final class MathLayoutTest {
 
     private void assertBounds(Rect[] before){
         assertArrayEquals("Hint and feedback must not move the prompt",before,bounds());
+    }
+
+    private void assertEquationGroup(){
+        View problem=view("problem"),answer=view("answer"),equation=view("math-equation");
+        int gap=answer.getLeft()-problem.getRight();
+        int expected=Math.round(12*activity.getResources().getDisplayMetrics().density);
+        assertEquals("Expression and answer need one compact gap",expected,gap);
+        assertTrue("The combined expression and answer must be centered",
+                Math.abs(problem.getLeft()+answer.getRight()-equation.getWidth())<=1);
+        assertTrue(problem.getLeft()>=0);
+        assertTrue(answer.getRight()<=equation.getWidth());
     }
 
     private void assertTextVisible(String tag,String expected){

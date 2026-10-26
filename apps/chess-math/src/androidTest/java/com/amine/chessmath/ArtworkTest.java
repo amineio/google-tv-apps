@@ -85,7 +85,7 @@ public final class ArtworkTest {
         });
     }
 
-    @Test public void legalMarkersContrastWithBothSquareColorsAndSelectionUsesSage() {
+    @Test public void legalMarkersUseTealOnBothSquareColorsAndSelectionUsesSageGold() {
         InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
             Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
             ChessBoardView board = new ChessBoardView(context);
@@ -96,18 +96,64 @@ public final class ArtworkTest {
             board.bind(new ChessGame(), 52, 52, "");
             Bitmap rendered = Bitmap.createBitmap(810, 810, Bitmap.Config.ARGB_8888);
             board.draw(new Canvas(rendered));
-            assertEquals("e4 marker contrasts with the ivory square", TvStyle.FOREST,
+            assertEquals("e4 marker uses muted teal on the ivory square", 0xff95c4b5,
                     rendered.getPixel(455, 455));
-            assertEquals("e3 marker contrasts with the green square", TvStyle.IVORY,
+            assertEquals("e3 marker uses muted teal on the green square", 0xff95c4b5,
                     rendered.getPixel(455, 555));
-            assertEquals("Selected e2 keeps a continuous sage border", TvStyle.MUTED,
+            assertEquals("Legal disc keeps a forest outline against ivory", TvStyle.FOREST,
+                    rendered.getPixel(467, 455));
+            assertEquals("Legal disc keeps a forest outline against green", TvStyle.FOREST,
+                    rendered.getPixel(467, 555));
+            assertEquals("Selected e2 keeps a continuous sage-gold border", 0xffc9c58a,
                     rendered.getPixel(455, 619));
             assertTrue(board.getContentDescription().toString().contains("e2"));
             rendered.recycle();
         });
     }
 
-    @Test public void legalCaptureUsesAContinuousIvoryRing() {
+    @Test public void honeyFocusAndSageSelectionRemainDistinctOnBothSquareColors() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
+            Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+            for (int source : new int[]{52, 51}) {
+                ChessBoardView board = new ChessBoardView(context);
+                int spec = android.view.View.MeasureSpec.makeMeasureSpec(810,
+                        android.view.View.MeasureSpec.EXACTLY);
+                board.measure(spec, spec);
+                board.layout(0, 0, 810, 810);
+                assertTrue(board.requestFocus());
+                assertTrue(board.hasFocus());
+                board.bind(new ChessGame(), source, source, "");
+                Bitmap rendered = Bitmap.createBitmap(810, 810, Bitmap.Config.ARGB_8888);
+                board.draw(new Canvas(rendered));
+                int x = 5 + source % 8 * 100, y = 5 + source / 8 * 100;
+                assertEquals("Focus has a continuous honey outline", 0xffffcf70,
+                        rendered.getPixel(x + 50, y + 5));
+                assertEquals("Selected piece has a separate inner sage-gold border", 0xffc9c58a,
+                        rendered.getPixel(x + 50, y + 14));
+                assertEquals("Forest understroke separates focus from either square", TvStyle.FOREST,
+                        rendered.getPixel(x + 50, y + 8));
+                rendered.recycle();
+            }
+        });
+    }
+
+    @Test public void buttonFocusUsesTheSameHoneyAsTheBoard() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
+            Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+            android.graphics.drawable.Drawable background = TvStyle.button(context, "OK").getBackground();
+            float density = context.getResources().getDisplayMetrics().density;
+            int width = Math.round(200 * density), height = Math.round(60 * density);
+            background.setBounds(0, 0, width, height);
+            background.setState(new int[]{android.R.attr.state_focused});
+            Bitmap rendered = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            background.draw(new Canvas(rendered));
+            assertEquals("Button focus shares the honey board outline", 0xffffcf70,
+                    rendered.getPixel(width / 2, Math.round(3 * density)));
+            rendered.recycle();
+        });
+    }
+
+    @Test public void legalCaptureUsesAContinuousTealRing() {
         InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
             Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
             ChessBoardView board = new ChessBoardView(context);
@@ -115,17 +161,22 @@ public final class ArtworkTest {
                     android.view.View.MeasureSpec.EXACTLY);
             board.measure(spec, spec);
             board.layout(0, 0, 810, 810);
-            ChessGame game = new ChessGame();
-            game.play("e2e4");
-            game.play("d7d5");
-            board.bind(game, 36, 36, "d7d5");
-            Bitmap rendered = Bitmap.createBitmap(810, 810, Bitmap.Config.ARGB_8888);
-            board.draw(new Canvas(rendered));
-            assertEquals("The d5 capture ring crosses its top midpoint", TvStyle.IVORY,
-                    rendered.getPixel(355, 313));
-            assertEquals("The d5 capture ring crosses its left midpoint", TvStyle.IVORY,
-                    rendered.getPixel(313, 355));
-            rendered.recycle();
+            for (boolean light : new boolean[]{true, false}) {
+                ChessGame game = new ChessGame();
+                game.play(light ? "e2e4" : "d2d4");
+                String reply = light ? "d7d5" : "e7e5";
+                game.play(reply);
+                int source = light ? 36 : 35;
+                int centerX = light ? 355 : 455;
+                board.bind(game, source, source, reply);
+                Bitmap rendered = Bitmap.createBitmap(810, 810, Bitmap.Config.ARGB_8888);
+                board.draw(new Canvas(rendered));
+                assertEquals("Capture ring crosses its top midpoint on either square color", 0xff95c4b5,
+                        rendered.getPixel(centerX, 313));
+                assertEquals("Capture ring crosses its left midpoint on either square color", 0xff95c4b5,
+                        rendered.getPixel(centerX - 42, 355));
+                rendered.recycle();
+            }
         });
     }
 }

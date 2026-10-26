@@ -8,6 +8,7 @@ import android.widget.Button;
 import android.widget.TextView;
 final class TvStyle {
     static final int FOREST=0xff0c2b1d, IVORY=0xfffff1d0, MUTED=0xffb5ceb0, MINT=0xff6be0bd, AMBER=0xffffcf70;
+    static final int LEGAL_TEAL=0xff95c4b5, SELECTED_SAGE_GOLD=0xffc9c58a;
     static int dp(Context c,float v){
         return Math.round(v*c.getResources().getDisplayMetrics().density);
     }
@@ -60,7 +61,7 @@ final class TvStyle {
             c.drawRoundRect(left,top,right,bottom,10*d,10*d,p);
             p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth((focus?2.5f:1.4f)*d);
-            p.setColor(focus?IVORY:checked?MUTED:0xaafff1d0);
+            p.setColor(focus?AMBER:checked?MUTED:0xaafff1d0);
             c.drawRoundRect(left,top,right,bottom,10*d,10*d,p);
         }
         @Override public void setAlpha(int a){

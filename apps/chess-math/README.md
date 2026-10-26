@@ -12,7 +12,7 @@ Open Schaak & Reken from the TV app grid. Select Start or Verder spelen.
 2. Use the arrows to choose a marked destination. Press OK to move.
 3. Press Back to cancel a piece selection. Press Back again to open Pause.
 
-An ivory outline marks focus. A sage inner border marks the selected piece. Dots mark empty legal destinations. Rings mark legal captures. A quiet sage overlay marks the last move. A checked king has a double border and an exclamation mark.
+A honey outline marks focus. A sage-gold inner border marks the selected piece. Muted teal dots mark empty legal destinations. Teal rings mark legal captures. A quiet sage overlay marks the last move. A checked king has a double border and an exclamation mark.
 
 Promotion shows images and names for Dame, Toren, Loper, and Paard. Use Left and Right to choose the piece. Press OK to confirm. Press Back to cancel the choice before the move commits.
 
@@ -78,3 +78,5 @@ Instrumentation tests need a connected TV and the debug app. They are not run by
 See the [verification record](../../docs/chess-math/verification.md) for actual build, test, screenshot, and device evidence. Design images are not app screenshots.
 
 The v0.2 visual pass adds original ImageGen pieces and a forest backdrop. Text, controls, and board cells remain native. See the [visual evidence](../../docs/chess-math/visual-polish-verification-2026-10-26.md) and [design review](../../docs/chess-math/visual-review-2026-10-26.md).
+
+The v0.4 layout centers the board on the TV. The right panel keeps only turn, context, and error text. The equation and answer form one compact centered group.

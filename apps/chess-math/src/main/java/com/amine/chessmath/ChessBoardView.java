@@ -93,25 +93,24 @@ public final class ChessBoardView extends View {
                 c.drawRect(x,y,x+cell,y+cell,paint);
             }
             if(i==selected){
-                paint.setColor(0x40b5ceb0);
+                paint.setColor(0x40c9c58a);
                 c.drawRect(x,y,x+cell,y+cell,paint);
             }
             char piece=game==null?'.':game.pieceAt(i);
             pieces.draw(c,piece,x,y,cell);
             if(selected>=0)for(String move:legal)if(move.startsWith(coordinate(selected)+coordinate(i))) {
-                boolean light=(i/8+i%8)%2==0;
                 if(piece=='.'){
                     paint.setStyle(Paint.Style.FILL);
                     paint.setColor(TvStyle.FOREST);
                     c.drawCircle(x+cell/2,y+cell/2,cell*.14f,paint);
-                    paint.setColor(light?TvStyle.FOREST:TvStyle.IVORY);
+                    paint.setColor(TvStyle.LEGAL_TEAL);
                     c.drawCircle(x+cell/2,y+cell/2,cell*.11f,paint);
                 } else {
                     paint.setStyle(Paint.Style.STROKE);
                     paint.setColor(TvStyle.FOREST);
                     paint.setStrokeWidth(cell*.1f);
                     c.drawCircle(x+cell/2,y+cell/2,cell*.42f,paint);
-                    paint.setColor(TvStyle.IVORY);
+                    paint.setColor(TvStyle.LEGAL_TEAL);
                     paint.setStrokeWidth(cell*.055f);
                     c.drawCircle(x+cell/2,y+cell/2,cell*.42f,paint);
                 }
@@ -122,7 +121,7 @@ public final class ChessBoardView extends View {
                 paint.setStyle(Paint.Style.STROKE);
                 paint.setStrokeWidth(cell*.08f);
                 c.drawRect(x+cell*.14f,y+cell*.14f,x+cell*.86f,y+cell*.86f,paint);
-                paint.setColor(TvStyle.MUTED);
+                paint.setColor(TvStyle.SELECTED_SAGE_GOLD);
                 paint.setStrokeWidth(cell*.04f);
                 c.drawRect(x+cell*.14f,y+cell*.14f,x+cell*.86f,y+cell*.86f,paint);
             }
@@ -144,7 +143,7 @@ public final class ChessBoardView extends View {
                 paint.setColor(TvStyle.FOREST);
                 paint.setStrokeWidth(cell*.1f);
                 c.drawRect(x+cell*.045f,y+cell*.045f,x+cell*.955f,y+cell*.955f,paint);
-                paint.setColor(TvStyle.IVORY);
+                paint.setColor(TvStyle.AMBER);
                 paint.setStrokeWidth(cell*.055f);
                 c.drawRect(x+cell*.045f,y+cell*.045f,x+cell*.955f,y+cell*.955f,paint);
             }

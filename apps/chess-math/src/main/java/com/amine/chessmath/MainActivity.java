@@ -392,31 +392,48 @@ public final class MainActivity extends Activity {
             );
             return;
         }
-        // Chess owns the largest square area, with a quiet instruction panel to its right.
+        // Equal space on both sides keeps the board at the center of the TV.
         content.removeAllViews();
-        LinearLayout row=new LinearLayout(this);
-        row.setGravity(Gravity.CENTER_VERTICAL);
+        FrameLayout row=new FrameLayout(this){
+            @Override protected void onMeasure(int widthSpec,int heightSpec){
+                int width=View.MeasureSpec.getSize(widthSpec);
+                int height=View.MeasureSpec.getSize(heightSpec);
+                int size=Math.min(dp(462),Math.min(height,width));
+                FrameLayout.LayoutParams boardBounds=(FrameLayout.LayoutParams)getChildAt(0).getLayoutParams();
+                boardBounds.width=size;
+                boardBounds.height=size;
+                FrameLayout.LayoutParams statusBounds=(FrameLayout.LayoutParams)getChildAt(1).getLayoutParams();
+                statusBounds.width=Math.max(0,(width-size)/2-dp(20));
+                super.onMeasure(widthSpec,heightSpec);
+            }
+        };
         content.addView(row,new LinearLayout.LayoutParams(-1,-1));
         board=new ChessBoardView(this);
         board.setId(View.generateViewId());
         board.setTag("board");
-        row.addView(board,new LinearLayout.LayoutParams(0,-1,1.12f));
+        row.addView(board,new FrameLayout.LayoutParams(0,0,Gravity.CENTER));
+        ScrollView status=new ScrollView(this);
+        status.setTag("chess-status");
+        status.setFocusable(false);
+        status.setFillViewport(true);
+        row.addView(status,new FrameLayout.LayoutParams(0,-1,Gravity.RIGHT|Gravity.CENTER_VERTICAL));
         LinearLayout side=new LinearLayout(this);
         side.setOrientation(LinearLayout.VERTICAL);
-        side.setPadding(dp(30),dp(20),0,dp(20));
+        side.setPadding(0,dp(20),0,dp(20));
         side.setGravity(Gravity.CENTER_VERTICAL);
-        row.addView(side,new LinearLayout.LayoutParams(0,-1,1));
-        chessHeading=TvStyle.text(this,"",35,true);
+        status.addView(side,new ScrollView.LayoutParams(-1,-2));
+        chessHeading=TvStyle.text(this,"",24,true);
+        chessHeading.setTag("chess-turn");
         side.addView(chessHeading);
-        space(side,18);
-        chessHelp=TvStyle.text(this,"",24,false);
+        space(side,12);
+        chessHelp=TvStyle.text(this,"",18,false);
+        chessHelp.setTag("chess-prompt");
         chessHelp.setTextColor(TvStyle.MUTED);
         side.addView(chessHelp);
-        space(side,18);
-        chessDetail=TvStyle.text(this,"",18,false);
+        chessDetail=TvStyle.text(this,"",16,false);
+        chessDetail.setTag("chess-feedback");
+        chessDetail.setPadding(0,dp(12),0,0);
         side.addView(chessDetail);
-        space(side,24);
-        side.addView(TvStyle.text(this,s(R.string.back_pause),16,false));
         board.setListener(new ChessBoardView.Listener(){
             public void focus(int square){
                 controller.focusSquare(square);
@@ -441,10 +458,8 @@ public final class MainActivity extends Activity {
     private void updateBoardDetail(int square){
         if(board==null||chessDetail==null)return;
         Session st=controller.state();
-        ChessGame game=controller.game();
-        String detail=getString(R.string.square_description,ChessBoardView.coordinate(square),board.pieceName(game.pieceAt(square)));
-        if(!st.feedback.isEmpty())detail+="\n"+st.feedback;
-        chessDetail.setText(detail);
+        chessDetail.setText(st.feedback);
+        chessDetail.setVisibility(st.feedback.isEmpty()?View.GONE:View.VISIBLE);
     }
     /** Uses the same artwork and color as the pawn that is being promoted. */
     private final class PromotionPiece extends android.graphics.drawable.Drawable {
@@ -512,18 +527,30 @@ public final class MainActivity extends Activity {
         count.setTextColor(TvStyle.MUTED);
         left.addView(count);
         space(left,28);
-        LinearLayout equation=new LinearLayout(this);
-        equation.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout equation=new LinearLayout(this){
+            @Override protected void onMeasure(int widthSpec,int heightSpec){
+                TextView expression=(TextView)getChildAt(0);
+                android.graphics.Paint paint=new android.graphics.Paint(expression.getPaint());
+                paint.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,58,getResources().getDisplayMetrics()));
+                int desired=(int)Math.ceil(paint.measureText(expression.getText().toString()))
+                        +expression.getCompoundPaddingLeft()+expression.getCompoundPaddingRight();
+                int available=View.MeasureSpec.getSize(widthSpec)-getPaddingLeft()-getPaddingRight()-dp(124);
+                expression.getLayoutParams().width=Math.max(0,Math.min(desired,available));
+                super.onMeasure(widthSpec,heightSpec);
+            }
+        };
+        equation.setTag("math-equation");
+        equation.setGravity(Gravity.CENTER);
         left.addView(equation,new LinearLayout.LayoutParams(-1,-2));
         String expression=st.exercise==null?"":st.exercise.expression();
         TextView problem=TvStyle.text(this,expression+" =",58,true);
         problem.setTag("problem");
-        problem.setMaxLines(2);
+        problem.setMaxLines(1);
         problem.setGravity(Gravity.CENTER_VERTICAL);
         int equationHeight=dp(80*Math.max(1,getResources().getConfiguration().fontScale));
         problem.setMinHeight(equationHeight);
         problem.setAutoSizeTextTypeUniformWithConfiguration(32,58,1,TypedValue.COMPLEX_UNIT_SP);
-        equation.addView(problem,new LinearLayout.LayoutParams(0,equationHeight,1));
+        equation.addView(problem,new LinearLayout.LayoutParams(-2,equationHeight));
         TextView answer=TvStyle.text(this,st.input.isEmpty()?"…":st.input,48,true);
         answer.setTag("answer");
         answer.setGravity(Gravity.CENTER);
