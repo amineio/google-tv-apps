@@ -76,3 +76,5 @@ The review APK is `apps/chess-math/build/outputs/apk/release/chessMath-release.a
 Instrumentation tests need a connected TV and the debug app. They are not run by the APK build. The test package is `com.amine.chessmath.test`. The parent and promotion tests use temporary memory fixtures. Other smoke tests change the test app's current session. Preserve existing family progress before operating the test suite.
 
 See the [verification record](../../docs/chess-math/verification.md) for actual build, test, screenshot, and device evidence. Design images are not app screenshots.
+
+The v0.2 visual pass adds original ImageGen pieces and a forest backdrop. Text, controls, and board cells remain native. See the [visual evidence](../../docs/chess-math/visual-polish-verification-2026-10-26.md) and [design review](../../docs/chess-math/visual-review-2026-10-26.md).

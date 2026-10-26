@@ -1,6 +1,8 @@
 package com.amine.chessmath;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.graphics.drawable.GradientDrawable;
+import android.util.TypedValue;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -448,33 +450,98 @@ public final class MainActivity extends Activity {
         LinearLayout row=new LinearLayout(this);
         row.setGravity(Gravity.CENTER_VERTICAL);
         content.addView(row,new LinearLayout.LayoutParams(-1,0,1));
+        ScrollView reading=new ScrollView(this);
+        reading.setId(View.generateViewId());
+        reading.setTag("math-reading");
+        reading.setFocusable(false);
+        reading.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+        reading.setFillViewport(true);
+        GradientDrawable readingOutline=new GradientDrawable();
+        readingOutline.setColor(android.graphics.Color.TRANSPARENT);
+        readingOutline.setStroke(dp(2),TvStyle.IVORY);
+        readingOutline.setCornerRadius(dp(12));
+        android.graphics.drawable.StateListDrawable readingFocus=new android.graphics.drawable.StateListDrawable();
+        readingFocus.addState(new int[]{android.R.attr.state_focused},readingOutline);
+        reading.setForeground(readingFocus);
+        reading.addOnLayoutChangeListener((v,l,t,r,b,ol,ot,or,ob)->
+                reading.setFocusable(reading.canScrollVertically(-1)||reading.canScrollVertically(1)));
+        reading.setOnKeyListener((v,k,event)->{
+            if(k==KeyEvent.KEYCODE_DPAD_RIGHT){
+                if(event.getAction()==KeyEvent.ACTION_DOWN){
+                    View target=findViewById(reading.getNextFocusRightId());
+                    if(target!=null)target.requestFocus();
+                }
+                return true;
+            }
+            if(k==KeyEvent.KEYCODE_DPAD_UP||k==KeyEvent.KEYCODE_DPAD_DOWN){
+                reading.executeKeyEvent(event);
+                return true;
+            }
+            return k==KeyEvent.KEYCODE_DPAD_LEFT;
+        });
+        reading.setClipToPadding(false);
+        row.addView(reading,new LinearLayout.LayoutParams(0,-1,1.6f));
         LinearLayout left=new LinearLayout(this);
         left.setOrientation(LinearLayout.VERTICAL);
-        left.setGravity(Gravity.CENTER_VERTICAL);
-        left.setPadding(0,0,dp(24),0);
-        row.addView(left,new LinearLayout.LayoutParams(0,-1,1.6f));
-        left.addView(TvStyle.text(this,s(R.string.math_title),42,true));
-        space(left,12);
+        left.setGravity(Gravity.TOP);
+        left.setPadding(0,dp(26),dp(24),dp(8));
+        reading.addView(left,new ScrollView.LayoutParams(-1,-2));
+        TextView heading=TvStyle.text(this,s(R.string.math_title),44,true);
+        heading.setTag("math-title");
+        left.addView(heading);
+        space(left,8);
         TextView count=TvStyle.text(this,getResources().getQuantityString(R.plurals.math_count,st.correct,st.correct),21,false);
+        count.setTag("math-count");
         count.setTextColor(TvStyle.MUTED);
         left.addView(count);
-        space(left,30);
+        space(left,40);
+        LinearLayout equation=new LinearLayout(this);
+        equation.setGravity(Gravity.CENTER_VERTICAL);
+        left.addView(equation,new LinearLayout.LayoutParams(-1,-2));
         String expression=st.exercise==null?"":st.exercise.expression();
-        TextView problem=TvStyle.text(this,expression+" = "+(st.input.isEmpty()?"…":st.input),46,true);
+        TextView problem=TvStyle.text(this,expression+" =",58,true);
         problem.setTag("problem");
-        left.addView(problem);
-        space(left,22);
-        TextView feedback=TvStyle.text(this,st.feedback,22,true);
+        problem.setMaxLines(2);
+        problem.setGravity(Gravity.CENTER_VERTICAL);
+        int equationHeight=dp(80*Math.max(1,getResources().getConfiguration().fontScale));
+        problem.setMinHeight(equationHeight);
+        problem.setAutoSizeTextTypeUniformWithConfiguration(32,58,1,TypedValue.COMPLEX_UNIT_SP);
+        equation.addView(problem,new LinearLayout.LayoutParams(0,equationHeight,1));
+        TextView answer=TvStyle.text(this,st.input.isEmpty()?"…":st.input,48,true);
+        answer.setTag("answer");
+        answer.setGravity(Gravity.CENTER);
+        answer.setMaxLines(1);
+        answer.setPadding(dp(8),dp(8),dp(8),dp(8));
+        answer.setAutoSizeTextTypeUniformWithConfiguration(18,48,1,TypedValue.COMPLEX_UNIT_SP);
+        GradientDrawable well=new GradientDrawable();
+        well.setColor(0x181C492E);
+        well.setStroke(dp(2),TvStyle.IVORY);
+        well.setCornerRadius(dp(12));
+        answer.setBackground(well);
+        LinearLayout.LayoutParams answerBounds=new LinearLayout.LayoutParams(dp(112),equationHeight);
+        answerBounds.setMargins(dp(12),0,0,0);
+        equation.addView(answer,answerBounds);
+        space(left,10);
+        // Invisible text still reserves its natural height, including scaled fonts.
+        TextView feedback=TvStyle.text(this,st.feedback.isEmpty()?"Vul je antwoord in.":st.feedback,22,true);
+        feedback.setTag("math-feedback");
         feedback.setTextColor(TvStyle.MINT);
+        feedback.setVisibility(st.feedback.isEmpty()?View.INVISIBLE:View.VISIBLE);
         left.addView(feedback);
-        if(st.hintLevel>0&&st.exercise!=null){
-            space(left,8);
-            TextView hint=TvStyle.text(this,st.exercise.hint(st.hintLevel),20,false);
-            hint.setTextColor(TvStyle.MUTED);
-            left.addView(hint);
+        space(left,6);
+        FrameLayout hints=new FrameLayout(this);
+        left.addView(hints,new LinearLayout.LayoutParams(-1,-2));
+        if(st.exercise!=null)for(int level=1;level<=2;level++){
+            TextView explanation=TvStyle.text(this,st.exercise.hint(level),20,false);
+            explanation.setTextColor(TvStyle.MUTED);
+            boolean shown=st.hintLevel==level||level==2&&st.hintLevel>2;
+            explanation.setVisibility(shown?View.VISIBLE:View.INVISIBLE);
+            if(shown)explanation.setTag("math-hint");
+            hints.addView(explanation,new FrameLayout.LayoutParams(-1,-2));
         }
-        space(left,22);
+        space(left,8);
         TextView paper=TvStyle.text(this,s(R.string.paper),19,false);
+        paper.setTag("math-paper");
         paper.setTextColor(TvStyle.MUTED);
         left.addView(paper);
         LinearLayout pad=new LinearLayout(this);
@@ -484,6 +551,7 @@ public final class MainActivity extends Activity {
         if(st.solved){
             Button next=button(s(R.string.next),"next",()->controller.nextExercise());
             pad.addView(next,new LinearLayout.LayoutParams(-1,dp(70)));
+            next.setOnKeyListener((v,k,event)->enterMathReading(reading,v,k,event));
             next.requestFocus();
             return;
         }
@@ -519,6 +587,7 @@ public final class MainActivity extends Activity {
             Button b=keys[i];
             int col=i%3,r=i/3;
             b.setNextFocusLeftId(keys[col==0?i:i-1].getId());
+            if(col==0)b.setOnKeyListener((v,k,event)->enterMathReading(reading,v,k,event));
             b.setNextFocusRightId(keys[col==2?i:i+1].getId());
             b.setNextFocusDownId(keys[r==3?i:i+3].getId());
             b.setNextFocusUpId(r==0?hint.getId():keys[i-3].getId());
@@ -527,6 +596,7 @@ public final class MainActivity extends Activity {
         hint.setNextFocusLeftId(hint.getId());
         hint.setNextFocusRightId(hint.getId());
         hint.setOnKeyListener((v,k,event)->{
+            if(enterMathReading(reading,v,k,event))return true;
             if(k==KeyEvent.KEYCODE_DPAD_DOWN&&event.getAction()==KeyEvent.ACTION_DOWN){
                 keys[lastPad].requestFocus();return true;
             }
@@ -537,6 +607,14 @@ public final class MainActivity extends Activity {
         TextView remote=TvStyle.text(this,s(R.string.math_remote)+" · "+s(R.string.back_pause),14,false);
         remote.setTextColor(TvStyle.MUTED);
         content.addView(remote);
+    }
+    private boolean enterMathReading(ScrollView reading,View origin,int key,KeyEvent event){
+        if(key!=KeyEvent.KEYCODE_DPAD_LEFT||!reading.isFocusable())return false;
+        if(event.getAction()==KeyEvent.ACTION_DOWN){
+            reading.setNextFocusRightId(origin.getId());
+            reading.requestFocus();
+        }
+        return true;
     }
     private void handoff(boolean math){
         title(math?R.string.handoff_math:R.string.handoff_chess);

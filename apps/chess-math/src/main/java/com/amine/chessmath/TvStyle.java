@@ -39,6 +39,7 @@ final class TvStyle {
     private static final class FocusSurface extends android.graphics.drawable.Drawable {
         private final Paint p=new Paint(3);
         private final float d;
+        private final Path corners=new Path();
         FocusSurface(Context c){
             d=c.getResources().getDisplayMetrics().density;
         }
@@ -60,17 +61,24 @@ final class TvStyle {
             p.setColor(focus?0xff52734c:checked?0xff345c40:0x451c492e);
             c.drawRoundRect(left,top,right,bottom,10*d,10*d,p);
             p.setStyle(Paint.Style.STROKE);
-            p.setStrokeWidth((focus?3:1.4f)*d);
-            p.setColor(focus?IVORY:checked?AMBER:0xff80977c);
+            p.setStrokeWidth((focus?2:1.4f)*d);
+            p.setColor(focus?IVORY:checked?AMBER:0x88fff1d0);
             c.drawRoundRect(left,top,right,bottom,10*d,10*d,p);
             if(focus){
-                p.setStrokeWidth(4*d);
-                float len=11*d;
+                p.setStrokeWidth(3*d);
+                p.setStrokeCap(Paint.Cap.ROUND);
+                corners.reset();
+                float len=13*d,radius=10*d;
                 for(int n=0;n<4;n++){
                     float x=n%2==0?left:right,y=n/2==0?top:bottom;
-                    c.drawLine(x,y,x+(n%2==0?len:-len),y,p);
-                    c.drawLine(x,y,x,y+(n/2==0?len:-len),p);
+                    float sx=n%2==0?1:-1,sy=n/2==0?1:-1;
+                    corners.moveTo(x,y+sy*len);
+                    corners.lineTo(x,y+sy*radius);
+                    corners.quadTo(x,y,x+sx*radius,y);
+                    corners.lineTo(x+sx*len,y);
                 }
+                c.drawPath(corners,p);
+                p.setStrokeCap(Paint.Cap.BUTT);
             }
         }
         @Override public void setAlpha(int a){
@@ -83,40 +91,43 @@ final class TvStyle {
     }
     static final class Backdrop extends View {
         private final Paint p=new Paint(3);
-        private final Path leaf=new Path();
+        private static android.graphics.Bitmap artwork;
+        private static boolean attempted;
+        private final android.graphics.RectF destination=new android.graphics.RectF();
         private android.graphics.RadialGradient gradient;
         Backdrop(Context c){
             super(c);
             setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
+            synchronized(Backdrop.class){
+                if(!attempted){
+                    attempted=true;
+                    android.graphics.BitmapFactory.Options options=new android.graphics.BitmapFactory.Options();
+                    options.inScaled=false;
+                    artwork=android.graphics.BitmapFactory.decodeResource(c.getResources(),R.drawable.forest_backdrop_v2,options);
+                }
+            }
+            p.setFilterBitmap(true);
         }
         @Override protected void onSizeChanged(int width,int height,int oldWidth,int oldHeight){
             super.onSizeChanged(width,height,oldWidth,oldHeight);
-            if(width>0&&height>0)gradient=new android.graphics.RadialGradient(width*.3f,height*.3f,width*.85f,
+            if(width>0&&height>0){
+                gradient=new android.graphics.RadialGradient(width*.3f,height*.3f,width*.85f,
                     new int[]{0xff194831,FOREST,0xff071a11},null,android.graphics.Shader.TileMode.CLAMP);
+                if(artwork!=null){
+                    float scale=Math.max((float)width/artwork.getWidth(),(float)height/artwork.getHeight());
+                    float w=artwork.getWidth()*scale,h=artwork.getHeight()*scale;
+                    destination.set((width-w)/2,(height-h)/2,(width+w)/2,(height+h)/2);
+                }
+            }
         }
         @Override protected void onDraw(Canvas c){
             c.drawColor(FOREST);
-            p.setShader(gradient);
-            c.drawRect(0,0,getWidth(),getHeight(),p);
-            p.setShader(null);
-            p.setColor(0x205d8850);
-            for(int corner=0;corner<2;corner++){
-                c.save();
-                if(corner==1){
-                    c.translate(getWidth(),getHeight());
-                    c.rotate(180);
-                }
-                float unit=getHeight()/540f;
-                c.scale(unit,unit);
-                for(int n=0;n<9;n++){
-                    float x=10+n*9,y=520-n*26;
-                    leaf.reset();
-                    leaf.moveTo(x,y);
-                    leaf.cubicTo(x-42,y-32,x-28,y-59,x,y-71);
-                    leaf.cubicTo(x+12,y-43,x+15,y-22,x,y);
-                    c.drawPath(leaf,p);
-                }
-                c.restore();
+            if(artwork!=null){
+                c.drawBitmap(artwork,null,destination,p);
+            }else{
+                p.setShader(gradient);
+                c.drawRect(0,0,getWidth(),getHeight(),p);
+                p.setShader(null);
             }
         }
     }

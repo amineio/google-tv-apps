@@ -1,13 +1,95 @@
 package com.amine.chessmath;
+import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
-/** Original path artwork, drawn in a 100 by 100 coordinate space. */
+import android.graphics.Rect;
+import android.graphics.RectF;
+/** Original sculpted artwork with the original paths retained as a fallback. */
 public final class PiecePainter {
+    private static final String TYPES = "pnbrqk";
+    private static final float[] HEIGHTS = {.66f, .78f, .80f, .72f, .84f, .86f};
+    private static Atlas sharedAtlas;
+    private static boolean atlasLoaded;
+    private final Atlas atlas;
+    private final RectF destination = new RectF();
+    private final Paint bitmapPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+
+    public PiecePainter(Context context) {
+        atlas = loadAtlas(context.getResources(), context.getPackageName());
+    }
+
+    private static synchronized Atlas loadAtlas(Resources resources, String packageName) {
+        if (atlasLoaded) return sharedAtlas;
+        atlasLoaded = true;
+        int resource = resources.getIdentifier("chess_pieces_v2", "drawable", packageName);
+        if (resource == 0) return null;
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inScaled = false;
+        Bitmap bitmap = BitmapFactory.decodeResource(resources, resource, options);
+        if (bitmap == null) return null;
+        if (bitmap.getWidth() % 6 != 0 || bitmap.getHeight() % 2 != 0 || !bitmap.hasAlpha()) {
+            bitmap.recycle();
+            return null;
+        }
+        int width = bitmap.getWidth() / 6, height = bitmap.getHeight() / 2;
+        Rect[] bounds = new Rect[12];
+        int[] pixels = new int[width * height];
+        for (int index = 0; index < bounds.length; index++) {
+            int originX = index % 6 * width, originY = index / 6 * height;
+            bitmap.getPixels(pixels, 0, width, originX, originY, width, height);
+            int left = width, top = height, right = -1, bottom = -1;
+            for (int y = 0; y < height; y++) for (int x = 0; x < width; x++) {
+                if ((pixels[y * width + x] >>> 24) <= 8) continue;
+                left = Math.min(left, x);
+                top = Math.min(top, y);
+                right = Math.max(right, x);
+                bottom = Math.max(bottom, y);
+            }
+            // Reject an empty or edge-clipped tile; all pieces must be independently padded.
+            if (right < left || left == 0 || top == 0 || right == width - 1 || bottom == height - 1) {
+                bitmap.recycle();
+                return null;
+            }
+            bounds[index] = new Rect(originX + left, originY + top,
+                    originX + right + 1, originY + bottom + 1);
+        }
+        sharedAtlas = new Atlas(bitmap, bounds);
+        return sharedAtlas;
+    }
+
+    private static final class Atlas {
+        final Bitmap bitmap;
+        final Rect[] bounds;
+        Atlas(Bitmap bitmap, Rect[] bounds) {
+            this.bitmap = bitmap;
+            this.bounds = bounds;
+        }
+    }
+
+    private void place(Rect source, int type, float x, float y, float size) {
+        float scale = Math.min(size * HEIGHTS[type] / source.height(), size * .76f / source.width());
+        float width = source.width() * scale, height = source.height() * scale;
+        float left = x + (size - width) / 2f;
+        float bottom = y + size * .89f;
+        destination.set(left, bottom - height, left + width, bottom);
+    }
+
     private final Paint paint = new Paint(3);
     private final Path path = new Path();
     public void draw(Canvas canvas, char piece, float x, float y, float size) {
         if (piece == '.') return;
+        int type = TYPES.indexOf(Character.toLowerCase(piece));
+        if (type < 0) return;
+        if (atlas != null) {
+            Rect source = atlas.bounds[type + (Character.isUpperCase(piece) ? 0 : 6)];
+            place(source, type, x, y, size);
+            canvas.drawBitmap(atlas.bitmap, source, destination, bitmapPaint);
+            return;
+        }
         canvas.save();
         canvas.translate(x, y);
         canvas.scale(size / 100f, size / 100f);

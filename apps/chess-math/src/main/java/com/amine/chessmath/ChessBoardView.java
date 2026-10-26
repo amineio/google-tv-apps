@@ -12,7 +12,7 @@ public final class ChessBoardView extends View {
         void activate(int square);
     }
     private final Paint paint = new Paint(3);
-    private final PiecePainter pieces = new PiecePainter();
+    private final PiecePainter pieces;
     private ChessGame game;
     private int square = 52, selected = -1;
     private List<String> legal = Collections.emptyList();
@@ -20,6 +20,7 @@ public final class ChessBoardView extends View {
     private Listener listener;
     public ChessBoardView(Context context) {
         super(context);
+        pieces = new PiecePainter(context);
         setFocusable(true);
         setFocusableInTouchMode(true);
         setLayerType(View.LAYER_TYPE_SOFTWARE,null);
@@ -81,6 +82,7 @@ public final class ChessBoardView extends View {
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(TvStyle.IVORY);
         c.drawRoundRect(0,0,getWidth(),getHeight(),7,7,paint);
+        int checkSquare = game == null ? -1 : game.checkSquare();
         for(int i=0;i<64;i++) {
             float x=margin+i%8*cell,y=margin+i/8*cell;
             paint.setColor((i/8+i%8)%2==0?0xffeee3c8:0xff486a4d);
@@ -97,16 +99,28 @@ public final class ChessBoardView extends View {
             char piece=game==null?'.':game.pieceAt(i);
             pieces.draw(c,piece,x,y,cell);
             if(selected>=0)for(String move:legal)if(move.startsWith(coordinate(selected)+coordinate(i))) {
-                paint.setColor(TvStyle.MINT);
-                paint.setStrokeWidth(cell*.055f);
+                paint.setColor(0xff183729);
                 if(piece=='.'){
                     paint.setStyle(Paint.Style.FILL);
+                    c.drawCircle(x+cell/2,y+cell/2,cell*.135f,paint);
+                    paint.setColor(TvStyle.MINT);
                     c.drawCircle(x+cell/2,y+cell/2,cell*.11f,paint);
+                } else {
+                    paint.setStrokeWidth(cell*.1f);
+                    corners(c,x+cell*.12f,y+cell*.12f,cell*.76f,cell*.18f);
+                    paint.setColor(TvStyle.MINT);
+                    paint.setStrokeWidth(cell*.055f);
+                    corners(c,x+cell*.12f,y+cell*.12f,cell*.76f,cell*.18f);
                 }
-                else corners(c,x+cell*.12f,y+cell*.12f,cell*.76f,cell*.18f);
                 break;
             }
             if(i==selected){
+                paint.setColor(0xff183729);
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setStrokeWidth(cell*.1f);
+                c.drawRect(x+cell*.1f,y+cell*.1f,x+cell*.9f,y+cell*.9f,paint);
+                paint.setStyle(Paint.Style.FILL);
+                c.drawCircle(x+cell*.18f,y+cell*.18f,cell*.085f,paint);
                 paint.setColor(TvStyle.AMBER);
                 paint.setStyle(Paint.Style.STROKE);
                 paint.setStrokeWidth(cell*.055f);
@@ -114,7 +128,7 @@ public final class ChessBoardView extends View {
                 paint.setStyle(Paint.Style.FILL);
                 c.drawCircle(x+cell*.18f,y+cell*.18f,cell*.06f,paint);
             }
-            if(game!=null&&game.checkSquare()==i){
+            if(checkSquare==i){
                 paint.setColor(0xffff817b);
                 paint.setStyle(Paint.Style.STROKE);
                 paint.setStrokeWidth(3);
