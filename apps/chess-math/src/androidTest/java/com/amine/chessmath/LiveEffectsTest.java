@@ -33,6 +33,7 @@ import static org.junit.Assume.assumeTrue;
 /** Physical-TV integration with memory storage. Never opens the family's snapshot or preferences. */
 @RunWith(AndroidJUnit4.class)
 public final class LiveEffectsTest {
+    @org.junit.Rule public final PlayModeRule playMode=new PlayModeRule();
     private static final String TAG="ChessMathEffectsTest";
     private static final Handler MAIN=new Handler(Looper.getMainLooper());
     private final Instrumentation instrumentation=InstrumentationRegistry.getInstrumentation();

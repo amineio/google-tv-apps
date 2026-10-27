@@ -48,6 +48,29 @@ public class SessionControllerTest {
         }
     }
 
+    @Test public void pausedWorkerCannotApplyItsReplyAfterResume() {
+        Fixture f=new Fixture();
+        f.store.saved.moves.addAll(java.util.Arrays.asList("f2f3","e7e5","g2g4"));
+        f.c.close();f.c=f.controller(Runnable::run);
+        f.c.foreground(true);f.c.resume();
+        assertEquals(1,f.computer.size());
+        f.c.pause();f.c.resume();
+        assertEquals(2,f.computer.size());
+        f.computer.get(0).run();assertEquals(3,f.c.state().moves.size());
+        f.computer.get(1).run();assertEquals("d8h4",f.c.state().moves.get(3));
+        assertTrue(f.c.state().result.contains("wint"));
+    }
+
+    @Test public void defaultOpponentFindsMateForEveryLegacySeedAfterRestore() {
+        for(long seed=0;seed<10;seed++){
+            Fixture f=new Fixture();f.store.saved.moves.addAll(java.util.Arrays.asList("f2f3","e7e5","g2g4"));
+            f.store.saved.opponentSeed=seed;
+            f.c.close();f.c=f.controller(Runnable::run);
+            f.c.foreground(true);f.c.resume();f.computer.get(0).run();
+            assertEquals("d8h4",f.c.state().moves.get(3));
+        }
+    }
+
     @Test public void chessDoesNotEndAtFiveMinutesOrLater() {
         Fixture f=new Fixture();f.c.foreground(true);f.c.resume();
         f.now=300000;f.c.tick();assertEquals(Session.Phase.CHESS,f.c.state().phase);
@@ -424,13 +447,24 @@ public class SessionControllerTest {
         f.now++;f.c.tick();assertEquals(Session.Phase.CHESS,f.c.state().phase);
         assertFalse(f.c.state().paused);assertEquals(0,f.c.state().elapsedMs);
     }
+    @Test public void resumeKeepsCompletedBoardAfterPauseAndRestore() {
+        Fixture f=new Fixture();Session ended=new Session();ended.phase=Session.Phase.CHESS;
+        ended.moves.addAll(java.util.Arrays.asList("f2f3","e7e5","g2g4","d8h4"));
+        ended.result=ChessGame.fromHistory(ended.moves).result();
+        f.store.saved=ended;f.c.close();f.c=f.controller(Runnable::run);f.c.foreground(true);
+        f.c.resume();assertEquals(Session.Phase.CHESS,f.c.state().phase);
+        f.now=900000;f.c.tick();assertEquals(Session.Phase.CHESS,f.c.state().phase);
+        f.c.pause();f.c.resume();assertEquals(Session.Phase.CHESS,f.c.state().phase);
+        assertEquals(ended.moves,f.c.state().moves);assertEquals(ended.result,f.c.state().result);
+        assertTrue(f.computer.isEmpty());
+    }
     @Test public void completedGameWaitsForExplicitContinueThenNextMathBreakStartsFreshBoard() {
         Fixture f=new Fixture();Session ended=new Session();ended.phase=Session.Phase.CHESS;
         ended.moves.addAll(java.util.Arrays.asList("f2f3","e7e5","g2g4","d8h4"));
         ended.result=ChessGame.fromHistory(ended.moves).result();assertFalse(ended.result.isEmpty());
         f.store.saved=ended;f.c.close();f.c=f.controller(Runnable::run);f.c.foreground(true);
         f.now=900000;f.c.tick();assertEquals(Session.Phase.CHESS,f.c.state().phase);
-        f.c.resume();assertEquals(Session.Phase.MATH,f.c.state().phase);assertEquals(4,f.c.state().moves.size());
+        f.c.resume();f.c.continueAfterGame();assertEquals(Session.Phase.MATH,f.c.state().phase);assertEquals(4,f.c.state().moves.size());
         f.c.state().correct=2;f.c.state().elapsedMs=300000;answer(f.c);f.now+=1200;f.c.tick();
         assertEquals(Session.Phase.BREAK,f.c.state().phase);assertEquals(4,f.c.state().moves.size());
         f.now+=60000;f.c.tick();assertEquals(Session.Phase.CHESS,f.c.state().phase);
@@ -443,4 +477,105 @@ public class SessionControllerTest {
         assertTrue(f.c.state().paused);assertNotNull(f.c.error());
         f.store.fail=false;f.c.retrySave();assertEquals(Session.Phase.CHESS,f.c.state().phase);assertTrue(f.c.state().paused);
     }
+    @Test public void disabledMathsResumesEveryPracticeHandoffDirectlyIntoChess() {
+        for(Session.Phase phase:new Session.Phase[]{Session.Phase.MATH,Session.Phase.BREAK,
+                Session.Phase.TO_MATH,Session.Phase.TO_CHESS}) {
+            Fixture f=new Fixture();f.store.saved.phase=phase;f.store.saved.elapsedMs=12345;
+            f.c.close();f.c=f.controller(Runnable::run);f.c.setMathsEnabled(false);
+            long revision=f.c.state().revision;
+            assertEquals(phase,f.c.state().phase);assertEquals(revision,f.c.state().revision);
+            f.c.foreground(true);f.c.resume();
+            assertEquals(Session.Phase.CHESS,f.c.state().phase);assertFalse(f.c.state().paused);
+            assertEquals(0,f.c.state().elapsedMs);assertFalse(f.c.state().mathPending);
+            assertFalse(f.c.state().chessPending);assertTrue(f.computer.isEmpty());
+        }
+    }
+    @Test public void disabledMathsPreservesOwedBlackReplyAcrossPracticeHandoff() {
+        Fixture f=new Fixture();f.store.saved.phase=Session.Phase.MATH;
+        f.store.saved.moves.add("e2e4");f.c.close();f.c=f.controller(Runnable::run);
+        List<PresentationEvent> events=new ArrayList<>();f.c.setPresenter(events::add);
+        f.c.setMathsEnabled(false);f.c.foreground(true);f.c.resume();f.c.tick();
+        assertEquals(java.util.Arrays.asList("e2e4"),f.c.state().moves);
+        assertEquals(1,f.computer.size());assertTrue(events.isEmpty());
+        f.computer.get(0).run();assertEquals(2,f.c.state().moves.size());
+        f.c.tick();assertEquals(1,f.computer.size());
+    }
+    @Test public void disabledMathsClearsCompletedBoardOnlyWhenLeavingPractice() {
+        for(Session.Phase phase:new Session.Phase[]{Session.Phase.CHESS,Session.Phase.MATH,
+                Session.Phase.BREAK,Session.Phase.TO_MATH,Session.Phase.TO_CHESS}) {
+            Fixture f=completedGame();f.c.close();f.store.saved.phase=phase;
+            f.c=f.controller(Runnable::run);f.c.setMathsEnabled(false);f.c.foreground(true);f.c.resume();
+            assertEquals(Session.Phase.CHESS,f.c.state().phase);
+            if(phase==Session.Phase.CHESS){assertEquals(4,f.c.state().moves.size());assertFalse(f.c.state().result.isEmpty());}
+            else {assertTrue(f.c.state().moves.isEmpty());assertEquals("",f.c.state().result);}
+        }
+    }
+    @Test public void disabledMathsContinuesOnlyCompletedGameIntoFreshChess() {
+        Fixture f=new Fixture();f.c.setMathsEnabled(false);f.c.foreground(true);f.c.resume();
+        f.c.chooseSquare(52);f.c.continueAfterGame();assertEquals(52,f.c.state().selected);
+        f=completedGame();f.c.setMathsEnabled(false);f.c.foreground(true);f.c.resume();
+        f.c.continueAfterGame();assertEquals(Session.Phase.CHESS,f.c.state().phase);
+        assertTrue(f.c.state().moves.isEmpty());assertEquals("",f.c.state().result);
+        assertFalse(f.c.state().paused);assertTrue(f.computer.isEmpty());
+    }
+    @Test public void enablingMathsKeepsUnfinishedChessThenUsesNormalCycle() {
+        Fixture f=new Fixture();f.c.setMathsEnabled(false);f.c.foreground(true);f.c.resume();
+        f.c.chooseSquare(52);f.c.chooseSquare(36);long revision=f.c.state().revision;
+        f.c.setMathsEnabled(true);assertEquals(revision,f.c.state().revision);
+        assertEquals(Session.Phase.CHESS,f.c.state().phase);assertEquals(1,f.c.state().moves.size());
+        assertEquals(1,f.computer.size());
+        f=completedGame();f.c.setMathsEnabled(false);f.c.setMathsEnabled(true);
+        f.c.foreground(true);f.c.resume();f.c.continueAfterGame();
+        assertEquals(Session.Phase.MATH,f.c.state().phase);assertNotNull(f.c.state().exercise);
+    }
+    @Test public void disabledMathsResetStartsPausedChessAndKeepsModeForFollowingReset() {
+        Fixture f=new Fixture();f.c.setMathsEnabled(false);f.c.foreground(true);f.c.resume();
+        f.c.chooseSquare(52);f.c.chooseSquare(36);f.c.resetSession();
+        assertEquals(Session.Phase.CHESS,f.c.state().phase);assertTrue(f.c.state().paused);
+        assertTrue(f.c.state().moves.isEmpty());f.c.resume();f.c.resetSession();
+        assertEquals(Session.Phase.CHESS,f.c.state().phase);
+    }
+    @Test public void disabledMathsHandoffFailureRetainsSnapshotUntilDurableRetry() {
+        Fixture f=completedGame();f.c.setMathsEnabled(false);f.c.foreground(true);f.c.resume();
+        f.store.fail=true;f.c.continueAfterGame();
+        assertEquals(4,f.c.state().moves.size());assertFalse(f.c.state().result.isEmpty());
+        assertTrue(f.c.state().paused);assertNotNull(f.c.error());
+        f.store.fail=false;f.c.retrySave();assertTrue(f.c.state().moves.isEmpty());
+        assertEquals(Session.Phase.CHESS,f.c.state().phase);assertTrue(f.c.state().paused);
+    }
+    private static Fixture completedGame() {
+        Fixture f=new Fixture();f.c.close();
+        f.store.saved.moves.addAll(java.util.Arrays.asList("f2f3","e7e5","g2g4","d8h4"));
+        f.store.saved.result=ChessGame.fromHistory(f.store.saved.moves).result();
+        f.c=f.controller(Runnable::run);return f;
+    }
+
+    @Test public void disablingMathsDuringChessDoesNotReplayMoveOrDuplicatePendingReply() {
+        Fixture f=new Fixture();List<PresentationEvent> events=new ArrayList<>();
+        f.c.setPresenter(events::add);f.c.foreground(true);f.c.resume();
+        f.c.chooseSquare(52);f.c.chooseSquare(36);PresentationEvent move=f.c.presentation();
+        long revision=f.c.state().revision;f.c.setMathsEnabled(false);
+        assertEquals(revision,f.c.state().revision);assertEquals(move,f.c.presentation());
+        assertEquals(1,events.size());assertTrue(f.computer.isEmpty());
+        f.c.completePresentation(move.id);f.now=100;f.c.tick();f.c.tick();
+        assertEquals(1,f.computer.size());assertEquals(1,events.size());
+    }
+    @Test public void disabledMathsResumeFailureRetainsPracticeAndRetriesPausedChess() {
+        Fixture f=new Fixture();f.c.close();f.store.saved.phase=Session.Phase.BREAK;
+        f.store.saved.moves.add("e2e4");f.c=f.controller(Runnable::run);
+        f.c.setMathsEnabled(false);f.store.fail=true;f.c.foreground(true);f.c.resume();
+        assertEquals(Session.Phase.BREAK,f.c.state().phase);assertNotNull(f.c.error());
+        assertTrue(f.computer.isEmpty());f.store.fail=false;f.c.retrySave();
+        assertEquals(Session.Phase.CHESS,f.c.state().phase);assertTrue(f.c.state().paused);
+        assertEquals(java.util.Arrays.asList("e2e4"),f.c.state().moves);assertTrue(f.computer.isEmpty());
+        f.c.resume();assertEquals(1,f.computer.size());
+    }
+    @Test public void disabledMathsOverrideStaysPausedAndResetSnapshotCanReload() throws Exception {
+        Fixture f=mathWithAnswer(7);f.c.pause();f.c.setMathsEnabled(false);f.c.skipToMath();
+        assertEquals(Session.Phase.CHESS,f.c.state().phase);assertTrue(f.c.state().paused);
+        f.c.resetSession();Session decoded=SessionCodec.decode(SessionCodec.encode(f.c.state()));
+        assertEquals(Session.Phase.CHESS,decoded.phase);assertTrue(decoded.paused);
+        assertTrue(decoded.moves.isEmpty());assertFalse(f.c.mathsEnabled());
+    }
+
 }

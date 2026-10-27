@@ -36,10 +36,89 @@ final class TvStyle {
         b.setStateListAnimator(null);
         return b;
     }
+    static android.widget.Switch switchControl(Context context,String label){
+        android.widget.Switch control=new android.widget.Switch(context);
+        control.setId(View.generateViewId());control.setText(label);
+        control.setTextColor(IVORY);control.setTextSize(21);control.setSingleLine(false);control.setMaxLines(3);
+        control.setTypeface(Typeface.create("sans-serif-medium",Typeface.NORMAL));
+        control.setMinHeight(dp(context,52));control.setMinimumHeight(dp(context,52));
+        control.setPadding(dp(context,16),dp(context,8),dp(context,16),dp(context,8));
+        control.setSwitchMinWidth(dp(context,48));control.setSwitchPadding(dp(context,12));
+        control.setShowText(false);control.setSplitTrack(false);
+        control.setThumbTintList(new android.content.res.ColorStateList(
+                new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},new int[]{AMBER,IVORY}));
+        control.setTrackTintList(new android.content.res.ColorStateList(
+                new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},new int[]{0xff6b9277,0xff49614f}));
+        control.setBackground(new FocusSurface(context));control.setStateListAnimator(null);
+        return control;
+    }
+    static void preferenceRow(TextView row){
+        Context context=row.getContext();
+        row.setTextSize(20);
+        row.setGravity(android.view.Gravity.CENTER_VERTICAL|android.view.Gravity.START);
+        row.setMinHeight(dp(context,56));row.setMinimumHeight(dp(context,56));
+        row.setPadding(dp(context,16),dp(context,12),dp(context,16),dp(context,12));
+        row.setBackground(new PreferenceSurface(context));
+    }
+    private static final class PreferenceSurface extends android.graphics.drawable.Drawable {
+        private final Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final float density;
+        PreferenceSurface(Context context){density=context.getResources().getDisplayMetrics().density;}
+        @Override public boolean isStateful(){return true;}
+        @Override protected boolean onStateChange(int[] states){invalidateSelf();return true;}
+        @Override public void draw(Canvas canvas){
+            boolean focused=false;
+            for(int state:getState())focused|=state==android.R.attr.state_focused;
+            float left=getBounds().left+2*density,top=getBounds().top+2*density;
+            float right=getBounds().right-2*density,bottom=getBounds().bottom-2*density;
+            paint.setStyle(Paint.Style.FILL);paint.setColor(focused?0xff3e6046:0x350c2b1d);
+            canvas.drawRoundRect(left,top,right,bottom,6*density,6*density,paint);
+            if(focused){
+                paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(2*density);paint.setColor(AMBER);
+                canvas.drawRoundRect(left,top,right,bottom,6*density,6*density,paint);
+            }else{
+                paint.setStrokeWidth(density);paint.setColor(0x25b5ceb0);
+                canvas.drawLine(left+14*density,bottom,right-14*density,bottom,paint);
+            }
+        }
+        @Override public void setAlpha(int alpha){}
+        @Override public void setColorFilter(android.graphics.ColorFilter filter){}
+        @Override public int getOpacity(){return android.graphics.PixelFormat.TRANSLUCENT;}
+    }
+    static Button titleButton(Context context,String label,boolean primary,boolean quiet){
+        Button button=button(context,label);
+        button.setTextSize(quiet?20:22);
+        button.setMinHeight(dp(context,quiet?48:56));
+        button.setMinimumHeight(dp(context,quiet?48:56));
+        button.setPadding(dp(context,20),dp(context,12),dp(context,20),dp(context,12));
+        button.setBackground(new FocusSurface(context,primary,quiet));
+        return button;
+    }
+    static final class TitleArtwork extends View {
+        private final PiecePainter pieces;
+        private final Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG);
+        TitleArtwork(Context context){
+            super(context);pieces=new PiecePainter(context);
+            setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
+            setFocusable(false);
+        }
+        @Override protected void onDraw(Canvas canvas){
+            super.onDraw(canvas);
+            float size=Math.min(Math.min(getWidth(),getHeight()),dp(getContext(),340));
+            float left=(getWidth()-size)/2,top=(getHeight()-size)/2;
+            paint.setColor(0x22000000);
+            canvas.drawOval(left+size*.06f,top+size*.69f,left+size*.96f,top+size*.80f,paint);
+            pieces.draw(canvas,'n',left+size*.51f,top+size*.24f,size*.48f);
+            pieces.draw(canvas,'K',left+size*.03f,top+size*.02f,size*.75f);
+        }
+    }
     private static final class FocusSurface extends android.graphics.drawable.Drawable {
         private final Paint p=new Paint(3);
         private final float d;
-        FocusSurface(Context c){
+        private final boolean primary,quiet;
+        FocusSurface(Context c){this(c,false,false);}
+        FocusSurface(Context c,boolean primary,boolean quiet){
+            this.primary=primary;this.quiet=quiet;
             d=c.getResources().getDisplayMetrics().density;
         }
         @Override public boolean isStateful(){
@@ -57,11 +136,11 @@ final class TvStyle {
             }
             float left=getBounds().left+3*d,top=getBounds().top+3*d,right=getBounds().right-3*d,bottom=getBounds().bottom-3*d;
             p.setStyle(Paint.Style.FILL);
-            p.setColor(focus?0xff3e6046:checked?0xff34543d:0x451c492e);
+            p.setColor(focus?0xff3e6046:quiet?0x00000000:primary||checked?0xff34543d:0x451c492e);
             c.drawRoundRect(left,top,right,bottom,10*d,10*d,p);
             p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth((focus?2.5f:1.4f)*d);
-            p.setColor(focus?AMBER:checked?MUTED:0xaafff1d0);
+            p.setColor(focus?AMBER:quiet?0x00000000:primary||checked?MUTED:0xaafff1d0);
             c.drawRoundRect(left,top,right,bottom,10*d,10*d,p);
         }
         @Override public void setAlpha(int a){

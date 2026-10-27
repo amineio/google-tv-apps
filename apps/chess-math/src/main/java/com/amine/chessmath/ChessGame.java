@@ -107,6 +107,29 @@ public final class ChessGame {
         return knights + bishops <= 1 || (knights == 0 && sameBishopColor);
     }
 
+    // Search uses generated moves only, on its own snapshot. Pair every push with pop in finally.
+    List<Move> searchMoves() { return board.legalMoves(); }
+    void searchPush(Move move) {
+        if(!board.doMove(move))throw new IllegalStateException("Generated search move refused");
+    }
+    void searchPop() { board.undoMove(); }
+    boolean searchCheck() { return board.isKingAttacked(); }
+    boolean searchDestinationAttacked(Move move) {
+        return board.squareAttackedBy(move.getTo(),board.getSideToMove())!=0;
+    }
+    boolean searchQueenAttacked() {
+        Piece queen=board.getSideToMove()==Side.WHITE?Piece.BLACK_QUEEN:Piece.WHITE_QUEEN;
+        for(Square square:board.getPieceLocation(queen))
+            if(board.squareAttackedBy(square,board.getSideToMove())!=0)return true;
+        return false;
+    }
+    boolean searchClaimableDraw() { return board.isRepetition(3)||board.getHalfMoveCounter()>=100; }
+    /** -1 means the side to move is mated, 1 means an automatic draw, 0 means active. */
+    int searchOutcome(List<Move> legal) {
+        if(legal.isEmpty())return board.isKingAttacked()?-1:1;
+        return deadMaterial()||board.isRepetition(5)||board.getHalfMoveCounter()>=150?1:0;
+    }
+
     /** Worker-owned copy retains repetition and counters, including speculative branch history. */
     ChessGame copy() {
         ChessGame copy = new ChessGame();

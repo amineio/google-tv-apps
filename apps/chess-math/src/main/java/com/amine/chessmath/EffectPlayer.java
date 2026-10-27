@@ -47,7 +47,7 @@ public final class EffectPlayer implements AutoCloseable {
         // Cues have balanced source levels; reward energy comes from its melody and layers.
         float gain=cue==PresentationEvent.Cue.MATH_SUCCESS?.46f:cue==PresentationEvent.Cue.CHECK?.42f:.50f;
         // Full WAV lengths include the quiet reflection tails (tools/generate_audio.py).
-        int duration=cue==PresentationEvent.Cue.MOVE?160:cue==PresentationEvent.Cue.CAPTURE?220:cue==PresentationEvent.Cue.CHECK?420:680;
+        int duration=cue==PresentationEvent.Cue.MOVE?160:cue==PresentationEvent.Cue.CAPTURE?320:cue==PresentationEvent.Cue.CHECK?420:680;
         stream=pool.play(samples.get(cue),gain,gain,rank,0,1);priority=rank;
         until=SystemClock.elapsedRealtime()+duration;
         handler.postDelayed(()->{if(generation==token)stop();},duration+15);

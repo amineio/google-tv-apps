@@ -1,0 +1,14 @@
+
+com.amine.chessmath.BoardLayoutTest:...
+com.amine.chessmath.StartScreenTest:..
+com.amine.chessmath.DifficultyRemoteTest:....
+com.amine.chessmath.OpponentDeviceTest:..
+com.amine.chessmath.ParentAndPromotionRemoteTest:[23077.873791] (RenderThread) Successfully parsed 1 environment variable(s) from /vendor/etc/mali_platform.config.
+Could not open module param file '/sys/module/mali_kbase/parameters/large_page_conf'
+[23077.879407] (RenderThread) Successfully parsed 1 environment variable(s) from /vendor/etc/mali_platform.config.
+.......
+com.amine.chessmath.RemoteFocusTest:.
+
+Time: 74.651
+
+OK (19 tests)

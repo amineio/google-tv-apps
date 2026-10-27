@@ -22,6 +22,7 @@ import static org.junit.Assert.*;
 /** Memory-only layout fixtures never overwrite the saved child's game. */
 @RunWith(AndroidJUnit4.class)
 public final class MathLayoutTest {
+    @org.junit.Rule public final PlayModeRule playMode=new PlayModeRule();
     private static final Handler MAIN=new Handler(Looper.getMainLooper());
     private final Instrumentation instrumentation=InstrumentationRegistry.getInstrumentation();
     private MainActivity activity;

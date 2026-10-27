@@ -83,7 +83,7 @@ public class ChessGameTest {
     @Test public void matePrecedesSeventyFiveAndReportsCheckedKing() throws Exception {
         ChessGame g = position("7k/8/5KQ1/8/8/8/8/8 w - - 149 75");
         g.play("g6g7"); assertTrue(g.result().contains("Wit")); assertEquals(7, g.checkSquare());
-        assertNull(EasyOpponent.choose(g, 1));
+        assertNull(ChessOpponent.choose(g));
         ChessGame stalemate = position("7k/5K2/6Q1/8/8/8/8/8 b - - 0 1");
         assertTrue(stalemate.result().contains("pat")); assertEquals(-1, stalemate.checkSquare());
     }
@@ -95,4 +95,17 @@ public class ChessGameTest {
         assertEquals("", position("6bk/8/8/8/8/8/8/KN6 w - - 0 1").result());
         assertEquals("", position("7k/8/8/8/8/8/8/KNN5 w - - 0 1").result());
     }
+    @org.junit.Test public void generatedSearchMovesUndoWithoutChangingCountersOrRepetition(){
+        ChessGame game=ChessGame.fromHistory(java.util.Arrays.asList(
+                "g1f3","g8f6","f3g1","f6g8","g1f3","g8f6","f3g1","f6g8"));
+        String fen=game.fen();java.util.List<String> history=game.history();
+        assertTrue(game.claimableDraw());
+        for(com.github.bhlangonijr.chesslib.move.Move move:game.searchMoves()){
+            game.searchPush(move);
+            try {assertFalse(game.fen().equals(fen));}
+            finally {game.searchPop();}
+            assertEquals(fen,game.fen());assertEquals(history,game.history());assertTrue(game.claimableDraw());
+        }
+    }
+
 }

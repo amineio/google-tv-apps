@@ -1,9 +1,14 @@
 <resources>
+    <string name="app_build">Build %1$d</string>
+    <string name="settings_play">Spelen en leren</string>
+    <string name="settings_app">Appvoorkeuren</string>
+    <string name="settings_session">Huidige sessie</string>
+    <string name="settings_information">Informatie</string>
+
     <string name="app_version">Versie %1$s</string>
     <string name="app_name">Schaak &amp; Reken</string>
     <string name="brand">S C H A A K  &amp;  R E K E N</string>
-    <string name="start">Start</string><string name="continue_game">Verder spelen</string>
-    <string name="intro">Reken 5 minuten en maak minstens 3 sommen goed.\nNeem 1 minuut pauze. Speel daarna een heel schaakspel.</string>
+    <string name="start">Start</string><string name="continue_game">Verder spelen</string><string name="new_game">Nieuw spel</string>
     <string name="your_turn">Jij bent aan zet</string><string name="computer_turn">De computer is aan zet</string>
     <string name="choose_piece">Kies een stuk</string><string name="choose_target">Kies een vak voor je stuk</string>
     <string name="square_description">%1$s · %2$s</string>
@@ -31,13 +36,9 @@
     <string name="saving">Opslaan…</string>
     <string name="table_help">Tafel 5: 1 × 5 tot en met 10 × 5. De tafel is het tweede getal.</string>
     <string name="about_game">Over het spel</string>
-    <string name="parent_help">Begin met vijf minuten rekenen en minstens drie goede antwoorden. Maak de huidige som af. Daarna volgt een pauze van één minuut. Schaken begint vanzelf. Speel het schaakspel uit. Ga daarna verder met rekenen.\n\nAlleen tijd in de zichtbare, actieve app telt mee. Menu’s en pauzes stoppen de tijd. De pauzeteller loopt alleen op het pauzescherm. Een goed antwoord met een hint telt ook mee. De app meet niet of een kind nadenkt.\n\nDe app herkent niet elke dode stelling. In zeldzame, geblokkeerde stellingen kan het spel doorgaan terwijl geen speler nog mat kan zetten.\n\nDe computer speelt bewust eenvoudig. Zijn speelsterkte en het leereffect zijn niet vastgesteld.</string>
+    <string name="parent_help">Rekenoefeningen zijn optioneel. Zet ze uit in Instellingen om te schaken zonder rekenen of pauzes. Met rekenoefeningen aan begin je met vijf minuten rekenen en minstens drie goede antwoorden. Maak de huidige som af. Daarna volgt een pauze van één minuut. Schaken begint vanzelf. Speel het schaakspel uit. Ga daarna verder met rekenen.\n\nAlleen tijd in de zichtbare, actieve app telt mee. Menu’s en pauzes stoppen de tijd. De pauzeteller loopt alleen op het pauzescherm. Een goed antwoord met een hint telt ook mee. De app meet niet of een kind nadenkt.\n\nDe app herkent niet elke dode stelling. In zeldzame, geblokkeerde stellingen kan het spel doorgaan terwijl geen speler nog mat kan zetten.\n\nDe computer berekent zijn zetten op de tv. Zijn speelsterkte en het leereffect zijn niet vastgesteld.</string>
     <string name="sound_effects">Geluidseffecten</string>
     <string name="piece_motion">Stukbewegingen</string>
-    <string name="on">Aan</string><string name="off">Uit</string>
-    <string name="effect_value">%1$s: %2$s</string>
-    <string name="sound_on">Geluid aan · uitzetten</string>
-    <string name="sound_off">Geluid uit · aanzetten</string>
     <string name="preference_error">De instelling is niet opgeslagen. Probeer opnieuw.</string>
     <string name="language">Taal</string>
     <string name="dutch">Nederlands</string>
@@ -45,4 +46,6 @@
     <string name="break_title">Even pauze</string>
     <string name="break_help">Schaken begint zo</string>
     <string name="break_remaining">Nog %1$d seconden</string>
+    <string name="maths_practice">Rekenoefeningen</string>
+    <string name="maths_practice_help">Zet uit om te schaken zonder rekenen of pauzes.</string>
 </resources>
