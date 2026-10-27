@@ -129,7 +129,7 @@ public final class ClockService extends Service {
     @android.annotation.SuppressLint("RtlHardcoded")
     private void showClock() {
         windows = getSystemService(WindowManager.class);
-        TextView view = new TextView(this);
+        TextView view = new OutlinedClockView(this);
         view.setTextColor(Color.WHITE);
         view.setTextSize(ClockPreferences.size(this));
         view.setFontFeatureSettings("tnum");
