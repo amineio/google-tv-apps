@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 /** Inject remote events through the window, including its default focus navigation. */
 @RunWith(AndroidJUnit4.class)
 public final class MathRemoteTest {
+    @org.junit.Rule public final PlayModeRule playMode=new PlayModeRule();
     private final Instrumentation instrumentation=InstrumentationRegistry.getInstrumentation();
     private MainActivity activity;
     private SessionController controller;
@@ -31,6 +32,8 @@ public final class MathRemoteTest {
             assertStartFocus();
             key(KeyEvent.KEYCODE_DPAD_UP);
             assertStartFocus();
+            key(KeyEvent.KEYCODE_DPAD_DOWN);
+            assertFocus(activity.getString(R.string.parents));
             key(KeyEvent.KEYCODE_DPAD_DOWN);
             assertFocus(activity.getString(R.string.exit));
         });

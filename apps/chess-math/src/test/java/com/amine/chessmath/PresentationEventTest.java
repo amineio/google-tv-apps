@@ -18,12 +18,12 @@ public class PresentationEventTest {
     }
     @Test public void castleSlidesBothPiecesForOneDuration() {
         PresentationEvent e=event("e2e4 e7e5 g1f3 b8c6 f1c4 g8f6","e1g1");
-        assertEquals(63,e.rookFrom);assertEquals(61,e.rookTo);assertEquals(420,e.durationMs);
+        assertEquals(63,e.rookFrom);assertEquals(61,e.rookTo);assertEquals(620,e.durationMs);
         assertEquals('K',e.movingPiece);assertEquals(PresentationEvent.Cue.MOVE,e.cue);
     }
     @Test public void shortAndLongMovesAllowTimeForGentleAccelerationAndDeceleration() {
-        assertEquals(320,event("","e2e4").durationMs);
-        assertEquals(380,event("e2e4 e7e5","f1c4").durationMs);
+        assertEquals(480,event("","e2e4").durationMs);
+        assertEquals(560,event("e2e4 e7e5","f1c4").durationMs);
     }
     @Test public void allCapturePromotionsTravelAsPawnAndLandAsChosenPiece() {
         for(char p:new char[]{'q','r','b','n'}) {
@@ -32,12 +32,18 @@ public class PresentationEventTest {
             assertEquals('r',e.capturedPiece);assertEquals(0,e.capturedSquare);
         }
     }
-    @Test public void checkReplacesCaptureAndTapAndIdentitiesDeduplicate() {
+    @Test public void nonCaptureCheckKeepsItsCueAndIdentitiesDeduplicate() {
         PresentationEvent e=event("e2e4 f7f6","d1h5");
         assertEquals(PresentationEvent.Cue.CHECK,e.cue);
         PresentationEvent.Consumption consumed=new PresentationEvent.Consumption();
         assertTrue(consumed.take(e));assertFalse(consumed.take(e));
         assertFalse(consumed.take(event("","d2d4")));
+    }
+    @Test public void checkingCaptureStillPlaysTheCaptureCue() {
+        PresentationEvent e=event("e2e4 d7d5 f1b5 c7c6","b5c6");
+        assertEquals('p',e.capturedPiece);
+        assertTrue(e.afterCheck>=0);
+        assertEquals(PresentationEvent.Cue.CAPTURE,e.cue);
     }
     @Test public void selectionAndRestoredSolvedSnapshotsAreSilent() {
         Session before=new Session(), after=before.copy();after.selected=52;after.revision=1;

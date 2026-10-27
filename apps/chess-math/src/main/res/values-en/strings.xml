@@ -1,11 +1,17 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+    <string name="app_build">Build %1$d</string>
+    <string name="settings_play">Play &amp; learning</string>
+    <string name="settings_app">App preferences</string>
+    <string name="settings_session">Current session</string>
+    <string name="settings_information">Information</string>
+
     <string name="app_version">Version %1$s</string>
     <string name="app_name">Chess &amp; Maths</string>
     <string name="brand">C H E S S  &amp;  M A T H S</string>
     <string name="start">Start</string>
     <string name="continue_game">Continue</string>
-    <string name="intro">Practise maths for 5 minutes and solve at least 3 exercises.\nTake a 1-minute break. Then play a full chess game.</string>
+    <string name="new_game">New game</string>
     <string name="your_turn">Your turn</string>
     <string name="computer_turn">The computer is thinking</string>
     <string name="choose_piece">Choose a piece</string>
@@ -84,14 +90,9 @@
     <string name="saving">Saving…</string>
     <string name="table_help">Table 5: 1 × 5 through 10 × 5. The table is the second number.</string>
     <string name="about_game">About the game</string>
-    <string name="parent_help">Start with five minutes of maths and at least three correct answers. Finish the current exercise. Then take a one-minute break. Chess starts automatically. Finish the chess game. Then continue with maths.\n\nOnly time in the visible, active app counts. Menus and pauses stop the timer. The break timer runs only on the break screen. A correct answer with a hint also counts. The app cannot measure whether a child is thinking.\n\nThe app does not detect every dead position. In rare blocked positions, play can continue even though neither player can give checkmate.\n\nThe computer plays simple moves by design. Its playing strength and learning effect have not been established.</string>
+    <string name="parent_help">Maths practice is optional. Turn it off in Settings to play chess without maths or breaks. With maths on, start with five minutes of maths and at least three correct answers. Finish the current exercise. Then take a one-minute break. Chess starts automatically. Finish the chess game. Then continue with maths.\n\nOnly time in the visible, active app counts. Menus and pauses stop the timer. The break timer runs only on the break screen. A correct answer with a hint also counts. The app cannot measure whether a child is thinking.\n\nThe app does not detect every dead position. In rare blocked positions, play can continue even though neither player can give checkmate.\n\nThe computer calculates its moves on the TV. Its playing strength and learning effect have not been established.</string>
     <string name="sound_effects">Sound effects</string>
     <string name="piece_motion">Piece motion</string>
-    <string name="on">On</string>
-    <string name="off">Off</string>
-    <string name="effect_value">%1$s: %2$s</string>
-    <string name="sound_on">Sound on · mute</string>
-    <string name="sound_off">Sound off · unmute</string>
     <string name="preference_error">Could not save this setting. Try again.</string>
     <string name="language">Language</string>
     <string name="dutch">Nederlands</string>
@@ -99,4 +100,6 @@
     <string name="break_title">Take a break</string>
     <string name="break_help">Chess starts soon</string>
     <string name="break_remaining">%1$d seconds remaining</string>
+    <string name="maths_practice">Maths practice</string>
+    <string name="maths_practice_help">Turn off to play chess without maths or breaks.</string>
 </resources>

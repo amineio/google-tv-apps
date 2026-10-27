@@ -32,6 +32,8 @@ public final class MainActivity extends Activity {
     private SessionController controller;
     private static EffectPreferences sharedEffects;
     private EffectPreferences effects;
+    private static PlayPreferences sharedPlay;
+    private PlayPreferences play;
     private EffectPlayer player;
     private final PresentationEvent.Consumption consumed=new PresentationEvent.Consumption();
     private PresentationEvent presenting;
@@ -66,11 +68,18 @@ public final class MainActivity extends Activity {
         if(!effects.sound())player.stop();
         render();
     }
+    private void changeMathsMode(boolean enabled){
+        if(play.setMathsEnabled(enabled))controller.setMathsEnabled(enabled);
+        else new AlertDialog.Builder(this).setTitle(R.string.error_title)
+                .setMessage(R.string.preference_error).setPositiveButton(R.string.ok,null).show();
+        render();
+    }
     private LinearLayout content;
-    private boolean started, alive, foreground;
+    private boolean started, alive, foreground, startAfterReset;
     private String menu="", screen="";
     private ChessBoardView board;
-    private TextView chessHeading,chessHelp,chessDetail,savingText,breakCountdown;
+    private boolean showingChessResult;
+    private TextView savingText,breakCountdown;
     private long displayedBreakSecond=-1;
     private MathConfig draft;
     private static LanguagePreferences sharedLanguage;
@@ -126,6 +135,7 @@ public final class MainActivity extends Activity {
         controller=sharedController;
         if(saved!=null){
             started=saved.getBoolean("started",false);menu=saved.getString("menu","");
+            startAfterReset=saved.getBoolean("start-after-reset",false);
             lastPad=saved.getInt("pad",4);
             if(saved.containsKey("draft-limit")){
                 draft=controller.state().config.copy();
@@ -138,6 +148,8 @@ public final class MainActivity extends Activity {
         }
         if(sharedEffects==null)sharedEffects=new EffectPreferences(getApplicationContext());
         effects=sharedEffects;player=new EffectPlayer(this);
+        if(sharedPlay==null)sharedPlay=new PlayPreferences(getApplicationContext());
+        play=sharedPlay;controller.setMathsEnabled(play.mathsEnabled());
         controller.setListener(this::render);
         alive=true;
         controller.setPresenter(this::present);
@@ -147,6 +159,7 @@ public final class MainActivity extends Activity {
     }
     @Override protected void onSaveInstanceState(Bundle saved){
         saved.putBoolean("started",started);saved.putString("menu",menu);saved.putInt("pad",lastPad);
+        saved.putBoolean("start-after-reset",startAfterReset);
         if(draft!=null){
             saved.putInt("draft-limit",draft.limit);saved.putBoolean("draft-add",draft.addition);
             saved.putBoolean("draft-sub",draft.subtraction);saved.putBoolean("draft-mul",draft.multiplication);
@@ -168,6 +181,7 @@ public final class MainActivity extends Activity {
     @Override public void onWindowFocusChanged(boolean focus){
         super.onWindowFocusChanged(focus);
         if(controller!=null)controller.foreground(focus&&foreground);
+        if(focus&&startAfterReset)render();
         if(!focus){interruptEffects();}
     }
     @Override protected void onDestroy(){
@@ -199,6 +213,12 @@ public final class MainActivity extends Activity {
             presenting=null;if(board!=null)board.cancelMotion();
         }
         if(controller.busy()){updateSaving();return;}
+        if(startAfterReset){
+            if(hasError())startAfterReset=false;
+            else if(foreground&&hasWindowFocus()){
+                startAfterReset=false;controller.resume();return;
+            }
+        }
         if(hasError()){
             shell();
             screen="error";
@@ -210,8 +230,8 @@ public final class MainActivity extends Activity {
             focusFirst();
             return;
         }
-        String target=presenting!=null?"CHESS":!started?"start":!menu.isEmpty()?menu:(state.phase==Session.Phase.TO_MATH||state.phase==Session.Phase.TO_CHESS)?state.phase.name():state.paused?"pause":state.phase.name();
-        if(target.equals("CHESS")&&screen.equals("CHESS")&&state.promotionTo<0&&state.intendedMove==null&&(state.result.isEmpty()||presenting!=null)&&board!=null){
+        String target=presenting!=null?"CHESS":!menu.isEmpty()?menu:!started?"start":(state.phase==Session.Phase.TO_MATH||state.phase==Session.Phase.TO_CHESS)?state.phase.name():state.paused?"pause":state.phase.name();
+        if(target.equals("CHESS")&&screen.equals("CHESS")&&state.promotionTo<0&&state.intendedMove==null&&(state.result.isEmpty()||presenting!=null||showingChessResult)&&board!=null){
             bindBoard();
             return;
         }
@@ -258,12 +278,12 @@ public final class MainActivity extends Activity {
     private void updateSaving(){
         if(savingText!=null){
             savingText.setText(hasError()?localized(controller.error()):s(R.string.saving));
-            savingText.setVisibility(controller.busy()?View.VISIBLE:View.GONE);
+            savingText.setVisibility(controller.busy()&&((!screen.equals("CHESS")&&!screen.equals("MATH"))||hasError())?View.VISIBLE:View.GONE);
         }
     }
     private void shell(){
         if(board!=null)board.cancelMotion();
-        board=null;
+        board=null;showingChessResult=false;
         breakCountdown=null;displayedBreakSecond=-1;
         FrameLayout frame=new FrameLayout(this);
         frame.addView(new TvStyle.Backdrop(this),new FrameLayout.LayoutParams(-1,-1));
@@ -341,15 +361,53 @@ public final class MainActivity extends Activity {
         }
     }
     private void start(){
-        title(R.string.app_name);
-        body(s(R.string.intro));
-        space(content,14);
-        action(controller.state().revision==0?R.string.start:R.string.continue_game,()->{
-            started=true;menu="";controller.resume();render();
+        content.removeAllViews();
+        content.setPadding(dp(64),dp(64),dp(64),dp(48));
+        LinearLayout scene=new LinearLayout(this);
+        scene.setOrientation(LinearLayout.HORIZONTAL);
+        content.addView(scene,new LinearLayout.LayoutParams(-1,-1));
+        boolean showArtwork=getResources().getConfiguration().fontScale<1.4f
+                &&getResources().getConfiguration().screenWidthDp>=800;
+        ScrollView scroll=new ScrollView(this);
+        scroll.setClipToPadding(false);
+        scroll.setVerticalScrollBarEnabled(false);
+        scene.addView(scroll,new LinearLayout.LayoutParams(0,-1,showArtwork?.58f:1f));
+        LinearLayout menuColumn=new LinearLayout(this);
+        menuColumn.setOrientation(LinearLayout.VERTICAL);
+        menuColumn.setPadding(0,0,dp(16),dp(8));
+        scroll.addView(menuColumn,new ScrollView.LayoutParams(-1,-2));
+        TextView title=TvStyle.text(this,s(R.string.app_name),42,true);
+        if(android.os.Build.VERSION.SDK_INT>=28)title.setAccessibilityHeading(true);
+        menuColumn.addView(title,new LinearLayout.LayoutParams(-1,-2));
+        space(menuColumn,32);
+        int primary=controller.state().revision==0?R.string.start:R.string.continue_game;
+        Button play=TvStyle.titleButton(this,s(primary),true,false);
+        play.setTag(s(primary));
+        play.setOnClickListener(v->act(()->{started=true;menu="";controller.resume();render();}));
+        addTitleAction(menuColumn,play);
+        if(controller.state().revision!=0){
+            space(menuColumn,12);
+            Button fresh=TvStyle.titleButton(this,s(R.string.new_game),false,false);
+            fresh.setTag(s(R.string.new_game));
+            fresh.setOnClickListener(v->act(()->confirmReset(true)));
+            addTitleAction(menuColumn,fresh);
         }
-        );
-        action(R.string.exit,this::finish);
-        verticalClamp(content);
+        space(menuColumn,12);
+        Button settings=TvStyle.titleButton(this,s(R.string.parents),false,false);
+        settings.setTag(s(R.string.parents));
+        settings.setOnClickListener(v->act(()->{menu="parents";render();}));
+        addTitleAction(menuColumn,settings);
+        space(menuColumn,12);
+        Button close=TvStyle.titleButton(this,s(R.string.exit),false,false);
+        close.setTag(s(R.string.exit));
+        close.setOnClickListener(v->act(this::finish));
+        addTitleAction(menuColumn,close);
+        if(showArtwork)scene.addView(new TvStyle.TitleArtwork(this),new LinearLayout.LayoutParams(0,-1,.42f));
+        verticalClamp(menuColumn);
+    }
+    private void addTitleAction(LinearLayout parent,Button action){
+        int width=Math.min(dp(320),getResources().getDisplayMetrics().widthPixels-dp(144));
+        parent.addView(action,new LinearLayout.LayoutParams(width,-2));
     }
     private void pause(){
         title(R.string.pause);
@@ -359,65 +417,93 @@ public final class MainActivity extends Activity {
         );
         if(controller.state().phase==Session.Phase.CHESS&&controller.game().claimableDraw())action(R.string.claim_draw,()->controller.claimDraw());
         action(R.string.parents,()->{menu="parents";render();});
-        Button mute=button(getString(effects.sound()?R.string.sound_on:R.string.sound_off),"pause-sound",()->changeEffect(true));
-        content.addView(mute,new LinearLayout.LayoutParams(dp(350),dp(49)));
-        space(content,6);
         action(R.string.exit,this::finish);
         verticalClamp(content);
     }
     private void parents(){
         title(R.string.parent_title);
-        TextView version=TvStyle.text(this,getString(R.string.app_version,BuildConfig.VERSION_NAME),14,false);
-        version.setTextColor(TvStyle.MUTED);
-        version.setTag("app-version");
-        content.addView(version,new LinearLayout.LayoutParams(-1,-2));
         ScrollView scroll=new ScrollView(this);
         LinearLayout list=new LinearLayout(this);
         list.setOrientation(LinearLayout.VERTICAL);
         scroll.addView(list);
-        content.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
-        LinearLayout previous=content;
-        content=list;
-        action(R.string.settings,()->{
+        int width=Math.min(dp(560),getResources().getDisplayMetrics().widthPixels-dp(84));
+        content.addView(scroll,new LinearLayout.LayoutParams(width,0,1));
+        settingsHeading(list,R.string.settings_play,"settings-play",true);
+        android.widget.Switch maths=TvStyle.switchControl(this,s(R.string.maths_practice));
+        TvStyle.preferenceRow(maths);
+        maths.setTag("maths-practice");maths.setChecked(play.mathsEnabled());
+        maths.setOnCheckedChangeListener((button,enabled)->changeMathsMode(enabled));
+        list.addView(maths,new LinearLayout.LayoutParams(-1,-2));
+        TextView modeHelp=TvStyle.text(this,s(R.string.maths_practice_help),16,false);
+        modeHelp.setTextColor(TvStyle.MUTED);modeHelp.setPadding(dp(16),dp(4),dp(16),dp(12));
+        list.addView(modeHelp,new LinearLayout.LayoutParams(-1,-2));
+        settingsAction(list,R.string.settings,()->{
             draft=controller.state().config.copy();java.util.Arrays.fill(settingsMemory,-1);menu="settings";render();
-        }
-        );
-        Button sound=button(getString(R.string.effect_value,s(R.string.sound_effects),s(effects.sound()?R.string.on:R.string.off)),"sound-effects",()->changeEffect(true));
-        list.addView(sound,new LinearLayout.LayoutParams(dp(350),dp(49)));
-        Button motion=button(getString(R.string.effect_value,s(R.string.piece_motion),s(effects.motion()?R.string.on:R.string.off)),"piece-motion",()->changeEffect(false));
-        list.addView(motion,new LinearLayout.LayoutParams(dp(350),dp(49)));
-        Button languageChoice=button(getString(R.string.effect_value,s(R.string.language),s("en".equals(language.language())?R.string.english:R.string.dutch)),"language",()->{
+        });
+        settingsHeading(list,R.string.settings_app,"settings-app",false);
+        android.widget.Switch sound=TvStyle.switchControl(this,s(R.string.sound_effects));
+        TvStyle.preferenceRow(sound);
+        sound.setTag("sound-effects");sound.setChecked(effects.sound());
+        sound.setOnCheckedChangeListener((button,enabled)->changeEffect(true));
+        list.addView(sound,new LinearLayout.LayoutParams(-1,-2));
+        android.widget.Switch motion=TvStyle.switchControl(this,s(R.string.piece_motion));
+        TvStyle.preferenceRow(motion);
+        motion.setTag("piece-motion");motion.setChecked(effects.motion());
+        motion.setOnCheckedChangeListener((button,enabled)->changeEffect(false));
+        list.addView(motion,new LinearLayout.LayoutParams(-1,-2));
+        Button languageChoice=button(s(R.string.language),"language",()->{
             new AlertDialog.Builder(this).setTitle(R.string.language)
                 .setSingleChoiceItems(new String[]{s(R.string.dutch),s(R.string.english)},"en".equals(language.language())?1:0,
                     (dialog,which)->{dialog.dismiss();changeLanguage(which==1?"en":"nl");}).show();
         });
-        list.addView(languageChoice,new LinearLayout.LayoutParams(dp(350),dp(49)));
-        action(R.string.to_math,()->confirmSkip(true));
-        action(R.string.to_chess,()->confirmSkip(false));
-        action(R.string.restart_chess,()->{menu="";controller.restartGame();render();});
-        action(R.string.reset,()->confirmReset());
-        action(R.string.about_game,()->{menu="help";render();});
-        action(R.string.licenses,()->{
-            menu="licenses";render();
-        }
-        );
-        action(R.string.exit,this::finish);
+        TvStyle.preferenceRow(languageChoice);
+        String label=s(R.string.language);
+        String value=s("en".equals(language.language())?R.string.english:R.string.dutch);
+        android.text.SpannableString languageText=new android.text.SpannableString(label+"\n"+value);
+        languageText.setSpan(new android.text.style.AbsoluteSizeSpan(16,true),label.length()+1,languageText.length(),0);
+        languageText.setSpan(new android.text.style.ForegroundColorSpan(TvStyle.MUTED),label.length()+1,languageText.length(),0);
+        languageChoice.setText(languageText);
+        list.addView(languageChoice,new LinearLayout.LayoutParams(-1,-2));
+        settingsHeading(list,R.string.settings_session,"settings-session",false);
+        if(play.mathsEnabled())settingsAction(list,R.string.to_math,()->confirmSkip(true));
+        settingsAction(list,R.string.to_chess,()->confirmSkip(false));
+        settingsAction(list,R.string.restart_chess,()->{started=true;menu="";controller.restartGame();render();});
+        settingsAction(list,R.string.reset,()->confirmReset());
+        settingsHeading(list,R.string.settings_information,"settings-information",false);
+        settingsAction(list,R.string.about_game,()->{menu="help";render();});
+        settingsAction(list,R.string.licenses,()->{menu="licenses";render();});
+        settingsAction(list,R.string.exit,this::finish);
         verticalClamp(list);
-        content=previous;
+    }
+    private void settingsHeading(LinearLayout list,int label,String tag,boolean first){
+        TextView heading=TvStyle.text(this,s(label),16,true);
+        heading.setTag(tag);heading.setFocusable(false);
+        if(android.os.Build.VERSION.SDK_INT>=28)heading.setAccessibilityHeading(true);
+        heading.setTextColor(TvStyle.MUTED);
+        heading.setPadding(dp(16),dp(first?8:24),dp(16),dp(8));
+        list.addView(heading,new LinearLayout.LayoutParams(-1,-2));
+    }
+    private void settingsAction(LinearLayout list,int label,Runnable action){
+        Button row=button(s(label),s(label),action);
+        TvStyle.preferenceRow(row);
+        list.addView(row,new LinearLayout.LayoutParams(-1,-2));
     }
     private void confirmSkip(boolean math){
         new AlertDialog.Builder(this).setTitle(math?R.string.to_math:R.string.to_chess).setMessage(R.string.skip_help).setNegativeButton(R.string.cancel,(d,w)->{
         }
         ).setPositiveButton(R.string.ok,(d,w)->{
-            menu="";if(math)controller.skipToMath();else controller.skipToChess();render();
+            started=true;menu="";if(math)controller.skipToMath();else controller.skipToChess();render();
         }
         ).show().getButton(AlertDialog.BUTTON_NEGATIVE).requestFocus();
     }
     private void confirmReset(){
+        confirmReset(false);
+    }
+    private void confirmReset(boolean startNew){
         new AlertDialog.Builder(this).setTitle(R.string.confirm_reset).setMessage(R.string.reset_help)
             .setNegativeButton(R.string.cancel,(d,w)->{})
             .setPositiveButton(R.string.ok,(d,w)->{
-                menu="";controller.resetSession();started=true;render();
+                menu="";startAfterReset=startNew;controller.resetSession();started=true;render();
             }).show().getButton(AlertDialog.BUTTON_NEGATIVE).requestFocus();
     }
     private void chess(){
@@ -455,13 +541,9 @@ public final class MainActivity extends Activity {
             action(R.string.claim_draw,()->controller.claimDraw());
             return;
         }
-        if(!st.result.isEmpty()&&presenting==null){
-            TextView result=title(R.string.app_name);
-            result.setText(localized(st.result));
-            action(R.string.math_action,()->controller.resume());
-            return;
-        }
-        // Equal space on both sides keeps the board at the center of the TV.
+        boolean finished=!st.result.isEmpty()&&presenting==null;
+        showingChessResult=finished;
+        // Keep the board at the center of the TV.
         content.removeAllViews();
         FrameLayout row=new FrameLayout(this){
             @Override protected void onMeasure(int widthSpec,int heightSpec){
@@ -471,42 +553,17 @@ public final class MainActivity extends Activity {
                 FrameLayout.LayoutParams boardBounds=(FrameLayout.LayoutParams)getChildAt(0).getLayoutParams();
                 boardBounds.width=size;
                 boardBounds.height=size;
-                FrameLayout.LayoutParams statusBounds=(FrameLayout.LayoutParams)getChildAt(1).getLayoutParams();
-                statusBounds.width=Math.max(0,(width-size)/2-dp(20));
                 super.onMeasure(widthSpec,heightSpec);
             }
         };
-        content.addView(row,new LinearLayout.LayoutParams(-1,-1));
+        content.addView(row,finished?new LinearLayout.LayoutParams(-1,0,1):new LinearLayout.LayoutParams(-1,-1));
         board=new ChessBoardView(this);
         board.setId(View.generateViewId());
         board.setTag("board");
         row.addView(board,new FrameLayout.LayoutParams(0,0,Gravity.CENTER));
-        ScrollView status=new ScrollView(this);
-        status.setTag("chess-status");
-        status.setFocusable(false);
-        status.setFillViewport(true);
-        row.addView(status,new FrameLayout.LayoutParams(0,-1,Gravity.RIGHT|Gravity.CENTER_VERTICAL));
-        LinearLayout side=new LinearLayout(this);
-        side.setOrientation(LinearLayout.VERTICAL);
-        side.setPadding(0,dp(20),0,dp(20));
-        side.setGravity(Gravity.CENTER_VERTICAL);
-        status.addView(side,new ScrollView.LayoutParams(-1,-2));
-        chessHeading=TvStyle.text(this,"",24,true);
-        chessHeading.setTag("chess-turn");
-        side.addView(chessHeading);
-        space(side,12);
-        chessHelp=TvStyle.text(this,"",18,false);
-        chessHelp.setTag("chess-prompt");
-        chessHelp.setTextColor(TvStyle.MUTED);
-        side.addView(chessHelp);
-        chessDetail=TvStyle.text(this,"",16,false);
-        chessDetail.setTag("chess-feedback");
-        chessDetail.setPadding(0,dp(12),0,0);
-        side.addView(chessDetail);
         board.setListener(new ChessBoardView.Listener(){
             public void focus(int square){
                 controller.focusSquare(square);
-                updateBoardDetail(square);
             }
             public void activate(int square){
                 act(()->controller.chooseSquare(square));
@@ -514,22 +571,24 @@ public final class MainActivity extends Activity {
         }
         );
         bindBoard();
-        board.requestFocus();
+        if(finished){
+            board.setFocusable(false);board.setFocusableInTouchMode(false);
+            LinearLayout footer=new LinearLayout(this);
+            footer.setGravity(Gravity.CENTER_VERTICAL);
+            footer.setPadding(0,dp(8),0,0);
+            TextView result=TvStyle.text(this,localized(st.result),22,true);
+            result.setTag("game-result");
+            footer.addView(result,new LinearLayout.LayoutParams(0,-2,1));
+            Button next=button(s(controller.mathsEnabled()?R.string.math_action:R.string.new_game),"game-continue",controller::continueAfterGame);
+            footer.addView(next,new LinearLayout.LayoutParams(dp(250),dp(56)));
+            content.addView(footer,new LinearLayout.LayoutParams(-1,-2));
+            next.requestFocus();
+        } else board.requestFocus();
     }
     private void bindBoard(){
         Session st=controller.state();
         ChessGame game=controller.game();
         board.bind(game,st.focus,st.selected,st.moves.isEmpty()?"":st.moves.get(st.moves.size()-1));
-        boolean white=presenting==null?game.whiteToMove():presenting.beforeWhiteToMove;
-        chessHeading.setText(s(white?R.string.your_turn:R.string.computer_turn));
-        chessHelp.setText((presenting==null?game.checkSquare():presenting.beforeCheck)>=0?s(R.string.check):st.chessPending?s(R.string.finish_move):s(st.selected>=0?R.string.choose_target:R.string.choose_piece));
-        updateBoardDetail(st.focus);
-    }
-    private void updateBoardDetail(int square){
-        if(board==null||chessDetail==null)return;
-        Session st=controller.state();
-        chessDetail.setText(localized(st.feedback));
-        chessDetail.setVisibility(st.feedback.isEmpty()?View.GONE:View.VISIBLE);
     }
     /** Uses the same artwork and color as the pawn that is being promoted. */
     private final class PromotionPiece extends android.graphics.drawable.Drawable {
@@ -760,9 +819,9 @@ public final class MainActivity extends Activity {
         content.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
         List<List<Button>> rows=new ArrayList<>();
         List<Button> families=new ArrayList<>();
-        families.add(toggle(s(R.string.addition),draft.addition,()->draft.addition=!draft.addition));
-        families.add(toggle(s(R.string.subtraction),draft.subtraction,()->draft.subtraction=!draft.subtraction));
-        families.add(toggle(s(R.string.multiplication),draft.multiplication,()->draft.multiplication=!draft.multiplication));
+        families.add(switchToggle(s(R.string.addition),draft.addition,()->draft.addition=!draft.addition));
+        families.add(switchToggle(s(R.string.subtraction),draft.subtraction,()->draft.subtraction=!draft.subtraction));
+        families.add(switchToggle(s(R.string.multiplication),draft.multiplication,()->draft.multiplication=!draft.multiplication));
         addRow(form,rows,families);
         TextView limit=TvStyle.text(this,s(R.string.number_limit),15,false);
         form.addView(limit);
@@ -772,7 +831,7 @@ public final class MainActivity extends Activity {
         }
         )limits.add(toggle(String.valueOf(value),draft.limit==value,()->draft.limit=value));
         addRow(form,rows,limits);
-        addRow(form,rows,java.util.Collections.singletonList(toggle(s(R.string.crossing),draft.crossingTen,()->draft.crossingTen=!draft.crossingTen)));
+        addRow(form,rows,java.util.Collections.singletonList(switchToggle(s(R.string.crossing),draft.crossingTen,()->draft.crossingTen=!draft.crossingTen)));
         TextView help=TvStyle.text(this,s(R.string.crossing_help),14,false);
         help.setTextColor(TvStyle.MUTED);
         form.addView(help);
@@ -784,7 +843,7 @@ public final class MainActivity extends Activity {
             List<Button> tables=new ArrayList<>();
             for(int i=1+r*5;i<=5+r*5;i++){
                 final int table=i;
-                tables.add(toggle(String.valueOf(i),draft.tables[i],()->draft.tables[table]=!draft.tables[table]));
+                tables.add(switchToggle(String.valueOf(i),draft.tables[i],()->draft.tables[table]=!draft.tables[table]));
             }
             addRow(form,rows,tables);
         }
@@ -829,6 +888,12 @@ public final class MainActivity extends Activity {
             );
         }
     }
+    private Button switchToggle(String label,boolean checked,Runnable change){
+        android.widget.Switch control=TvStyle.switchControl(this,label);
+        control.setTextSize(18);control.setTag(label);control.setChecked(checked);
+        control.setOnCheckedChangeListener((button,enabled)->{change.run();render();});
+        return control;
+    }
     private Button toggle(String label,boolean checked,Runnable change){
         Button b=button(getString(checked?R.string.selected:R.string.unselected,label),label,()->{
             change.run();render();
@@ -841,9 +906,9 @@ public final class MainActivity extends Activity {
     private void addRow(LinearLayout form,List<List<Button>> rows,List<Button> controls){
         LinearLayout row=new LinearLayout(this);
         row.setPadding(0,dp(3),0,dp(3));
-        form.addView(row,new LinearLayout.LayoutParams(-1,dp(53)));
+        form.addView(row,new LinearLayout.LayoutParams(-1,-2));
         for(Button b:controls){
-            LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-1,1);
+            LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-2,1);
             p.setMargins(dp(2),0,dp(2),0);
             row.addView(b,p);
         }
@@ -853,14 +918,29 @@ public final class MainActivity extends Activity {
     private void parentHelp(){
         title(R.string.about_game);
         ScrollView scroll=new ScrollView(this);
-        TextView text=TvStyle.text(this,s(R.string.parent_help),20,false);
+        LinearLayout details=new LinearLayout(this);
+        details.setOrientation(LinearLayout.VERTICAL);
+        TextView name=TvStyle.text(this,s(R.string.app_name),26,true);
+        name.setTag("about-app-name");
+        name.setPadding(0,dp(8),0,dp(12));
+        details.addView(name,new LinearLayout.LayoutParams(-1,-2));
+        TextView version=TvStyle.text(this,getString(R.string.app_version,BuildConfig.VERSION_NAME),20,false);
+        version.setTag("app-version");
+        details.addView(version,new LinearLayout.LayoutParams(-1,-2));
+        TextView build=TvStyle.text(this,getString(R.string.app_build,BuildConfig.VERSION_CODE),18,false);
+        build.setTag("app-build");build.setTextColor(TvStyle.MUTED);
+        build.setPadding(0,dp(6),0,dp(20));
+        details.addView(build,new LinearLayout.LayoutParams(-1,-2));
+        TextView text=TvStyle.text(this,s(R.string.parent_help),18,false);
         text.setTextColor(TvStyle.MUTED);
         text.setLineSpacing(dp(5),1);
-        text.setPadding(0,dp(8),dp(20),dp(20));
-        scroll.addView(text);
+        text.setPadding(0,0,dp(20),dp(20));
+        details.addView(text,new LinearLayout.LayoutParams(-1,-2));
+        scroll.addView(details);
         scroll.setFocusable(true);
         scroll.setId(View.generateViewId());
-        content.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
+        int width=Math.min(dp(650),getResources().getDisplayMetrics().widthPixels-dp(84));
+        content.addView(scroll,new LinearLayout.LayoutParams(width,0,1));
     }
     private void licenses(){
         title(R.string.licenses);
@@ -905,7 +985,7 @@ public final class MainActivity extends Activity {
         if(controller.busy())return;
         if(!menu.isEmpty()){
             if(menu.equals("pause")){menu="";controller.resume();render();return;}
-            menu=menu.equals("settings")||menu.equals("licenses")||menu.equals("help")?"parents":"pause";
+            menu=menu.equals("settings")||menu.equals("licenses")||menu.equals("help")?"parents":started?"pause":"";
             render();
             return;
         }

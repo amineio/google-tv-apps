@@ -9,7 +9,7 @@ RATE = 44100
 ROOT = Path(__file__).resolve().parents[1] / 'src/main/res/raw'
 TAU = 2 * math.pi
 # Full resource lengths, including the quiet room tail. Keep EffectPlayer in sync.
-DURATIONS = {'wood_move': .160, 'wood_capture': .220,
+DURATIONS = {'wood_move': .160, 'wood_capture': .320,
              'gentle_check': .420, 'math_success': .680}
 
 
@@ -73,8 +73,9 @@ def render(name):
         add_mallet(out, .008, 1040, .16, .014, wooden=True)
         peak = .60
     elif name == 'wood_capture':
-        add_mallet(out, .002, 440, .72, .040, wooden=True)
-        add_mallet(out, .014, 820, .24, .022, wooden=True)
+        # Two separated wooden knocks distinguish a capture from the single move tap.
+        add_mallet(out, .002, 440, .68, .032, wooden=True)
+        add_mallet(out, .095, 740, .72, .042, wooden=True)
         peak = .62
     elif name == 'gentle_check':
         add_mallet(out, .002, 392, .50, .083)

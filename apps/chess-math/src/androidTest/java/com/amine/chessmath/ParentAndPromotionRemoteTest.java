@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 /** Memory-only fixtures preserve the child's actual saved session. */
 @RunWith(AndroidJUnit4.class)
 public final class ParentAndPromotionRemoteTest {
+    @org.junit.Rule public final PlayModeRule playMode=new PlayModeRule();
     private static final Handler MAIN=new Handler(Looper.getMainLooper());
     private final Instrumentation instrumentation=InstrumentationRegistry.getInstrumentation();
     private MainActivity activity;
@@ -38,6 +39,7 @@ public final class ParentAndPromotionRemoteTest {
             key(KeyEvent.KEYCODE_DPAD_DOWN);
             assertFocus(activity.getString(R.string.parents));
             key(KeyEvent.KEYCODE_DPAD_CENTER);
+            key(KeyEvent.KEYCODE_DPAD_DOWN);
             assertFocus(activity.getString(R.string.settings));
             key(KeyEvent.KEYCODE_DPAD_CENTER);
             assertFocus(activity.getString(R.string.addition));
@@ -55,6 +57,7 @@ public final class ParentAndPromotionRemoteTest {
             key(KeyEvent.KEYCODE_DPAD_CENTER);
             assertEquals(20,controller.state().config.limit);
             assertTrue(controller.state().config.crossingTen);
+            key(KeyEvent.KEYCODE_DPAD_DOWN);
             assertFocus(activity.getString(R.string.settings));
             key(KeyEvent.KEYCODE_DPAD_CENTER);
             key(KeyEvent.KEYCODE_DPAD_DOWN);
@@ -64,6 +67,7 @@ public final class ParentAndPromotionRemoteTest {
             key(KeyEvent.KEYCODE_BACK);
             assertEquals("Back must discard settings edits",20,controller.state().config.limit);
             assertTrue(controller.state().config.crossingTen);
+            key(KeyEvent.KEYCODE_DPAD_DOWN);
             assertFocus(activity.getString(R.string.settings));
         });
     }
@@ -77,9 +81,11 @@ public final class ParentAndPromotionRemoteTest {
             fixture.selected=9;
             fixture.focus=0;
             fixture.promotionTo=0;
-            withFixture(fixture,()->{
+            // Promotion has no time dependency. Freeze the clock so a periodic
+            // checkpoint cannot start between awaitSave() and a remote press.
+            withFixture(fixture,()->0L,()->{
                 launchAndStart();
-                assertFocus("promotion0");
+                assertPromotionFocus("promotion0","Initial promotion choice "+index);
                 instrumentation.runOnMainSync(()->{
                     String[] names={activity.getString(R.string.queen),activity.getString(R.string.rook),activity.getString(R.string.bishop),activity.getString(R.string.knight)};
                     for(int i=0;i<4;i++){
@@ -102,11 +108,12 @@ public final class ParentAndPromotionRemoteTest {
                     assertEquals(8,controller.state().moves.size());
                     assertEquals(-1,controller.state().promotionTo);
                     assertEquals(9,controller.state().selected);
+                    awaitBoardFocus();
                     key(KeyEvent.KEYCODE_DPAD_CENTER);
-                    assertFocus("promotion0");
+                    assertPromotionFocus("promotion0","Reopened promotion after Cancel");
                 }
                 for(int move=0;move<index;move++)key(KeyEvent.KEYCODE_DPAD_RIGHT);
-                assertFocus("promotion"+index);
+                assertPromotionFocus("promotion"+index,"Selected promotion choice "+index);
                 key(KeyEvent.KEYCODE_DPAD_CENTER);
                 assertTrue(controller.state().moves.size()>=9);
                 assertEquals("b7a8"+choices[index],controller.state().moves.get(8));
@@ -167,7 +174,7 @@ public final class ParentAndPromotionRemoteTest {
     @Test public void soundAndMotionChoicesUseRemoteAndSurviveProgressReset() throws Exception {
         withFixture(chessSession(),()->{
             launchAndStart();key(KeyEvent.KEYCODE_BACK);key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_CENTER);
-            key(KeyEvent.KEYCODE_DPAD_DOWN);assertFocus("sound-effects");
+            key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_DOWN);assertFocus("sound-effects");
             key(KeyEvent.KEYCODE_DPAD_CENTER);
             key(KeyEvent.KEYCODE_DPAD_DOWN);assertFocus("piece-motion");
             key(KeyEvent.KEYCODE_DPAD_CENTER);
@@ -191,7 +198,7 @@ public final class ParentAndPromotionRemoteTest {
             launchAndStart();key(KeyEvent.KEYCODE_BACK);
             long elapsed=controller.state().elapsedMs;
             key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_CENTER);
-            key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_DOWN);
+            focusDown("language");
             assertFocus("language");
             key(KeyEvent.KEYCODE_DPAD_CENTER);key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_CENTER);
             assertEquals("Settings",activity.getString(R.string.parent_title));
@@ -216,11 +223,38 @@ public final class ParentAndPromotionRemoteTest {
                 assertTrue(hint.getText().toString().startsWith("Split 7 into 2 and 5"));
             });
             key(KeyEvent.KEYCODE_BACK);key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_CENTER);
-            key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_DOWN);
+            focusDown("language");
             key(KeyEvent.KEYCODE_DPAD_CENTER);key(KeyEvent.KEYCODE_DPAD_UP);key(KeyEvent.KEYCODE_DPAD_CENTER);
             assertEquals("Instellingen",activity.getString(R.string.parent_title));
             assertEquals(fixture.moves,controller.state().moves);
             assertEquals(71,controller.state().exercise.id);
+        });
+    }
+
+    @Test public void largeTextSwitchRowsGrowToFitTheirLabels() throws Exception {
+        withFixture(chessSession(),()->{
+            launchAndStart();key(KeyEvent.KEYCODE_BACK);key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_CENTER);
+            focusDown(activity.getString(R.string.settings));key(KeyEvent.KEYCODE_DPAD_CENTER);
+            android.content.res.Configuration previous=new android.content.res.Configuration(activity.getResources().getConfiguration());
+            try {
+                instrumentation.runOnMainSync(()->{
+                    android.content.res.Configuration large=new android.content.res.Configuration(previous);large.fontScale=2f;
+                    activity.getResources().updateConfiguration(large,null);
+                    try {
+                        java.lang.reflect.Method render=MainActivity.class.getDeclaredMethod("render");render.setAccessible(true);render.invoke(activity);
+                    } catch(ReflectiveOperationException e){throw new AssertionError(e);}
+                });
+                instrumentation.waitForIdleSync();
+                instrumentation.runOnMainSync(()->{
+                    for(int label:new int[]{R.string.addition,R.string.subtraction,R.string.multiplication,R.string.crossing}){
+                        View view=activity.findViewById(android.R.id.content).findViewWithTag(activity.getString(label));
+                        assertTrue(view instanceof android.widget.Switch);
+                        android.widget.Switch control=(android.widget.Switch)view;
+                        assertTrue("Switch must retain its minimum height",control.getHeight()>=TvStyle.dp(activity,52));
+                        assertTrue("Label must fit without vertical clipping",control.getHeight()>=control.getLayout().getHeight()+control.getPaddingTop()+control.getPaddingBottom());
+                    }
+                });
+            } finally {instrumentation.runOnMainSync(()->activity.getResources().updateConfiguration(previous,null));}
         });
     }
 
@@ -230,7 +264,7 @@ public final class ParentAndPromotionRemoteTest {
             launchAndStart();key(KeyEvent.KEYCODE_BACK);
             long elapsed=controller.state().elapsedMs;
             key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_CENTER);
-            for(int i=0;i<6;i++)key(KeyEvent.KEYCODE_DPAD_DOWN);
+            focusDown(activity.getString(R.string.restart_chess));
             assertFocus(activity.getString(R.string.restart_chess));
             key(KeyEvent.KEYCODE_DPAD_CENTER);
             assertTrue(controller.state().moves.isEmpty());
@@ -299,7 +333,7 @@ public final class ParentAndPromotionRemoteTest {
         shared.set(null,controller);
         try { test.run(); }
         finally {
-            if(activity!=null){instrumentation.runOnMainSync(activity::finish);instrumentation.waitForIdleSync();}
+            if(activity!=null)finishAndAwaitDestroyed();
             controller.setListener(null);
             awaitSave();
             controller.close();
@@ -349,12 +383,50 @@ public final class ParentAndPromotionRemoteTest {
         awaitSave();
     }
 
+    private void focusDown(String tag) throws Exception {
+        AtomicBoolean found=new AtomicBoolean();
+        for(int i=0;i<20;i++){
+            instrumentation.runOnMainSync(()->found.set(activity.getCurrentFocus()!=null&&tag.equals(activity.getCurrentFocus().getTag())));
+            if(found.get())return;
+            key(KeyEvent.KEYCODE_DPAD_DOWN);
+        }
+        fail("Remote must reach "+tag);
+    }
+
     private void assertFocus(String tag){
         instrumentation.runOnMainSync(()->{
             View focused=activity.getCurrentFocus();
             assertNotNull(focused);
             assertEquals(tag,focused.getTag());
         });
+    }
+
+    private void assertPromotionFocus(String tag,String context){
+        instrumentation.runOnMainSync(()->{
+            Session state=controller.state();
+            String detail=context+": promotionTo="+state.promotionTo+", selected="+state.selected
+                    +", square="+state.focus+", paused="+state.paused+", busy="+controller.busy()
+                    +", windowFocus="+activity.hasWindowFocus()+", moves="+state.moves;
+            View focused=activity.getCurrentFocus();
+            assertNotNull(detail,focused);
+            assertEquals(detail,tag,focused.getTag());
+        });
+    }
+
+    private void awaitBoardFocus() throws Exception {
+        AtomicBoolean focused=new AtomicBoolean();
+        long until=SystemClock.elapsedRealtime()+5000;
+        do {
+            instrumentation.waitForIdleSync();
+            instrumentation.runOnMainSync(()->{
+                View current=activity.getCurrentFocus();
+                focused.set(activity.hasWindowFocus()&&current instanceof ChessBoardView&&current.isShown());
+            });
+            if(!focused.get())SystemClock.sleep(20);
+        } while(!focused.get()&&SystemClock.elapsedRealtime()<until);
+        assertTrue("Canceled promotion must return remote focus to the board before Center",focused.get());
+        assertEquals("Reopening must use the promotion destination a8",0,controller.state().focus);
+        assertFalse("Reopening requires active chess",controller.state().paused);
     }
 
     private void awaitSave() throws Exception {

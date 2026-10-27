@@ -13,7 +13,9 @@ or third-party music are included.
 ## Sound design
 
 Move uses rounded wooden modes at 630 Hz, with a quieter 1040 Hz contact.
-Capture has a lower 440 Hz body and a second 820 Hz contact after 14 ms.
+Capture uses two wooden knocks at 440 Hz and 740 Hz, 93 ms apart.
+The second knock gives captures a clear sound, including captures that give check.
+This capture sound replaces the original sound on 2026-10-27.
 The wood modes have frequency ratios 1, 2.76, and 5.4. Each mode decays
 separately. A soft attack replaces the previous noise burst.
 
@@ -38,11 +40,11 @@ cleanup margin remains. Priorities and focus handling remain unchanged.
 | Resource | Duration | Bytes | Peak dBFS | RMS dBFS | Playback gain |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | `wood_move.wav` | 160 ms | 14,156 | -4.44 | -19.89 | 0.50 |
-| `wood_capture.wav` | 220 ms | 19,448 | -4.15 | -19.56 | 0.50 |
+| `wood_capture.wav` | 320 ms | 28,268 | -4.15 | -19.39 | 0.50 |
 | `gentle_check.wav` | 420 ms | 37,088 | -6.20 | -17.69 | 0.42 |
 | `math_success.wav` | 680 ms | 60,020 | -5.04 | -17.12 | 0.46 |
 
-The four files total 130,712 bytes, including WAV headers. dBFS measures level
+The four files total 139,532 bytes, including WAV headers. dBFS measures level
 relative to the largest digital sample. RMS measures average signal energy.
 Different cue lengths affect RMS, so these values do not establish equal
 perceived loudness. Conservative gains keep the longer reward comfortable.
