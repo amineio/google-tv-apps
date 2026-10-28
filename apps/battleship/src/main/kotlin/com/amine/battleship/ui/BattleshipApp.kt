@@ -126,8 +126,12 @@ private fun GameScreen(state: SessionState, onAction: (GameAction) -> Unit) {
             Spacer(Modifier.weight(1f))
             Box(Modifier.background(if (playerTurn) Cyan.copy(alpha = .12f) else Ink.copy(alpha = .07f),
                 RoundedCornerShape(20.dp)).padding(horizontal = 15.dp, vertical = 6.dp)) {
-                Text(if (state.resolving && game.phase == GamePhase.PLAYER_TURN) "SHOT RESOLVING"
-                    else if (playerTurn) "YOUR TURN" else "COMPUTER TURN", fontSize = 14.sp,
+                Text(when {
+                    game.phase == GamePhase.GAME_OVER -> if (game.winner == Player.HUMAN) "VICTORY" else "DEFEAT"
+                    state.resolving && game.phase == GamePhase.PLAYER_TURN -> "SHOT RESOLVING"
+                    playerTurn -> "YOUR TURN"
+                    else -> "COMPUTER TURN"
+                }, fontSize = 14.sp,
                     color = if (playerTurn) Cyan else Muted, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
             }
             Spacer(Modifier.width(18.dp))
@@ -158,19 +162,11 @@ private fun GameScreen(state: SessionState, onAction: (GameAction) -> Unit) {
                                 lineHeight = 38.sp, fontWeight = FontWeight.SemiBold)
                         }
                         Spacer(Modifier.width(23.dp))
-                        Column {
-                            Text(if (playerTurn) "Ready to fire" else "Stand by, captain", fontSize = 20.sp,
-                                fontWeight = FontWeight.Medium)
-                            Text(if (playerTurn) "Press OK to attack" else "The computer is taking its turn",
-                                color = Muted, fontSize = 14.sp)
+                        if (state.message.isNotEmpty()) {
+                            Text(state.message, fontSize = 20.sp, fontWeight = FontWeight.Medium,
+                                color = feedbackColor(game.lastAttack?.shot?.outcome), maxLines = 2,
+                                overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                         }
-                    }
-                    Box(Modifier.fillMaxWidth().heightIn(min = 47.dp)
-                        .background(DeepWater.copy(alpha = .72f), RoundedCornerShape(7.dp))
-                        .border(1.dp, Muted.copy(alpha = .16f), RoundedCornerShape(7.dp))
-                        .padding(horizontal = 13.dp, vertical = 9.dp)) {
-                        Text(state.message, fontSize = 18.sp, color = feedbackColor(game.lastAttack?.shot?.outcome),
-                            maxLines = 2, overflow = TextOverflow.Ellipsis)
                     }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalAlignment = Alignment.CenterVertically) {

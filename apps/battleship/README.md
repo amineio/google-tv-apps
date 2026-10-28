@@ -22,6 +22,8 @@ Restart and replacement require confirmation. Returning home retains the match f
 The app saves completed moves in an app-private file. Reopening the app offers Continue Game for an unfinished match.
 The app pauses delayed actions when it enters the background. Resume continues the saved turn.
 Settings provides a sound control. Short locally synthesized effects are optional. There is no background music.
+Version 1.1 adds layered impacts, a distinct friendly damage sound, a victory fanfare, and a descending defeat bugle.
+The right panel shows the target coordinate and compact shot feedback. Named sunk-ship feedback remains visible during aiming.
 
 ## Build
 
@@ -81,6 +83,14 @@ Unit tests cover placement, rules, hidden information, persistence, interruption
 
 The [design record](../../docs/superpowers/specs/2026-10-28-battleship-design.md) defines the interface.
 The [asset record](../../docs/battleship/concepts/assets.json) contains prompts, dimensions, synthesis details, and rights information.
+The [audio record](../../docs/battleship/audio-polish-assets.json) contains the original scores, levels, and file hashes for version 1.1.
+To reproduce its bundled effects, use Python 3 from the repository root:
+
+```sh
+python3 apps/battleship/tools/generate_audio.py --check
+```
+
+Remove `--check` to regenerate the five WAV files and the audio record.
 Outfit retains its [font license](FONT-LICENSE-OFL.txt).
 Manual placement, other difficulties, networking, tablet layouts, and multiplayer remain outside this release.
 

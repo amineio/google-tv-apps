@@ -16,13 +16,19 @@ class GameAudio(context: Context) : AutoCloseable {
         pool.setOnLoadCompleteListener { _, id, status -> if (status == 0) loaded.add(id) }
         sounds = mapOf(
             SoundCue.SELECT to R.raw.ui_select, SoundCue.FIRE to R.raw.fire,
-            SoundCue.MISS to R.raw.splash, SoundCue.HIT to R.raw.impact,
+            SoundCue.MISS to R.raw.splash, SoundCue.HIT to R.raw.impact, SoundCue.DAMAGE to R.raw.damage,
             SoundCue.SUNK to R.raw.sunk, SoundCue.VICTORY to R.raw.victory, SoundCue.DEFEAT to R.raw.defeat,
         ).mapValues { pool.load(context, it.value, 1) }
     }
     fun play(cue: SoundCue) {
         val id = sounds[cue] ?: return
-        if (id in loaded) pool.play(id, .32f, .32f, 1, 0, 1f)
+        val gain = when (cue) {
+            SoundCue.SELECT, SoundCue.FIRE, SoundCue.MISS -> .32f
+            SoundCue.HIT, SoundCue.DAMAGE, SoundCue.VICTORY -> .60f
+            SoundCue.SUNK -> .55f
+            SoundCue.DEFEAT -> .38f
+        }
+        if (id in loaded) pool.play(id, gain, gain, 1, 0, 1f)
     }
     fun pause() = pool.autoPause()
     override fun close() = pool.release()

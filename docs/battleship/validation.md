@@ -1,5 +1,50 @@
 # Battleship validation
 
+## Version 1.1 audio and feedback
+
+The 2026-10-28 update adds distinct attack and friendly damage sounds, a victory fanfare, and a descending defeat bugle.
+Five original PCM effects reproduce exactly with `python3 apps/battleship/tools/generate_audio.py --check`.
+The files use mono 16-bit PCM at 22,050 Hz. Their measured peak is below full scale, with zero endpoints.
+The victory cue lasts 2.30 seconds. The defeat cue lasts 2.05 seconds.
+The [audio record](audio-polish-assets.json) contains scores, synthesis details, levels, rights, and hashes.
+
+The right panel retains the target coordinate, friendly board, fleet status, and compact shot feedback.
+It removes repeated shot coordinates, narration, and repeated turn instructions.
+Arrow input preserves named sunk-ship feedback. The repeat-shot warning clears when the player selects a different coordinate.
+
+The final local command built debug, release, and instrumented APKs, with both unit-test variants and release lint.
+It completed successfully in 46 seconds.
+Debug unit tests: 32 passed, zero failures or errors.
+Release unit tests: 32 passed, zero failures or errors.
+The suites retain the 1,000 seeded match simulations in each variant.
+New coverage includes compact feedback, damage audio, exactly one completion cue, mute, and feedback during aiming.
+The two navigation regressions failed before the repair and passed afterward.
+Lint reports zero errors and three existing advisory warnings.
+Repository tests: 14 passed, zero failures.
+Independent source review found no remaining material issue after the feedback repair.
+
+Eight instrumented tests passed on the dedicated Google TV emulator, with zero failures or errors.
+The command completed in 1 minute, 7 seconds.
+The release APK installed and opened on the emulator. A native 1080p capture shows the compact panel after an actual shot.
+Independent capture review found clear focus, readable labels, retained fleet status, and no visible clipping.
+
+The physical Chromecast update also completed successfully. Android reports version 1.1, code 2.
+The installer repeated the release unit tests, lint, and build before installation.
+Android returned `Success` for replacement and `Status: ok` for launch.
+The resumed Activity belongs to Battleship. Installation uses `-r` and does not clear app data.
+The Home role, enabled helper list, Google TV Home, and setupwraith match the captured states before installation.
+The physical capture remains black, so this update does not add physical visual or listening acceptance.
+Device records remain in an ignored local backup.
+
+Version 1.1 debug APK SHA-256: `9c9254db1a8bca00466be4e50fbd86cf2cb4b42e5751c137179d939391b10ec8`.
+Version 1.1 release APK SHA-256: `caaf8b74d42b7c0b96f3c418560a6ccdfe1a45861e4a10e7e1c125fcd28dd952`.
+Both artifacts remain at the paths below. No APK upload or cloud build occurred.
+
+Subjective sound character and TV volume require listening through the target speakers.
+File analysis and automated routing tests do not establish that acceptance.
+
+## Version 1.0 delivery
+
 The local run on 2026-10-28 built the complete offline Kotlin TV game.
 The work uses `apps/battleship` and package `com.amine.battleship`.
 The root Java builds and cloud workflows remain unchanged.
