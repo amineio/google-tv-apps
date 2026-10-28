@@ -1,0 +1,63 @@
+{
+  "generator": "Built-in ImageGen tool",
+  "date": "2026-10-28",
+  "rights": "AI-generated artwork created for this repository. No external stock asset or third-party artwork license is claimed.",
+  "references": "Original prompts following the approved Battleship navy, steel, cyan, and ivory design. No external image supplied.",
+  "ownership": "Battleship owns icon, banner, and text-free hero. Family Home reads optional application metadata com.amine.familyhome.HERO_IMAGE and owns display/fallback.",
+  "assets": [
+    {
+      "kind": "icon",
+      "path": "apps/battleship/src/main/res/drawable-nodpi/launcher_icon_v1.webp",
+      "dimensions": [
+        512,
+        512
+      ],
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceFile": "exec-087c7ad2-97aa-4d4e-8d86-0912993e25db.png",
+      "transparentBackground": false,
+      "compression": "cwebp -q 90 -resize 512 512",
+      "bytes": 44744,
+      "sha256": "363f1c322c6a13ee5d5496242f9f99b4b24ca1cfc33a48fcad929af5af168721",
+      "prompt": "Use case: stylized-concept. Asset type: square Android TV Battleship game app icon. Create one premium finished naval game icon, perfectly square 1:1, full bleed opaque dark navy background. One impressive steel-gray battleship in three-quarter bow view, large clear hull silhouette, bow toward viewer at lower left and superstructure rising in upper center. Cinematic painted realism matching a restrained navy, steel, cool cyan and pale ivory Battleship strategy game. A simple low ocean wave beneath, soft cyan rim light separates the hull, subtle dawn glow behind the bridge. Design must remain immediately recognizable at 64x64 and 128x128. The entire essential ship silhouette stays inside the central 70 percent for Android circle and rounded-square masks, with generous surrounding navy. Crisp strong large forms and controlled contrast, minimal micro-detail, no frame, no rounded-corner mask baked in, no border, no text, no letters, no insignia, no people, no weapons firing, no fire/explosion, no watermark, no 3D app mockup. This is final original app artwork, not a UI screenshot."
+    },
+    {
+      "kind": "banner",
+      "path": "apps/battleship/src/main/res/drawable-nodpi/launcher_banner_v1.webp",
+      "dimensions": [
+        640,
+        360
+      ],
+      "sourceDimensions": [
+        1672,
+        941
+      ],
+      "sourceFile": "exec-4d77e375-0f95-48dc-b55d-d64b8168570f.png",
+      "transparentBackground": false,
+      "compression": "cwebp -q 92 -resize 640 360",
+      "bytes": 66278,
+      "sha256": "a1c4ac27b02ca69bc9b74eb5689002a12c2daf897daf7acc3ad8cddacb0ed350",
+      "prompt": "Use case: ads-marketing. Asset type: finished Android TV game launcher banner, wide exact 16:9 landscape. Create a premium BATTLESHIP game cover in restrained cinematic painted realism. Scene: dark navy ocean and clouded dawn, one realistic steel-gray battleship prominent on the RIGHT half, low three-quarter bow view toward lower left, readable navy silhouette with cool cyan rim light and pale ivory sunrise behind its bridge. The LEFT half is calm deep navy negative space containing the exact single title 'BATTLESHIP' in very large bold ivory condensed sans-serif capitals, two short subtle cyan horizontal rules as accents. The title must be spelled B A T T L E S H I P and remain crisp and readable when reduced to a 384x216 TV tile. Title on one line, inset safely from edges. No other words, no subtitles, no ratings, no store logos, no badges, no people, no insignia, no explosions or firing, no border or mockup frame. Full-bleed opaque artwork, final 16:9 composition with generous safe margins. Match an elegant dark-navy, steel-gray, cyan Battleship strategy game. Keep all essential title and ship within the inner90percent so TV crop is safe."
+    },
+    {
+      "kind": "hero",
+      "path": "apps/battleship/src/main/res/drawable-nodpi/battleship_hero.webp",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "sourceDimensions": [
+        1672,
+        941
+      ],
+      "sourceFile": "exec-fec72f68-56a3-4c1c-9bbc-49b6e9456ece.png",
+      "transparentBackground": false,
+      "compression": "cwebp -q 86 -resize 1920 1080",
+      "bytes": 157456,
+      "sha256": "c5123b677e1a90da92eb0a2a7458aa01ff83735158fa7947c05ac1cd10c74ff7",
+      "prompt": "Use case: stylized-concept. Asset type: full-screen 16:9 selected-app hero background for the Family Home Android TV launcher, featuring the Battleship game. Create original premium cinematic naval painted realism, matching a navy-blue, steel-gray, restrained cyan and ivory game. Wide exact16:9 landscape. One majestic realistic battleship occupies the RIGHT 45 percent of the frame, complete bow, stern and mast visible, low three-quarter view facing lower left, ship centered around x76percent and y43percent. Strong readable steel hull with cool cyan edge lighting and muted warm dawn rim light. Dark ocean, distant storm clouds and a soft horizon near60percent screen height. LEFT55percent must remain very quiet deep navy sky/ocean negative space for the launcher's native white game title. Bottom25percent is subdued dark ocean for native app tiles and footer controls. Keep top right corner dark enough for a profile portrait. Cinematic but calm, clear silhouette, refined details and realistic lighting. No text, no logo, no typography, no UI or mockup controls, no frame, no people, no insignia, no firing, no explosions, no watermark. Do not put a second ship or prominent object in the left half. All title, focus rings and app controls will be rendered natively over this background."
+    }
+  ]
+}
