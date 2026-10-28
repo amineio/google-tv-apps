@@ -50,6 +50,16 @@ A paused computer turn survived a process restart with the same complete saved m
 Continue restored that coordinate and applied exactly one pending computer shot.
 The release build retained the saved match during replacement of the debug build.
 
+The physical Chromecast installation on 2026-10-28 also completed successfully.
+The device operates Android 14. The installed game reports version 1.0, code 1.
+The release installer passed its unit tests, lint, and APK build before installation.
+Android reported `Success` for installation and `Status: ok` for launch.
+The family launcher required profile selection before it allowed the game to remain open.
+The parent profile opened the game without a PIN prompt. Child app permissions remain unchanged.
+A device capture shows the Battleship main menu with clear controls and the separate Clock overlay.
+The Home role, enabled helper list, Google TV Home, and setupwraith match their captured states.
+The capture and device records remain local. No device identifier or family screen is committed.
+
 Actual 1080p captures cover the main menu, Continue menu, native game boards, shot feedback, and paused release dialog.
 Independent source and rendered reviews found no remaining material defect.
 The captures show clear focus, safe margins, aligned labels, hidden intact enemy ships, and no observed overlap or clipping.
@@ -60,7 +70,7 @@ Review images remain local and were attached directly in chat. They are not publ
 The emulator reported a 3840 by 2160 physical display after a separate 4K startup.
 Its Google TV platform capped the logical UI and captures at 1920 by 1080.
 The game operated in that mode. This does not establish native 4K rendering.
-Native 4K rendering, physical TV viewing-distance readability, remote hardware, and TV audio volume remain unverified.
+Native 4K rendering, a complete match with the physical remote, viewing-distance readability, and TV audio volume remain unverified.
 Short local sound resources are bundled and optional. No physical sound-quality claim is made.
 The hit and sunk effects share a brief impact animation. The results screen uses a static victory or defeat presentation.
 
