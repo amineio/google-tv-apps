@@ -15,7 +15,7 @@ Spec: docs/superpowers/specs/2026-10-28-family-home-polish-design.md
 Keep the profile chooser unchanged. Preserve the 20-minute default, five-minute steps, and 5–60 minute range.
 Preserve the session, access, PIN, helper, and Cast behavior. Add no dependency.
 Use one coordinator for builds, Git operations, and device input.
-Use emulator-5554 for Android tests. Never run instrumented tests on the physical TV.
+Use emulator-5680 on the isolated ADB server port 5041 for Android tests. Never run instrumented tests on the physical TV.
 Keep family screenshots and device data outside Git. Do not enable cloud builds.
 
 ## Review Focus
@@ -33,14 +33,14 @@ Tests: FamilyRemoteTest.kt and HomePresentationTest.kt under apps/family-home/sr
 
 Interfaces: Preserve HomeScreen parameters and existing controller APIs. DurationScreen can become internal for focused presentation tests.
 
-- [ ] Update meaningful presentation regressions for initial focus, duration navigation, direct tile launch, fixed countdown geometry, and focus restoration.
-- [ ] The coordinator operates the failing emulator regressions before implementation.
-- [ ] Implement the duration and launcher presentation from the spec. Keep changes bounded to presentation.
-- [ ] Update the version to 1.2, versionCode 3, and revise the app README for final behavior.
-- [ ] The coordinator operates both unit variants, lintRelease, assembleRelease, assembleDebug, and assembleDebugAndroidTest.
-- [ ] The coordinator operates connectedDebugAndroidTest on emulator-5554 and captures rendered screens.
-- [ ] Resolve actionable findings from independent code and UI/UX reviews.
-- [ ] Commit only related app and design records. The coordinator owns the commit and delivery.
+- [x] Update meaningful presentation regressions for initial focus, duration navigation, direct tile launch, fixed countdown geometry, and focus restoration.
+- [x] The coordinator operates the failing emulator regressions before implementation.
+- [x] Implement the duration and launcher presentation from the spec. Keep changes bounded to presentation.
+- [x] Update the version to 1.2, versionCode 3, and revise the app README for final behavior.
+- [x] The coordinator operates both unit variants, lintRelease, assembleRelease, assembleDebug, and assembleDebugAndroidTest.
+- [x] The coordinator installs both test APKs and operates the Android instrumentation runner on emulator-5680 through ADB port 5041.
+- [x] Resolve actionable findings from independent code and UI/UX reviews.
+- [x] Commit only related app and design records. The coordinator owns the commit and delivery.
 
 ## Delivery
 

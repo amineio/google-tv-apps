@@ -1,11 +1,15 @@
 package com.amine.familyhome
 
+import android.graphics.Bitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.After
@@ -16,6 +20,13 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class FamilyRemoteTest {
     @get:Rule val screen = createAndroidComposeRule<MainActivity>()
+
+    private fun capture(name: String) {
+        val directory = requireNotNull(InstrumentationRegistry.getInstrumentation().targetContext.getExternalFilesDir(null))
+        directory.resolve("$name.png").outputStream().use {
+            screen.onRoot().captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)
+        }
+    }
 
     @Before fun showProfiles() {
         screen.waitUntil(10_000) { screen.activity.family.ui.value.ready }
@@ -91,15 +102,49 @@ class FamilyRemoteTest {
         screen.onNodeWithText("Parent PIN: on").assertIsFocused()
     }
 
+    @Test fun durationKeepsHelperRecoveryNoticeVisibleAfterStartFails() {
+        screen.onRoot().performKeyInput { pressKey(Key.DirectionRight); pressKey(Key.DirectionCenter) }
+        screen.waitUntil(10_000) { screen.onAllNodesWithText("Time for Elias").fetchSemanticsNodes().isNotEmpty() }
+        screen.onNodeWithText("Start session").assertIsFocused()
+        screen.activity.family.helperConnected(false)
+        screen.onRoot().performKeyInput { pressKey(Key.DirectionCenter) }
+        screen.onNodeWithText("Enable the Family Home accessibility helper before starting a child session.")
+            .assertIsDisplayed()
+        screen.onNodeWithText("Start session").assertIsDisplayed().assertIsFocused()
+        screen.onNodeWithTag("duration-value").assertTextEquals("20 minutes")
+        capture("duration-notice")
+    }
+
     @Test fun childDurationStartsAtTwentyAndStaysWithinFiveAndSixty() {
         screen.onRoot().performKeyInput { pressKey(Key.DirectionRight); pressKey(Key.DirectionCenter) }
         screen.waitUntil(10_000) { screen.onAllNodesWithText("Time for Elias").fetchSemanticsNodes().isNotEmpty() }
         screen.onNodeWithTag("duration-value").assertTextEquals("20 minutes")
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
+        screen.onNodeWithText("Start session").assertIsFocused()
+        screen.onNodeWithText("Choose up to one hour.").assertDoesNotExist()
+        val valueCenter = screen.onNodeWithTag("duration-value").fetchSemanticsNode().boundsInRoot.center.y
+        // Allow normal font rounding while catching the conflicting-height regression.
+        val alignmentTolerance = with(screen.density) { 1.dp.toPx() }
+        for (label in listOf("− 5", "+ 5")) {
+            val buttonCenter = screen.onNodeWithText(label).fetchSemanticsNode().boundsInRoot.center.y
+            val textCenter = screen.onNodeWithText(label, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.center.y
+            org.junit.Assert.assertEquals("$label label is not centered in its button", buttonCenter, textCenter, alignmentTolerance)
+            org.junit.Assert.assertEquals("$label label is not aligned with the duration", valueCenter, textCenter, alignmentTolerance)
+        }
+        capture("duration-default")
+        screen.onRoot().performKeyInput { pressKey(Key.DirectionUp) }
+        screen.onNodeWithText("+ 5").assertIsFocused()
         repeat(14) { screen.onRoot().performKeyInput { pressKey(Key.DirectionCenter) } }
         screen.onNodeWithTag("duration-value").assertTextEquals("60 minutes")
         screen.onRoot().performKeyInput { pressKey(Key.DirectionLeft) }
+        screen.onNodeWithText("− 5").assertIsFocused()
         repeat(14) { screen.onRoot().performKeyInput { pressKey(Key.DirectionCenter) } }
         screen.onNodeWithTag("duration-value").assertTextEquals("5 minutes")
+        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        screen.onNodeWithText("Start session").assertIsFocused()
+        screen.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
+        screen.onNodeWithText("Cancel").assertIsFocused()
+        screen.onRoot().performKeyInput { pressKey(Key.DirectionCenter) }
+        screen.waitUntil(10_000) { screen.onAllNodesWithText("Who is watching?").fetchSemanticsNodes().isNotEmpty() }
+        screen.onNodeWithText("Amine").assertIsFocused()
     }
 }

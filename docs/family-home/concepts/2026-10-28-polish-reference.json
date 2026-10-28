@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-28",
+  "tool": "image_gen.imagegen",
+  "purpose": "Design reference only; no raster asset is bundled by this change.",
+  "source_reference": "User feedback and existing Family Home native interface. Generic Alex profile.",
+  "dimensions": {
+    "width": 1672,
+    "height": 941
+  },
+  "license": "AI-generated design reference. No third-party source image supplied. Existing app marks remain their respective owners.",
+  "implementation_decision": "Use centered duration controls and simple native launcher. Put fixed countdown before trailing profile to anchor profile at right. Keep current Family Home branding and native buttons.",
+  "prompt": "Create one clean landscape design reference sheet for a native Google TV family launcher. Two wide 16:9 TV screen mockups stacked vertically, clear large readable UI, dark warm charcoal, restrained pale gold focus, Outfit-like sans serif. TOP screen: duration choice, Family Home small upper left, generic round illustrated child portrait above 'Alex', centered row of equal-size neutral pill buttons '\u2212 5' and '+ 5' symmetrically around big centered '20 minutes'. Below centered 'Start session' and neutral 'Cancel'. Only Start session has pale gold remote focus, no other gold filled controls or promotional copy. BOTTOM screen: launcher for Spotify, flat dark green shaded background with absolutely no banner or poster hero, Family Home upper left, stable top-right profile portrait and 'Alex' then noninteractive subdued fixed-width clock pill '19:59 left'. Large 'Spotify' title left, empty calm space. App row with six tightly fitted landscape app banners, first Chess & Math illustrated, then Spotify, Prime Video, VRT MAX, VTM GO, MasterClass simple marks. Only Spotify app banner has a thin gold focus outline. Small neutral standard Android TV pill actions at lower left 'Switch profile' and 'End session', enough empty lower-right space for an external Clock overlay. Design options are details in one consistent style, no decorative marketing text, no Open app button, no devices, no annotations, no personal names except generic Alex. This is design reference artwork only; implementation uses native Compose controls."
+}

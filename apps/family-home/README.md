@@ -8,10 +8,12 @@ Build and test locally. GitHub APK builds are paused until the user requests the
 
 ## Interface
 
-Version 1.1 implements the approved family launcher concepts.
+Version 1.2 refines the native family launcher interface.
 The profile screen uses circular illustrated portraits, Outfit text, and a gold focus outline.
-The home screen shows app artwork, landscape app banners, and the remaining child time.
-The feature area follows the focused app. Open app launches that same app.
+The home screen keeps the profile at the upper right and gives the countdown fixed bounds and equal-width digit cells.
+Select an app tile with the remote center key to open it.
+Chess keeps its illustrated background. Other apps use a subdued gradient based on their icon color.
+Landscape banners fill landscape tiles. Square icons fill square tiles.
 Children see installed permitted apps in the approved order. Amine keeps all installed TV apps.
 
 The launcher restores the selected app after returning from it.
@@ -23,6 +25,8 @@ The artwork is bundled locally. The launcher does not fetch recommendations or v
 
 Select Amine, Elias, or Sofia. Profiles belong to this app and share the existing streaming sign-ins.
 Amine has all installed TV apps. Each new child session starts with a duration choice.
+The centered duration screen shows the child's portrait and name above equal-size step buttons.
+Start session has initial focus. Buttons turn gold only when focused.
 The default is 20 minutes, with five-minute steps from 5 through 60 minutes.
 The maximum applies to each session. There is no daily quota.
 
