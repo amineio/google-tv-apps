@@ -75,7 +75,7 @@ Expected: success, zero unit failures, and zero lint errors.
 - [x] Request a fresh independent review of the complete branch. Fix material findings and rerun affected tests.
 - [x] Install the verified release build on the emulator. Use the physical TV only when available and idle.
 - [x] Record separate build, test, install, visual, and deferred physical evidence.
-- [ ] Commit only scoped app and documentation changes. Push the feature branch and merge into `origin/main`.
-- [ ] Make sure that the merged commit reaches `origin/main`. Preserve this worktree and unrelated local work.
+- [x] Commit only scoped app and documentation changes. Push the feature branch and merge into `origin/main`.
+- [x] Make sure that the merged commit reaches `origin/main`. Preserve this worktree and unrelated local work.
 
 Physical-TV testing is separate from emulator evidence. Do not claim playback, wake, Cast, or hardware acceptance from these tests.

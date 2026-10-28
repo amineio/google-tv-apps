@@ -84,7 +84,10 @@ The reviewed implementation commit is `32ce3304d9c06a5275bcc69ab7363489aad672aa`
 The release APK installed successfully on `emulator-5672` and launched with status `ok`.
 The installed package reports version code 10 and version name 0.10.
 APK SHA-256: `e59b7c2f57b9040eae944eaad8f69acd38a0b056a6bbb91f73a797f40c55bd8f`.
-The merge into `origin/main` remains pending.
+Merge commit `e159ead91fb7301d88ae28c708933e41d5feb279` reached `origin/main` and the feature branch.
+It preserves the Family Home and Battleship changes that reached remote `main` during this task.
+Post-merge Chess unit tests, lint, and release build pass. The release APK hash remains unchanged.
+The isolated worktree and feature branch remain available for further Chess work.
 
 Physical-TV installation, hardware behavior, and final couch-distance review remain deferred.
 Read-only TV diagnostics did not establish a ready, idle UI. No physical-TV input or installation formed part of this change.
