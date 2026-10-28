@@ -60,15 +60,16 @@ class FamilyRemoteTest {
         }
     }
 
-    @Test fun profileHeadingIsReadableOnTheDarkBackground() {
-        screen.onNodeWithText("Who is watching?").assertIsDisplayed()
-        val pixels = screen.onNodeWithText("Who is watching?").captureToImage().toPixelMap()
+    @Test fun chooserKeepsReadableNamesWithoutIntroductoryText() {
+        screen.onNodeWithTag("profile-chooser").assertIsDisplayed()
+        screen.onNodeWithText("Who is watching?").assertDoesNotExist()
+        screen.onNodeWithText("Choose your profile to begin").assertDoesNotExist()
+        val pixels = screen.onNodeWithText("Amine", useUnmergedTree = true).captureToImage().toPixelMap()
         var lightPixels = 0
         for (y in 0 until pixels.height) for (x in 0 until pixels.width) {
             if (pixels[x, y].luminance() > 0.7f) lightPixels++
         }
-        org.junit.Assert.assertTrue("The profile heading needs light text on its dark background",
-            lightPixels > pixels.width * pixels.height * 0.02)
+        org.junit.Assert.assertTrue("Profile names need readable text", lightPixels > pixels.width * pixels.height * 0.02)
     }
 
     @Test fun initialChooserShowsThreeProfiles() {
@@ -213,7 +214,7 @@ class FamilyRemoteTest {
         pressRemote(listOf(Key.DirectionRight))
         screen.onNodeWithText("Start session").assertIsFocused()
         pressBack()
-        screen.waitUntil(10_000) { screen.onAllNodesWithText("Who is watching?").fetchSemanticsNodes().isNotEmpty() }
+        screen.waitUntil(10_000) { screen.onAllNodesWithTag("profile-chooser").fetchSemanticsNodes().isNotEmpty() }
         screen.onNodeWithText("Amine").assertIsFocused()
         org.junit.Assert.assertNull(screen.activity.family.ui.value.state.selected)
         org.junit.Assert.assertFalse(screen.activity.family.ui.value.state.sessions.containsKey(Viewer.ELIAS))
@@ -246,27 +247,48 @@ class FamilyRemoteTest {
         screen.onNodeWithText("Switch profile").assertIsFocused()
     }
 
-    @Test fun switchQuestionNeedsOneContinueAndBackKeepsTheRunningSessionWithPinOn() {
-        startChildHome(pinEnabled = true)
-        val session = screen.activity.family.ui.value.state.sessions[Viewer.ELIAS]
+    @Test fun childSwitchPausesDirectlyWithPinOn() = assertDirectChildSwitch(true)
+
+    @Test fun childSwitchPausesDirectlyWithPinOff() = assertDirectChildSwitch(false)
+
+    private fun assertDirectChildSwitch(pinEnabled: Boolean) {
+        startChildHome(pinEnabled)
+        val running = screen.activity.family.ui.value.state
         pressRemote(listOf(Key.DirectionCenter))
-        screen.onNodeWithText("Switch profile?").assertIsDisplayed()
-        assertContinueIsCentered()
-        screen.onNodeWithText("Continue").assertIsFocused().assertIsEnabled()
-        screen.onNode(hasText("1") and hasAnyAncestor(isDialog())).assertDoesNotExist()
-        pressBack()
-        screen.onNodeWithText("Switch profile?").assertDoesNotExist()
-        org.junit.Assert.assertEquals(Viewer.ELIAS, screen.activity.family.ui.value.state.selected)
-        org.junit.Assert.assertEquals(session, screen.activity.family.ui.value.state.sessions[Viewer.ELIAS])
-        screen.onNodeWithTag("home-profile").assertIsFocused()
-        pressRemote(listOf(Key.DirectionCenter, Key.DirectionCenter))
-        screen.onNodeWithText("Continue").assertIsFocused()
-        screen.onNode(isDialog()).performKeyInput { pressKey(Key.DirectionCenter) }
-        screen.waitUntil(10_000) { screen.onAllNodesWithText("Who is watching?").fetchSemanticsNodes().isNotEmpty() }
-        val paused = requireNotNull(screen.activity.family.ui.value.state.sessions[Viewer.ELIAS])
+        screen.onNodeWithTag("profile-chooser").assertIsDisplayed()
+        screen.onNode(isDialog()).assertDoesNotExist()
+        screen.onNodeWithText("Continue").assertDoesNotExist()
+        val paused = screen.activity.family.ui.value
+        val session = requireNotNull(paused.state.sessions[Viewer.ELIAS])
+        org.junit.Assert.assertNull(paused.state.selected)
+        org.junit.Assert.assertNull(session.deadlineElapsedMs)
+        org.junit.Assert.assertEquals(SessionEngine.remaining(running, Viewer.ELIAS, paused.now), session.remainingMs)
+        screen.onNodeWithTag("profile:AMINE").assertIsFocused()
+        screen.onNodeWithTag("resume:ELIAS", useUnmergedTree = true).assertIsDisplayed()
+        if (pinEnabled) {
+            pressRemote(listOf(Key.DirectionCenter))
+            screen.onNodeWithText("Parent PIN").assertIsDisplayed()
+            screen.onNodeWithText("1").assertIsFocused()
+            screen.onNodeWithText("Continue").assertIsNotEnabled()
+        }
+    }
+
+    @Test fun parentSwitchOpensChooserDirectlyWithPinOff() = assertDirectParentSwitch(false)
+
+    @Test fun parentSwitchOpensChooserDirectlyWithPinOn() = assertDirectParentSwitch(true)
+
+    private fun assertDirectParentSwitch(pinEnabled: Boolean) {
+        runBlocking {
+            org.junit.Assert.assertTrue(screen.activity.family.select(Viewer.AMINE))
+            if (pinEnabled) org.junit.Assert.assertTrue(screen.activity.family.setPin("1111"))
+        }
+        screen.waitUntil(10_000) { screen.onAllNodesWithTag("home-profile").fetchSemanticsNodes().isNotEmpty() }
+        pressRemote(listOf(Key.DirectionUp, Key.DirectionCenter, Key.DirectionCenter))
+        screen.onNodeWithTag("profile-chooser").assertIsDisplayed()
+        screen.onNode(isDialog()).assertDoesNotExist()
+        screen.onNodeWithText("Continue").assertDoesNotExist()
         org.junit.Assert.assertNull(screen.activity.family.ui.value.state.selected)
-        org.junit.Assert.assertNull(paused.deadlineElapsedMs)
-        org.junit.Assert.assertTrue(paused.remainingMs in 1..1_200_000L)
+        screen.onNodeWithTag("profile:AMINE").assertIsFocused()
     }
 
     @Test fun endQuestionNeedsOneContinueAndBackKeepsTheRunningSession() {
@@ -283,7 +305,7 @@ class FamilyRemoteTest {
         pressRemote(listOf(Key.DirectionCenter, Key.DirectionDown, Key.DirectionCenter))
         screen.onNodeWithText("Continue").assertIsFocused()
         screen.onNode(isDialog()).performKeyInput { pressKey(Key.DirectionCenter) }
-        screen.waitUntil(10_000) { screen.onAllNodesWithText("Who is watching?").fetchSemanticsNodes().isNotEmpty() }
+        screen.waitUntil(10_000) { screen.onAllNodesWithTag("profile-chooser").fetchSemanticsNodes().isNotEmpty() }
         org.junit.Assert.assertNull(screen.activity.family.ui.value.state.selected)
         org.junit.Assert.assertFalse(screen.activity.family.ui.value.state.sessions.containsKey(Viewer.ELIAS))
     }
@@ -316,7 +338,7 @@ class FamilyRemoteTest {
         repeat(4) { screen.onNode(isDialog()).performKeyInput { pressKey(Key.DirectionDown) } }
         screen.onNodeWithText("Continue").assertIsFocused()
         screen.onNode(isDialog()).performKeyInput { pressKey(Key.DirectionCenter) }
-        screen.waitUntil(10_000) { screen.onAllNodesWithText("Who is watching?").fetchSemanticsNodes().isNotEmpty() }
+        screen.waitUntil(10_000) { screen.onAllNodesWithTag("profile-chooser").fetchSemanticsNodes().isNotEmpty() }
         org.junit.Assert.assertFalse(screen.activity.family.ui.value.state.sessions.containsKey(Viewer.ELIAS))
     }
 
@@ -338,7 +360,7 @@ class FamilyRemoteTest {
         screen.onNodeWithText("Start session").assertIsFocused()
         org.junit.Assert.assertFalse(screen.activity.family.ui.value.state.sessions.containsKey(Viewer.ELIAS))
         pressBack()
-        screen.onNodeWithText("Who is watching?").assertIsDisplayed()
+        screen.onNodeWithTag("profile-chooser").assertIsDisplayed()
         org.junit.Assert.assertNull(screen.activity.family.ui.value.state.selected)
     }
 }

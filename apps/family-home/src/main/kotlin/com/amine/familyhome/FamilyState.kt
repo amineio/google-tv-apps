@@ -39,6 +39,9 @@ internal fun defaultProfiles() = listOf(Viewer.AMINE, Viewer.ELIAS, Viewer.SOFIA
 internal fun validProfileName(name: String): Boolean =
     name == name.trim() && name.length in 1..24 && name.none { it.isISOControl() }
 
+internal fun validAppPackage(pkg: String): Boolean =
+    pkg.matches(Regex("[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)+"))
+
 @Serializable
 data class ChildSession(
     val totalMs: Long,
@@ -62,7 +65,7 @@ object DefaultApps {
 
 @Serializable
 data class FamilyState(
-    val schema: Int = 3,
+    val schema: Int = 4,
     val selected: Viewer? = null,
     val sessions: Map<Viewer, ChildSession> = emptyMap(),
     val allowed: Map<Viewer, Set<String>> = DefaultApps.allowed(),
@@ -72,6 +75,7 @@ data class FamilyState(
     val recovered: Boolean = false,
     val profiles: List<FamilyProfile> = defaultProfiles(),
     val usage: Map<String, Map<Viewer, Long>> = emptyMap(),
+    val appOrder: Map<Viewer, List<String>> = emptyMap(),
 ) {
     val pinEnabled: Boolean get() = pinHash.isNotEmpty()
     val children: List<FamilyProfile> get() = profiles.filter { it.viewer.isChild }
@@ -79,7 +83,7 @@ data class FamilyState(
     fun label(viewer: Viewer): String = requireNotNull(profile(viewer)) { "Unknown family profile" }.name
 
     fun validated(): FamilyState {
-        require(schema == 3 && revision >= 0) { "Unsupported saved family state" }
+        require(schema == 4 && revision >= 0) { "Unsupported saved family state" }
         require(pinSalt.isEmpty() == pinHash.isEmpty()) { "Incomplete parent PIN" }
         val ids = profiles.map { it.viewer }.toSet()
         require(ids.size == profiles.size && Viewer.AMINE in ids) { "Invalid family profiles" }
@@ -98,6 +102,10 @@ data class FamilyState(
         } }) { "Duplicate family profile name" }
         require(selected == null || selected in ids) { "Unknown selected family profile" }
         require(allowed.keys.all { it.isChild && it in ids }) { "Invalid family app lists" }
+        require(appOrder.keys.all { it in ids }) { "Unknown app-order profile" }
+        appOrder.values.forEach { packages ->
+            require(packages.distinct().size == packages.size && packages.all(::validAppPackage)) { "Invalid family app order" }
+        }
         sessions.forEach { (viewer, session) ->
             require(viewer in ids && viewer.isChild && session.totalMs in 300_000..3_600_000 && session.totalMs % 300_000 == 0L)
             require(session.remainingMs in 0..session.totalMs)

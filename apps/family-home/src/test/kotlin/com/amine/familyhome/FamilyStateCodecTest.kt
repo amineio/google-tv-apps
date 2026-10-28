@@ -26,7 +26,7 @@ class FamilyStateCodecTest {
         val original = Json.parseToJsonElement(legacy).jsonObject
         val encoded = Json.parseToJsonElement(FamilyStateCodec.encode(migrated)).jsonObject
 
-        assertEquals(3, migrated.schema)
+        assertEquals(4, migrated.schema)
         assertTrue(migrated.usage.isEmpty())
         assertEquals(listOf(Viewer.AMINE, Viewer.ELIAS, Viewer.SOFIA), migrated.profiles.map { it.viewer })
         assertEquals(listOf("Amine", "Elias", "Sofia"), migrated.profiles.map { it.name })
@@ -71,7 +71,7 @@ class FamilyStateCodecTest {
         assertThrows(IllegalArgumentException::class.java) {
             FamilyStateCodec.decode(JsonObject(saved - "profiles").toString())
         }
-        for (schema in listOf(JsonPrimitive(4), JsonPrimitive("2"))) {
+        for (schema in listOf(JsonPrimitive(5), JsonPrimitive("2"))) {
             assertThrows(IllegalArgumentException::class.java) {
                 FamilyStateCodec.decode(JsonObject(saved + ("schema" to schema)).toString())
             }
@@ -113,7 +113,7 @@ class FamilyStateCodecTest {
         )
         val migrated = FamilyStateCodec.decode(JsonObject(saved).toString())
         val encoded = Json.parseToJsonElement(FamilyStateCodec.encode(migrated)).jsonObject
-        assertEquals(3, migrated.schema)
+        assertEquals(4, migrated.schema)
         assertTrue(migrated.usage.isEmpty())
         for ((field, value) in saved) if (field != "schema") assertEquals(field, value, encoded[field])
     }
