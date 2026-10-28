@@ -39,7 +39,7 @@ Spec: `docs/superpowers/specs/2026-10-28-battleship-design.md` and the full user
 - [x] Run debug and release unit tests, lint, APK builds, repository tests, and emulator instrumented tests.
 - [x] Inspect 1080p and 4K captures. Exercise save/restore, repeat input, restart, and complete-match flows.
 - [x] Obtain independent whole-change review. Fix material findings and repeat affected tests.
-- [ ] Update the tracking PR with exact evidence. Merge tested installed changes into `origin/main` and report the APK path.
+- [x] Update the tracking PR with exact evidence. Merge tested installed changes into `origin/main` and report the APK path.
 
 ## Results and evidence limits
 

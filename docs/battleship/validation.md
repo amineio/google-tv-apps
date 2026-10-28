@@ -3,6 +3,8 @@
 The local run on 2026-10-28 built the complete offline Kotlin TV game.
 The work uses `apps/battleship` and package `com.amine.battleship`.
 The root Java builds and cloud workflows remain unchanged.
+PR [#6](https://github.com/amineio/google-tv-apps/pull/6) merged into `origin/main` at `16dc3d1a9d886dce066db8de9ebc07498ad56837`.
+The original checkout follows that merge. The feature worktree retains the local APKs and build reports.
 
 ## Automated results
 
