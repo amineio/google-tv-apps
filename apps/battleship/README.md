@@ -24,6 +24,9 @@ The app pauses delayed actions when it enters the background. Resume continues t
 Settings provides a sound control. Short locally synthesized effects are optional. There is no background music.
 Version 1.1 adds layered impacts, a distinct friendly damage sound, a victory fanfare, and a descending defeat bugle.
 The right panel shows the target coordinate and compact shot feedback. Named sunk-ship feedback remains visible during aiming.
+Version 1.2 adds a naval command panel, a generated battleship illustration, and five distinct native ship designs.
+Separate target and last-shot regions keep feedback clear during aiming. Damage slashes and larger labels improve visibility.
+The [three-round design review](../../docs/battleship/gameplay-design/review.md) records the native captures and expert scores.
 
 ## Build
 
@@ -84,6 +87,7 @@ Unit tests cover placement, rules, hidden information, persistence, interruption
 The [design record](../../docs/superpowers/specs/2026-10-28-battleship-design.md) defines the interface.
 The [asset record](../../docs/battleship/concepts/assets.json) contains prompts, dimensions, synthesis details, and rights information.
 The [audio record](../../docs/battleship/audio-polish-assets.json) contains the original scores, levels, and file hashes for version 1.1.
+The [gameplay art record](../../docs/battleship/gameplay-design/assets.json) contains the ImageGen prompts, dimensions, compressed paths, and rights for version 1.2.
 To reproduce its bundled effects, use Python 3 from the repository root:
 
 ```sh

@@ -1,5 +1,54 @@
 # Battleship validation
 
+## Version 1.2 gameplay graphics
+
+The update adds a native command panel, a generated decorative battleship illustration, and five distinct Canvas ship designs.
+The selected target and actual last-shot feedback have separate regions. The board keeps its single focus target.
+Warm brackets identify the last shot. Slashed damage segments supplement color. Intact enemy ships remain hidden.
+The engine, AI, saved-game format, sounds, dependencies, and permissions remain unchanged.
+
+The dedicated designer used one fixed rubric through all three iterations.
+The baseline scored 6.7/10. The iterations scored 8.0/10, 8.3/10, and 8.8/10.
+These scores are expert judgments from source and native captures. They do not measure user satisfaction or physical viewing distance.
+The [design review](gameplay-design/review.md) records the findings, changes, and seven preview captures.
+The [art record](gameplay-design/assets.json) records the built-in ImageGen prompts, asset dimensions, compression, and rights.
+The bundled transparent WebP illustration is 840 by 336 pixels and 64,824 bytes.
+The release APK is 1,514,239 bytes, about 81 KB larger than version 1.1.
+
+The final local command completed successfully in 1 minute, 57 seconds:
+
+```sh
+ANDROID_SERIAL=emulator-5580 apps/battleship/gradlew -p apps/battleship testDebugUnitTest testReleaseUnitTest lintRelease assembleDebug assembleRelease connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.captureGameplay=true --no-daemon --max-workers=1 --console=plain
+```
+
+Debug unit tests: 32 passed, zero failures or errors.
+Release unit tests: 32 passed, zero failures or errors.
+Each variant retains 1,000 seeded complete matches.
+Release lint: zero errors and three existing advisory warnings.
+Repository tests: 14 passed, zero failures or errors.
+The complete emulator suite passes all 10 tests at 1920 by 1080, density 320.
+The tests cover all 100 cells, held OK, blocked firing, menus, focus restoration, lifecycle, rematch, and the new presentation behavior.
+The selected-target regression failed before separate feedback regions existed and passed afterward.
+The TextLayoutResult overflow regression failed on clipped target text and passed after the measured-height repair.
+The dense fixture applies 72 legal attacks per side and leaves three ships sunk per side.
+
+The presentation, overflow, and focus test also passes at 1280 by 720, density 213, in 26 seconds.
+The coordinator restored the emulator to 1920 by 1080, density 320.
+The release APK also installs and launches successfully on the emulator. Actual D-pad input aims at E5 and applies one shot and one computer response.
+A fresh independent reviewer accepts the source and both viewport captures with no material finding.
+The dedicated designer finds no remaining material visual defect in the final four 1080p captures.
+
+The physical Chromecast reports version 1.2, code 3 after a successful background replacement.
+Installation uses `-r` and preserves app data. Family Home remains the resumed Activity.
+The Home role, enabled helper list, Google TV Home, and setupwraith match their states before installation.
+No launch or remote input was sent to the physical TV during this update. Device records remain in an ignored local backup.
+Physical viewing distance, panel contrast, overscan, motion comfort, and native 4K remain unverified for this design.
+No APK upload, public release, or cloud build occurred.
+
+Version 1.2 debug APK SHA-256: `a0ee3adf77f56f14f6b5a1b33fc1d9653236588cc2e9181706e2e78df51f430a`.
+Version 1.2 release APK SHA-256: `7f84d83fb016ebdfc27b6c2a1aa121a8e1c6aec1ee2a10887938348a6bfe2499`.
+Both artifacts remain at the paths below.
+
 ## Version 1.1 audio and feedback
 
 The 2026-10-28 update adds distinct attack and friendly damage sounds, a victory fanfare, and a descending defeat bugle.

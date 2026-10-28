@@ -1,0 +1,37 @@
+{
+  "generator": "Built-in ImageGen tool",
+  "date": "2026-10-28",
+  "rights": "AI-generated artwork created for this repository. No external stock asset or third-party artwork license is claimed.",
+  "references": "Existing native Battleship game and its approved navy/cyan art direction. No external reference image.",
+  "concept": {
+    "path": "docs/battleship/gameplay-design/concept.webp",
+    "purpose": "Design reference only. Native boards, labels, ship state, and controls are separate.",
+    "prompt": "Use case: ui-mockup. Create a highly polished 16:9 Google TV Battleship gameplay screen concept, 1920x1080 composition. Family-friendly offline naval strategy, standard D-pad remote, viewed from a sofa. Professional premium strategy-game art direction, restrained cinematic navy and steel with cyan targeting and warm coral hits. Large square enemy targeting board LEFT, exactly 10 columns A-J and 10 rows 1-10 with highly legible labels. Broad cyan selected-cell outline, pale ring misses, coral X hits, a single sunk steel ship visible, ALL intact enemy ships hidden. RIGHT: a distinct compact command area with selected coordinate E5, brief Hit, a secondary smaller friendly 10x10 board with five steel warships and damage, and compact fleet health. Header BATTLESHIP, clear YOUR TURN; footer small remote hints. Board information and labels dominate, safe margins 5 percent. Add tasteful naval artifacts: premium archival-style ship elevation illustration or a small battleship portrait in the right command area, material depth, subtle dark ocean texture, elegant fine divider rules. Realistic detailed steel ships, not cartoon. Keep all gameplay cells calm and unobstructed. Large native-looking typography, 24px minimum for minor labels at1080p. No dashboard card clutter, no gauges without function, no fake buttons, no neon haze, no orange fire everywhere, no people, no logos, no busy photo behind boards. This is a design reference to be rebuilt as native Compose with dynamic boards, not a screenshot background.",
+    "compression": "cwebp -q 82 -resize 1400 0",
+    "excluded": "Invented specifications, fake controls, incorrect fleet content, and tiny typography are excluded from implementation.",
+    "bytes": 85184,
+    "sha256": "6b497d9b0cb5dc37584c893db0d8b7428df92c7e6f7154c46036d9a55397e3dc",
+    "dimensions": [
+      1400,
+      788
+    ]
+  },
+  "commandIllustration": {
+    "path": "apps/battleship/src/main/res/drawable-nodpi/command_battleship.webp",
+    "purpose": "Decorative command-panel art. No focus, labels, controls, or hidden game information.",
+    "prompt": "Use case: stylized-concept. Asset type: transparent naval illustration for a premium Google TV Battleship gameplay command panel. Primary request: one beautifully detailed realistic steel-gray battleship, complete vessel seen from a low three-quarter front port view, bow pointing toward lower left, hull and long deck extending to upper right. Strong elegant silhouette and readable large shapes, refined painted game key art with realistic metal, subtle cool cyan edge lighting and a small warm light on bridge, no firing. Composition: wide horizontal 2.5:1 composition, entire ship including bow, mast and stern visible with generous transparent margins, no cropped parts. Genuinely transparent background. No ocean or water, no wake, no ground plane, no smoke, no surrounding scenery, no text, no logos, no insignia, no watermark, no frame, no mockup UI. It will be placed in a 440x220 pixel dark navy panel, so prioritize a clear silhouette and restrained highlights over tiny detail. This is only decorative art, all controls and labels are separate native Compose.",
+    "compression": "cwebp -q 90 -alpha_q 100 -resize 840 0",
+    "transparentBackground": true,
+    "bytes": 64824,
+    "sha256": "5b96f21aa205f7eb9c3db7a92223964d55b564b193f6e4ce7ee688b79e9a15b6",
+    "sourceDimensions": [
+      1983,
+      793
+    ],
+    "dimensions": [
+      840,
+      336
+    ]
+  },
+  "nativeGraphics": "Five class-specific top-down hulls, deck details, board surfaces, axes, focus, shot markers, and labels use Compose Canvas or native text."
+}

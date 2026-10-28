@@ -16,11 +16,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.key.Key
@@ -33,6 +31,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.amine.battleship.game.model.Coordinate
 import com.amine.battleship.game.model.Ship
 import com.amine.battleship.game.model.Shot
@@ -106,27 +105,28 @@ internal fun GameBoard(
             .testTag("friendly_board")
     }
     Canvas(inputModifier) {
-        val gutter = size.width * .067f
+        val gutter = size.width * if (selected == null) .10f else .067f
         val pitch = (size.width - gutter * 1.22f) / 10f
         val side = pitch * 10f
         val origin = Offset(gutter, gutter)
         fun center(coordinate: Coordinate) = origin + Offset((coordinate.column + .5f) * pitch, (coordinate.row + .5f) * pitch)
-        drawRoundRect(Ocean.copy(alpha = .97f), origin, Size(side, side), CornerRadius(3.dp.toPx()))
+        drawRoundRect(Brush.linearGradient(listOf(Color(0xFF102C3D), Color(0xFF081C2A)), origin, origin + Offset(side, side)),
+            origin, Size(side, side), CornerRadius(3.dp.toPx()))
         for (row in 0..9) for (column in 0..9) {
-            if ((row + column) % 2 == 0) drawRect(DeepWater.copy(alpha = .55f),
+            if ((row + column) % 2 == 0) drawRect(DeepWater.copy(alpha = .32f),
                 origin + Offset(column * pitch, row * pitch), Size(pitch, pitch))
         }
         ships.forEach { ship ->
-            drawShip(ship, origin, pitch, ship.cells.all { cell -> shots.any { it.coordinate == cell } })
+            drawNavalShip(ship, origin, pitch, ship.cells.all { cell -> shots.any { it.coordinate == cell } })
         }
         for (line in 0..10) {
             val axis = line * pitch
-            drawLine(Muted.copy(alpha = if (line == 0 || line == 10) .6f else .20f),
+            drawLine(Muted.copy(alpha = if (line == 0 || line == 10) .6f else .28f),
                 origin + Offset(axis, 0f), origin + Offset(axis, side), 1.dp.toPx())
-            drawLine(Muted.copy(alpha = if (line == 0 || line == 10) .6f else .20f),
+            drawLine(Muted.copy(alpha = if (line == 0 || line == 10) .6f else .28f),
                 origin + Offset(0f, axis), origin + Offset(side, axis), 1.dp.toPx())
         }
-        labels.textSize = pitch * .43f
+        labels.textSize = if (selected == null) minOf(13.sp.toPx(), pitch * .8f) else pitch * .43f
         for (index in 0..9) {
             labels.color = (if (selected?.column == index) Cyan else Muted).toArgb()
             drawContext.canvas.nativeCanvas.drawText(('A' + index).toString(),
@@ -148,9 +148,14 @@ internal fun GameBoard(
         }
         lastShot?.let { shot ->
             val at = center(shot.coordinate)
-            val radius = pitch * .38f
             val color = if (shot.outcome == ShotOutcome.MISS) Ink else Impact
-            drawCircle(color.copy(alpha = .75f), radius, at, style = Stroke(1.dp.toPx()))
+            val extent = pitch * .41f
+            val arm = pitch * .17f
+            for (x in listOf(-1f, 1f)) for (y in listOf(-1f, 1f)) {
+                val corner = at + Offset(x * extent, y * extent)
+                drawLine(Brass, corner, corner - Offset(x * arm, 0f), 1.4.dp.toPx())
+                drawLine(Brass, corner, corner - Offset(0f, y * arm), 1.4.dp.toPx())
+            }
             if (impact.value < 1f) {
                 val progress = impact.value
                 drawCircle(color.copy(alpha = (1f - progress) * .75f),
@@ -170,40 +175,12 @@ internal fun GameBoard(
             drawRect(Cyan.copy(alpha = .08f), corner, Size(pitch, pitch))
             drawRect(Cyan.copy(alpha = .15f), corner, Size(pitch, pitch), style = Stroke(8.dp.toPx()))
             drawRect(Cyan, corner, Size(pitch, pitch), style = Stroke(2.5.dp.toPx()))
-            val at = center(coordinate)
-            val marker = pitch * .07f
-            drawLine(Cyan, at - Offset(marker, 0f), at + Offset(marker, 0f), 1.5.dp.toPx())
-            drawLine(Cyan, at - Offset(0f, marker), at + Offset(0f, marker), 1.5.dp.toPx())
+            if (chosenShot == null) {
+                val at = center(coordinate)
+                val marker = pitch * .07f
+                drawLine(Cyan, at - Offset(marker, 0f), at + Offset(marker, 0f), 1.5.dp.toPx())
+                drawLine(Cyan, at - Offset(0f, marker), at + Offset(0f, marker), 1.5.dp.toPx())
+            }
         }
-    }
-}
-
-private fun DrawScope.drawShip(ship: Ship, origin: Offset, pitch: Float, sunk: Boolean) {
-    if (ship.cells.isEmpty()) return
-    val first = ship.cells.minWith(compareBy<Coordinate> { it.row }.thenBy { it.column })
-    val last = ship.cells.maxWith(compareBy<Coordinate> { it.row }.thenBy { it.column })
-    val horizontal = first.row == last.row
-    val center = origin + Offset((first.column + last.column + 1f) * pitch / 2f,
-        (first.row + last.row + 1f) * pitch / 2f)
-    val halfLength = (ship.cells.size * pitch - pitch * .24f) / 2f
-    val halfWidth = pitch * .31f
-    rotate(if (horizontal) 0f else 90f, center) {
-        val hull = Path().apply {
-            moveTo(center.x - halfLength, center.y - halfWidth * .72f)
-            lineTo(center.x + halfLength - pitch * .45f, center.y - halfWidth)
-            lineTo(center.x + halfLength, center.y)
-            lineTo(center.x + halfLength - pitch * .45f, center.y + halfWidth)
-            lineTo(center.x - halfLength, center.y + halfWidth * .72f)
-            close()
-        }
-        val color = if (sunk) Impact.copy(alpha = .48f) else Steel.copy(alpha = .68f)
-        drawPath(hull, color)
-        drawPath(hull, Ink.copy(alpha = .33f), style = Stroke(1.dp.toPx()))
-        drawRoundRect(Ocean.copy(alpha = .65f),
-            Offset(center.x - halfLength * .52f, center.y - halfWidth * .49f),
-            Size(halfLength * .83f, halfWidth * .98f), CornerRadius(pitch * .06f))
-        drawCircle(Steel, pitch * .105f, Offset(center.x + halfLength * .48f, center.y))
-        drawLine(Ink.copy(alpha = .55f), Offset(center.x + halfLength * .48f, center.y),
-            Offset(center.x + halfLength * .77f, center.y), pitch * .045f)
     }
 }
