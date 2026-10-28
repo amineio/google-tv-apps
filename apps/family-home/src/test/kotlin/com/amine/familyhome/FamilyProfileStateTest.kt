@@ -6,7 +6,7 @@ import org.junit.Test
 
 class FamilyProfileStateTest {
     @Test fun schemaTwoCustomChildResumesItsOwnBalanceAndAllowedApps() {
-        val saved = Json { ignoreUnknownKeys = true }.decodeFromString<FamilyState>("""
+        val saved = FamilyStateCodec.decode("""
             {
               "schema": 2,
               "profiles": [

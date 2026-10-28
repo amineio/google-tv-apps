@@ -81,16 +81,19 @@ class FamilyRemoteTest {
         screen.onNodeWithTag("setting:pin").assert(SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.StateDescription, "Off"))
     }
 
-    @Test fun settingsRootUsesThreeRowsAndBackRestoresTheOriginatingControl() {
+    @Test fun settingsRootUsesFourRowsAndBackRestoresTheOriginatingControl() {
         openParentConfiguration()
         screen.onNodeWithText("Profiles").assertIsDisplayed().assertIsFocused()
+        screen.onNodeWithText("Daily usage").assertIsDisplayed()
         screen.onNodeWithText("Parent PIN").assertIsDisplayed()
         screen.onNodeWithText("Device setup").assertIsDisplayed()
         screen.onNodeWithText("Back").assertDoesNotExist()
         screen.onNodeWithText("Enable helper").assertDoesNotExist()
         screen.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
-        screen.onNodeWithText("Parent PIN").assertIsFocused()
+        screen.onNodeWithText("Daily usage").assertIsFocused()
         screen.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
+        screen.onNodeWithText("Daily usage").assertIsFocused()
+        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
         screen.onNodeWithText("Parent PIN").assertIsFocused()
         screen.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
         screen.onNodeWithText("Device setup").assertIsFocused()
@@ -114,7 +117,7 @@ class FamilyRemoteTest {
 
     @Test fun parentPinKeypadSupportsRemoteApprovalAndFocusReturn() {
         openParentConfiguration()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown); pressKey(Key.DirectionCenter) }
+        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown); pressKey(Key.DirectionDown); pressKey(Key.DirectionCenter) }
         screen.onNodeWithText("1").assertIsFocused()
         screen.onNodeWithText("Continue").assertIsNotEnabled()
         repeat(4) { screen.onNodeWithText("1").performKeyInput { pressKey(Key.DirectionCenter) } }
@@ -131,7 +134,7 @@ class FamilyRemoteTest {
 
     @Test fun settingsRecreationKeepsDeviceDestinationAndOriginatingRows() {
         openParentConfiguration()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown); pressKey(Key.DirectionDown); pressKey(Key.DirectionCenter) }
+        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown); pressKey(Key.DirectionDown); pressKey(Key.DirectionDown); pressKey(Key.DirectionCenter) }
         screen.onNodeWithTag("setting:helper").assertIsFocused()
         screen.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
         screen.onNodeWithTag("setting:home").assertIsFocused()
@@ -145,7 +148,7 @@ class FamilyRemoteTest {
 
     @Test fun backFromPinDialogKeepsSwitchOffAndRestoresItsRow() {
         openParentConfiguration()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown); pressKey(Key.DirectionCenter) }
+        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown); pressKey(Key.DirectionDown); pressKey(Key.DirectionCenter) }
         screen.onNodeWithText("1").assertIsFocused()
         org.junit.Assert.assertFalse(screen.activity.family.ui.value.state.pinEnabled)
         pressBack()

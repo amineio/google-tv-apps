@@ -8,7 +8,7 @@ Build and test locally. GitHub APK builds are paused until the user requests the
 
 ## Interface
 
-Version 1.4 adds native TV settings and optional child profiles.
+Version 1.5 adds local daily usage totals for each profile.
 The profile screen uses circular illustrated portraits, Outfit text, and a gold focus outline.
 The home screen keeps the profile at the upper right and gives the countdown fixed bounds and equal-width digit cells.
 Select an app tile with the remote center key to open it.
@@ -50,7 +50,7 @@ Android can stop or disable the helper. These family controls do not provide man
 
 Both children initially get Chess & Math, MasterClass, VTM GO, VRT MAX, Spotify, and Prime Video.
 Amine can change each child's app list in Family configuration.
-Settings has three rows: Profiles, Parent PIN, and Device setup.
+Settings has four rows: Profiles, Daily usage, Parent PIN, and Device setup.
 Open a child under Profiles to switch allowed apps on or off.
 Unavailable default apps appear after the installed apps and cannot receive focus.
 Each row has one focus target. Up and Down move through rows. OK opens or changes a row.
@@ -159,7 +159,22 @@ adb -s '<connected address>' shell cmd package set-home-activity --user 0 com.go
 Disable Family Home in Android Accessibility after changing the Home role.
 Keep Google TV Home and setupwraith enabled so that Cast credentials remain available.
 
-## Later releases
+## Daily usage
 
-Usage reports, program titles, and development shortcuts are separate planned releases.
-This release does not provide viewing history or identify who watches without selecting their profile.
+Open Daily usage in parent settings to see today's total for each profile.
+Select a profile to see up to 30 recorded dates. Up and Down scroll through the dates.
+Remote Back returns to the same row on the previous page.
+Totals count selected-profile screen-on time, including menus and paused videos.
+Standby, profile exit, helper loss, and recovery stop measurement.
+Child measurement stops at the session deadline. The parent has no session limit.
+
+The report starts collecting data with this update. It does not infer previous usage from saved balances.
+The report stores durations locally and uses the device's local date.
+Clock changes do not add time. Process interruption can lose up to ten seconds since the last checkpoint.
+Storage retains up to 30 recorded dates. It removes the oldest records first if the state size limit requires space.
+The report does not add a daily quota, per-app history, program titles, or network access.
+It does not identify who watches without selecting their profile.
+
+The previous Java TV Home package can be removed independently of Family Home.
+Keep its APK and app data for recovery. Keep Google TV Home, setupwraith, and TV Clock installed.
+The Java source remains in this repository.
