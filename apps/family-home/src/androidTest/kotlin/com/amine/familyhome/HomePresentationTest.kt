@@ -2,6 +2,9 @@ package com.amine.familyhome
 
 import android.content.ComponentName
 import android.graphics.Bitmap
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.LayerDrawable
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.input.key.Key
@@ -25,6 +28,31 @@ class HomePresentationTest {
         val directory = requireNotNull(InstrumentationRegistry.getInstrumentation().targetContext.getExternalFilesDir(null))
         directory.resolve("$name.png").outputStream().use {
             screen.onRoot().captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)
+        }
+    }
+
+    @Test fun fixedSizeLayerArtworkScalesToFillMatchingAspectRatio() {
+        val color = Color.rgb(35, 80, 105)
+        val artwork = LayerDrawable(arrayOf(ColorDrawable(color))).apply { setLayerSize(0, 160, 90) }
+        val image = artwork.render(384, 216)
+        assertEquals(384, image.width)
+        assertEquals(216, image.height)
+        for ((x, y) in listOf(0 to 0, 383 to 0, 0 to 215, 383 to 215)) {
+            assertEquals("Artwork must fill corner ($x, $y)", color, image.getPixel(x, y))
+        }
+    }
+
+    @Test fun fixedSizeLayerArtworkFitsWhenAspectRatioDiffers() {
+        val color = Color.rgb(35, 80, 105)
+        val artwork = LayerDrawable(arrayOf(ColorDrawable(color))).apply { setLayerSize(0, 160, 90) }
+        val image = artwork.render(128, 128)
+        assertEquals(128, image.width)
+        assertEquals(128, image.height)
+        for ((x, y) in listOf(0 to 28, 127 to 28, 0 to 99, 127 to 99)) {
+            assertEquals("Fitted artwork must cover ($x, $y)", color, image.getPixel(x, y))
+        }
+        for (y in listOf(0, 27, 100, 127)) {
+            assertEquals("Aspect fit must keep row $y transparent", Color.TRANSPARENT, image.getPixel(64, y))
         }
     }
 
