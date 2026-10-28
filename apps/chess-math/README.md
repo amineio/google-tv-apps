@@ -18,6 +18,18 @@ Open Schaak & Reken from the TV app grid. The title screen shows the game name, 
 
 Honey backgrounds mark the selected piece and legal captures. Sage or cream backgrounds mark legal empty destinations. A quiet sage background marks the last move. A brick background marks check. One square outline marks remote focus.
 
+Both sides show the value of their remaining pieces beside the board. Each side starts with 39 points.
+A pawn is worth 1, a knight or bishop 3, a rook 5, and a queen 9. The king has no point value.
+A capture reduces the captured side's total. Promotion adds the replacement value after the pawn's value is removed.
+Points do not decide the winner. Checkmate and draw rules stay the same.
+At move landing, a green positive change rises slightly and a coral negative change falls slightly.
+With piece movement off, the signed change appears briefly without motion.
+
+After each computer move, a thinking period stops piece selection and moves for 20 seconds by default.
+The arrows still move focus so that the player can study the board. The countdown starts after the computer's move lands.
+Pause, menus, background time, and storage work stop the countdown. Saved games retain the remaining period.
+The opening move and completed games have no thinking delay. The timer does not measure attention or prove thought.
+
 Live moves slide once for 480–620 ms with smooth acceleration and deceleration. Captured pieces remain visible until landing.
 Castling moves both pieces together. Promotion lands as the chosen piece.
 A wooden tap confirms a move. Captures use two distinct wooden knocks, including captures that give check. Non-capturing checks use a warm notice. Correct
@@ -47,6 +59,8 @@ After arithmetic, a one-minute break shows the remaining time. Only foreground t
 Open Pause. Select Settings with one press. Home always leaves the app.
 
 Settings use switches for Maths practice, sound, and piece movement. Press OK to change a switch.
+Thinking time offers Off, 5, 10, 20, 30, and 60 seconds. A nonzero change applies after the next computer move.
+Off also clears the current wait. The choice survives app restarts and progress resets.
 
 Rekeninstellingen contains these controls:
 

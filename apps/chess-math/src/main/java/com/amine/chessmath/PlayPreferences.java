@@ -18,6 +18,7 @@ public final class PlayPreferences {
         private final SharedPreferences preferences=context.getSharedPreferences("play",Context.MODE_PRIVATE);
         public boolean read(String key,boolean fallback){return preferences.getBoolean(key,fallback);}
         public int readInt(String key,int fallback){return preferences.getInt(key,fallback);}
+        @android.annotation.SuppressLint("ApplySharedPref") // Report durable write failure before applying the preference to play.
         public boolean writeInt(String key,int value){
             int previous=preferences.getInt(key,20);
             if(preferences.edit().putInt(key,value).commit())return true;

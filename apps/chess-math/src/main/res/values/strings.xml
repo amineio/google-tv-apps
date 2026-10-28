@@ -48,4 +48,18 @@
     <string name="break_remaining">Nog %1$d seconden</string>
     <string name="maths_practice">Rekenoefeningen</string>
     <string name="maths_practice_help">Zet uit om te schaken zonder rekenen of pauzes.</string>
+    <string name="score_you">Jij</string>
+    <string name="score_computer">Computer</string>
+    <string name="score_points">stukpunten</string>
+    <string name="thinking_time">Denktijd</string>
+    <string name="thinking_off">Uit</string>
+    <plurals name="thinking_seconds">
+        <item quantity="one">%1$d seconde</item>
+        <item quantity="other">%1$d seconden</item>
+    </plurals>
+    <string name="score_gain">+%1$d ↑</string>
+    <string name="score_loss">−%1$d ↓</string>
+    <string name="thinking_countdown">Denk eerst · %1$d s</string>
+    <string name="thinking_prompt">Bekijk de laatste zet</string>
+    <string name="thinking_setting_help">Wacht na elke computerzet. Wijzigingen gelden vanaf de volgende zet. Uit stopt de huidige wachttijd.</string>
 </resources>

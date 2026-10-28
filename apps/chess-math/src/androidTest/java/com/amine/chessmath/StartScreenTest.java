@@ -34,14 +34,18 @@ public final class StartScreenTest {
             key(KeyEvent.KEYCODE_DPAD_DOWN);
             instrumentation.runOnMainSync(()->assertEquals(activity.getString(R.string.new_game),activity.getCurrentFocus().getTag()));
             key(KeyEvent.KEYCODE_DPAD_CENTER);
+            awaitWindowFocus(false);
             assertEquals(savedId,controller.state().id);
             assertEquals(Arrays.asList("e2e4","e7e5"),controller.state().moves);
             key(KeyEvent.KEYCODE_DPAD_CENTER); // Cancel has the initial dialog focus.
+            awaitWindowFocus(true);
             assertEquals(savedId,controller.state().id);
             assertEquals(Arrays.asList("e2e4","e7e5"),controller.state().moves);
             key(KeyEvent.KEYCODE_DPAD_CENTER);
+            awaitWindowFocus(false);
             key(KeyEvent.KEYCODE_DPAD_RIGHT);
             key(KeyEvent.KEYCODE_DPAD_CENTER);
+            awaitWindowFocus(true);
             assertNotEquals(savedId,controller.state().id);
             assertTrue(controller.state().moves.isEmpty());
             assertEquals(0,controller.state().correct);
@@ -60,6 +64,15 @@ public final class StartScreenTest {
             assertEquals(Arrays.asList("e2e4","e7e5"),controller.state().moves);
             assertFalse(controller.state().paused);
         });
+    }
+    private void awaitWindowFocus(boolean expected) throws Exception {
+        AtomicBoolean ready=new AtomicBoolean();long until=SystemClock.elapsedRealtime()+5000;
+        do {
+            instrumentation.waitForIdleSync();
+            instrumentation.runOnMainSync(()->ready.set(activity.hasWindowFocus()==expected));
+            if(!ready.get())SystemClock.sleep(20);
+        }while(!ready.get()&&SystemClock.elapsedRealtime()<until);
+        assertTrue("Dialog focus transition must finish before the next remote press",ready.get());
     }
 
     @Test public void titleSettingsReturnWithoutStartingGameAndPauseHasNoMute() throws Exception {

@@ -102,4 +102,18 @@
     <string name="break_remaining">%1$d seconds remaining</string>
     <string name="maths_practice">Maths practice</string>
     <string name="maths_practice_help">Turn off to play chess without maths or breaks.</string>
+    <string name="score_you">You</string>
+    <string name="score_computer">Computer</string>
+    <string name="score_points">piece points</string>
+    <string name="thinking_time">Thinking time</string>
+    <string name="thinking_off">Off</string>
+    <plurals name="thinking_seconds">
+        <item quantity="one">%1$d second</item>
+        <item quantity="other">%1$d seconds</item>
+    </plurals>
+    <string name="score_gain">+%1$d ↑</string>
+    <string name="score_loss">−%1$d ↓</string>
+    <string name="thinking_countdown">Think first · %1$d s</string>
+    <string name="thinking_prompt">Study the last move</string>
+    <string name="thinking_setting_help">Wait after each computer move. Changes apply from the next reply. Off clears the current wait.</string>
 </resources>

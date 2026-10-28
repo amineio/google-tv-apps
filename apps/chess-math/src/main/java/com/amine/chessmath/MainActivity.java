@@ -40,6 +40,7 @@ public final class MainActivity extends Activity {
     private void interruptEffects(){
         presenting=null;
         if(board!=null)board.cancelMotion();
+        clearScoreFeedback();
         if(player!=null)player.stop();
     }
     private void present(PresentationEvent event){
@@ -57,6 +58,10 @@ public final class MainActivity extends Activity {
             presenting=null;
             if(foreground&&hasWindowFocus()&&effects.sound())player.play(event.cue);
             controller.completePresentation(event.id);render();
+            if(playerScore!=null&&foreground&&hasWindowFocus()){
+                playerScore.feedback(MaterialPoints.after(event,true)-MaterialPoints.before(event,true),effects.motion());
+                computerScore.feedback(MaterialPoints.after(event,false)-MaterialPoints.before(event,false),effects.motion());
+            }
         },()->{
             if(presenting==event){presenting=null;controller.completePresentation(event.id);}
         });
@@ -78,6 +83,7 @@ public final class MainActivity extends Activity {
     private boolean started, alive, foreground, startAfterReset;
     private String menu="", screen="";
     private ChessBoardView board;
+    private ChessScoreView playerScore,computerScore;
     private boolean showingChessResult;
     private TextView savingText,breakCountdown;
     private long displayedBreakSecond=-1;
@@ -119,6 +125,7 @@ public final class MainActivity extends Activity {
                 controller.tick();
                 updateSaving();
                 updateBreakCountdown();
+                updateThinkingStatus();
                 handler.postDelayed(this,250);
             }
         }
@@ -150,6 +157,7 @@ public final class MainActivity extends Activity {
         effects=sharedEffects;player=new EffectPlayer(this);
         if(sharedPlay==null)sharedPlay=new PlayPreferences(getApplicationContext());
         play=sharedPlay;controller.setMathsEnabled(play.mathsEnabled());
+        controller.setThinkingSeconds(play.thinkingSeconds());
         controller.setListener(this::render);
         alive=true;
         controller.setPresenter(this::present);
@@ -283,6 +291,7 @@ public final class MainActivity extends Activity {
     }
     private void shell(){
         if(board!=null)board.cancelMotion();
+        clearScoreFeedback();playerScore=null;computerScore=null;
         board=null;showingChessResult=false;
         breakCountdown=null;displayedBreakSecond=-1;
         FrameLayout frame=new FrameLayout(this);
@@ -441,6 +450,13 @@ public final class MainActivity extends Activity {
         settingsAction(list,R.string.settings,R.drawable.ic_setting_calculator,()->{
             draft=controller.state().config.copy();java.util.Arrays.fill(settingsMemory,-1);menu="settings";render();
         });
+        Button thinking=button(s(R.string.thinking_time),"thinking-time",this::chooseThinkingTime);
+        TvStyle.preferenceRow(thinking);TvStyle.settingIcon(thinking,R.drawable.ic_setting_timer);
+        preferenceValue(thinking,s(R.string.thinking_time),thinkingLabel(play.thinkingSeconds()));
+        list.addView(thinking,new LinearLayout.LayoutParams(-1,-2));
+        TextView thinkingHelp=TvStyle.text(this,s(R.string.thinking_setting_help),16,false);
+        thinkingHelp.setTextColor(TvStyle.MUTED);thinkingHelp.setPadding(dp(16),dp(4),dp(16),dp(12));
+        list.addView(thinkingHelp,new LinearLayout.LayoutParams(-1,-2));
         settingsHeading(list,R.string.settings_app,"settings-app",false);
         android.widget.Switch sound=TvStyle.switchControl(this,s(R.string.sound_effects));
         TvStyle.preferenceRow(sound);
@@ -463,10 +479,7 @@ public final class MainActivity extends Activity {
         TvStyle.settingIcon(languageChoice,R.drawable.ic_setting_language);
         String label=s(R.string.language);
         String value=s("en".equals(language.language())?R.string.english:R.string.dutch);
-        android.text.SpannableString languageText=new android.text.SpannableString(label+"\n"+value);
-        languageText.setSpan(new android.text.style.AbsoluteSizeSpan(16,true),label.length()+1,languageText.length(),0);
-        languageText.setSpan(new android.text.style.ForegroundColorSpan(TvStyle.MUTED),label.length()+1,languageText.length(),0);
-        languageChoice.setText(languageText);
+        preferenceValue(languageChoice,label,value);
         list.addView(languageChoice,new LinearLayout.LayoutParams(-1,-2));
         settingsHeading(list,R.string.settings_session,"settings-session",false);
         if(play.mathsEnabled())settingsAction(list,R.string.to_math,R.drawable.ic_setting_calculator,()->confirmSkip(true));
@@ -486,6 +499,27 @@ public final class MainActivity extends Activity {
         heading.setTextColor(TvStyle.MUTED);
         heading.setPadding(dp(16),dp(first?8:24),dp(16),dp(8));
         list.addView(heading,new LinearLayout.LayoutParams(-1,-2));
+    }
+    private void preferenceValue(Button row,String label,String value){
+        android.text.SpannableString text=new android.text.SpannableString(label+"\n"+value);
+        text.setSpan(new android.text.style.AbsoluteSizeSpan(16,true),label.length()+1,text.length(),0);
+        text.setSpan(new android.text.style.ForegroundColorSpan(TvStyle.MUTED),label.length()+1,text.length(),0);
+        row.setText(text);
+    }
+    private String thinkingLabel(int seconds){return seconds==0?s(R.string.thinking_off):getResources().getQuantityString(R.plurals.thinking_seconds,seconds,seconds);}
+    private void chooseThinkingTime(){
+        int[] periods={0,5,10,20,30,60};String[] labels=new String[periods.length];int selected=0;
+        for(int i=0;i<periods.length;i++){
+            labels[i]=thinkingLabel(periods[i]);if(periods[i]==play.thinkingSeconds())selected=i;
+        }
+        new AlertDialog.Builder(this).setTitle(R.string.thinking_time)
+                .setSingleChoiceItems(labels,selected,(dialog,which)->{
+                    dialog.dismiss();
+                    if(play.setThinkingSeconds(periods[which]))controller.setThinkingSeconds(periods[which]);
+                    else new AlertDialog.Builder(this).setTitle(R.string.error_title)
+                            .setMessage(R.string.preference_error).setPositiveButton(R.string.ok,null).show();
+                    render();
+                }).show();
     }
     private void settingsAction(LinearLayout list,int label,int icon,Runnable action){
         Button row=button(s(label),s(label),action);
@@ -558,6 +592,11 @@ public final class MainActivity extends Activity {
                 FrameLayout.LayoutParams boardBounds=(FrameLayout.LayoutParams)getChildAt(0).getLayoutParams();
                 boardBounds.width=size;
                 boardBounds.height=size;
+                int gutter=Math.max(0,(width-size)/2-dp(16));
+                for(int i=1;i<getChildCount();i++){
+                    FrameLayout.LayoutParams scoreBounds=(FrameLayout.LayoutParams)getChildAt(i).getLayoutParams();
+                    scoreBounds.width=gutter;
+                }
                 super.onMeasure(widthSpec,heightSpec);
             }
         };
@@ -566,6 +605,11 @@ public final class MainActivity extends Activity {
         board.setId(View.generateViewId());
         board.setTag("board");
         row.addView(board,new FrameLayout.LayoutParams(0,0,Gravity.CENTER));
+        playerScore=new ChessScoreView(this,true);computerScore=new ChessScoreView(this,false);
+        FrameLayout.LayoutParams left=new FrameLayout.LayoutParams(0,-2,Gravity.CENTER_VERTICAL|Gravity.START);
+        FrameLayout.LayoutParams right=new FrameLayout.LayoutParams(0,-2,Gravity.CENTER_VERTICAL|Gravity.END);
+        left.leftMargin=dp(8);right.rightMargin=dp(8);
+        row.addView(playerScore,left);row.addView(computerScore,right);
         board.setListener(new ChessBoardView.Listener(){
             public void focus(int square){
                 controller.focusSquare(square);
@@ -594,6 +638,21 @@ public final class MainActivity extends Activity {
         Session st=controller.state();
         ChessGame game=controller.game();
         board.bind(game,st.focus,st.selected,st.moves.isEmpty()?"":st.moves.get(st.moves.size()-1));
+        if(playerScore!=null){
+            playerScore.setPoints(presenting==null?MaterialPoints.total(game,true):MaterialPoints.before(presenting,true));
+            computerScore.setPoints(presenting==null?MaterialPoints.total(game,false):MaterialPoints.before(presenting,false));
+            updateThinkingStatus();
+        }
+    }
+    private void updateThinkingStatus(){
+        if(playerScore==null||!screen.equals("CHESS"))return;
+        long remaining=presenting==null?controller.thinkingRemainingMs():0;
+        String turn=!controller.state().result.isEmpty()?"":s(controller.game().whiteToMove()?R.string.your_turn:R.string.computer_turn);
+        playerScore.updateThinking(remaining,controller.thinkingTotalMs(),turn);
+        computerScore.updateThinking(remaining,controller.thinkingTotalMs(),turn);
+    }
+    private void clearScoreFeedback(){
+        if(playerScore!=null)playerScore.clearFeedback();if(computerScore!=null)computerScore.clearFeedback();
     }
     /** Uses the same artwork and color as the pawn that is being promoted. */
     private final class PromotionPiece extends android.graphics.drawable.Drawable {

@@ -174,7 +174,7 @@ public final class ParentAndPromotionRemoteTest {
     @Test public void soundAndMotionChoicesUseRemoteAndSurviveProgressReset() throws Exception {
         withFixture(chessSession(),()->{
             launchAndStart();key(KeyEvent.KEYCODE_BACK);key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_CENTER);
-            key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_DOWN);assertFocus("sound-effects");
+            focusDown("sound-effects");assertFocus("sound-effects");
             key(KeyEvent.KEYCODE_DPAD_CENTER);
             key(KeyEvent.KEYCODE_DPAD_DOWN);assertFocus("piece-motion");
             key(KeyEvent.KEYCODE_DPAD_CENTER);

@@ -16,6 +16,7 @@ public final class PlayModeRule implements TestRule {
                     private boolean enabled=true;
                     public boolean read(String key,boolean fallback){return enabled;}
                     public boolean write(String key,boolean value){enabled=value;return true;}
+                    public int readInt(String key,int fallback){return 0;}
                 }));
                 try {base.evaluate();} finally {field.set(null,previous);}
             }
