@@ -33,7 +33,10 @@ Constraints: no text, letters, numbers, watermark, branding from other apps, boa
 
 ## Android integration
 
-The manifest now selects `@mipmap/app_launcher_v1` and `@drawable/tv_launcher_banner_v1`. API 26 and later select a layered adaptive icon with a solid `#0C2B1D` background and a true-alpha generated foreground. Older versions select the square original. The banner wrapper has intrinsic dimensions of 160 × 90 dp, equivalent to 320 × 180 pixels at xhdpi.
+The manifest selects `@mipmap/app_launcher_v1` and `@drawable/tv_launcher_banner_v1`. API 26 and later select a layered adaptive icon with a solid `#0C2B1D` background and a true-alpha generated foreground. Older versions select the square original.
+
+Version 0.12 removes the banner's fixed-size layer wrapper. The existing 320 × 180 opaque bitmap now fills the bounds that the launcher supplies.
+This preserves the 16:9 artwork without transparent space at larger tile sizes. The source artwork and export remain unchanged.
 
 Official references checked on 2026-10-26:
 

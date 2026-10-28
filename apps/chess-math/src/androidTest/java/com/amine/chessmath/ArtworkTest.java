@@ -15,6 +15,23 @@ import static org.junit.Assert.*;
 /** Production artwork stays padded, proportional, and inside the native board cells. */
 @RunWith(AndroidJUnit4.class)
 public final class ArtworkTest {
+    @Test public void tvBannerFillsRectangularLauncherBoundsAtDifferentSizes() throws Exception {
+        Context context=InstrumentationRegistry.getInstrumentation().getTargetContext();
+        android.graphics.drawable.Drawable banner=context.getPackageManager().getApplicationBanner(context.getPackageName());
+        assertNotNull("The launcher must receive the app's rectangular banner",banner);
+        assertEquals("Banner intrinsic dimensions must keep the 16:9 ratio",banner.getIntrinsicWidth()*9,banner.getIntrinsicHeight()*16);
+        for(int width:new int[]{320,384,640}){
+            int height=width*9/16;
+            Bitmap rendered=Bitmap.createBitmap(width,height,Bitmap.Config.ARGB_8888);
+            banner.setBounds(0,0,width,height);banner.draw(new Canvas(rendered));
+            for(int x:new int[]{0,width/2,width-1})for(int y:new int[]{0,height/2,height-1}){
+                assertEquals("Banner must fill the complete launcher rectangle at "+width+"x"+height+" ("+x+","+y+")",
+                        255,android.graphics.Color.alpha(rendered.getPixel(x,y)));
+            }
+            rendered.recycle();
+        }
+    }
+
     private static Object field(Object target, String name) throws Exception {
         Field field = target.getClass().getDeclaredField(name);
         field.setAccessible(true);
