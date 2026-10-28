@@ -18,16 +18,19 @@ The gameplay layout and artwork remain unchanged apart from the removed text pan
 
 ## Execution
 
-- [ ] Add regression tests for concise feedback, friendly damage, completion cues, and mute behavior.
-- [ ] Generate and inspect reproducible local sound assets. Record score, synthesis parameters, duration, levels, and rights.
-- [ ] Apply compact feedback and sound routing. Increment the app to version 1.1, code 2.
-- [ ] Operate debug/release unit tests, lint, builds, repository tests, and focused emulator tests.
-- [ ] Obtain independent review. Inspect the native game capture and sound previews.
-- [ ] Install the tested update when the TV is available. Preserve the saved match and family controls.
-- [ ] Commit the installed app changes and merge the tracking PR into `origin/main`.
+- [x] Add regression tests for concise feedback, friendly damage, completion cues, and mute behavior.
+- [x] Generate and inspect reproducible local sound assets. Record score, synthesis parameters, duration, levels, and rights.
+- [x] Apply compact feedback and sound routing. Increment the app to version 1.1, code 2.
+- [x] Operate debug/release unit tests, lint, builds, repository tests, and focused emulator tests.
+- [x] Obtain independent source and native capture review. Measure sound files and provide previews.
+- [x] Install the tested update when the TV is available. Preserve the saved match and family controls.
+The coordinator commits the installed app changes and merges tracking PR #9 into `origin/main` after these checks.
 
 ## Evidence boundaries
 
 Sound levels and event routing are testable. Subjective sound quality requires listening.
 Physical TV audio acceptance remains separate from emulator and file analysis.
+The update installed as version 1.1, code 2. The TV remains asleep, so physical listening and visual acceptance remain open.
+The final build passes 32 unit tests per variant, eight emulator tests, and release lint with zero errors.
+The repository suite passes all 14 tests. Independent source and capture review found no remaining material issue.
 The coordinator owns all builds, Git operations, integration, and device input.

@@ -29,6 +29,20 @@ import org.junit.runner.RunWith
 class BattleshipRemoteTest {
     @get:Rule val screen = createComposeRule()
 
+    @Test fun shotFeedbackStaysCompactWithoutNarrationOrRepeatedTurnInstructions() {
+        val game = GameEngine.newGame(42)
+        val hit = game.computerBoard.ships.first().cells.first()
+        val attacked = GameEngine.attack(game, Player.HUMAN, hit).state
+        screen.setContent { BattleshipApp(activeGame().copy(game = attacked, selected = hit, message = "Hit"), {}, {}) }
+        screen.onNodeWithText("Hit").assertIsDisplayed()
+        screen.onNodeWithText("TARGET").assertIsDisplayed()
+        screen.onNodeWithText(hit.label).assertIsDisplayed()
+        screen.onNodeWithText("Stand by, captain").assertDoesNotExist()
+        screen.onNodeWithText("The computer is taking its turn").assertDoesNotExist()
+        screen.onNodeWithText("Ready to fire").assertDoesNotExist()
+        screen.onNodeWithTag("targeting_board").assertIsFocused()
+    }
+
     // A lost initial focus or incorrect menu action breaks navigation without touch.
     @Test fun mainMenuOffersOnlyWorkingRemoteActions() {
         var state by mutableStateOf(SessionState(loaded = true))

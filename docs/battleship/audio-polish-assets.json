@@ -1,0 +1,478 @@
+{
+  "origin": "Original deterministic local synthesis with Python's standard library. No external samples, recordings, or services.",
+  "source": "apps/battleship/tools/generate_audio.py",
+  "generationCommand": "python3 apps/battleship/tools/generate_audio.py",
+  "comparisonCommand": "python3 apps/battleship/tools/generate_audio.py --check",
+  "references": "User feedback: stronger impact on the friendly fleet, an enthusiastic military victory sound, and a somber military defeat sound.",
+  "rights": "Original project synthesis and original musical motifs, distributed under the repository MIT license. No third-party audio license applies.",
+  "licensePath": "LICENSE",
+  "sourceNotes": "The earlier asset record describes the first release. This record supersedes only impact, sunk, victory, and defeat, and adds damage. The existing ui_select, fire, and splash assets remain unchanged.",
+  "commonParameters": {
+    "sampleRateHz": 22050,
+    "peakTarget": 0.82,
+    "noise": "Fixed xorshift32 sequence with a separate seed for each voice.",
+    "brassPartials": [
+      1.0,
+      0.46,
+      0.25,
+      0.13,
+      0.075,
+      0.035
+    ],
+    "brassAttackSeconds": 0.035,
+    "brassReleaseSecondsMaximum": 0.15,
+    "brassVibratoHz": 4.6,
+    "brassVibratoFraction": 0.0015,
+    "highPassHz": 20.0,
+    "endFadeSeconds": 0.055,
+    "postFilterFadeSeconds": 0.015,
+    "finalSample": 0,
+    "reverb": "Quiet finite early reflections only. No recursive echo."
+  },
+  "scores": {
+    "victory": {
+      "noteFields": [
+        "startSeconds",
+        "pitch",
+        "frequencyHz",
+        "durationSeconds",
+        "gainBeforeNormalization"
+      ],
+      "notes": [
+        [
+          0.12,
+          "G4",
+          392.0,
+          0.17,
+          0.34
+        ],
+        [
+          0.3,
+          "C5",
+          523.25,
+          0.17,
+          0.36
+        ],
+        [
+          0.48,
+          "E5",
+          659.25,
+          0.2,
+          0.37
+        ],
+        [
+          0.7,
+          "G5",
+          783.99,
+          0.29,
+          0.36
+        ],
+        [
+          1.03,
+          "E5",
+          659.25,
+          0.16,
+          0.3
+        ],
+        [
+          1.21,
+          "G5",
+          783.99,
+          0.19,
+          0.33
+        ],
+        [
+          1.43,
+          "C5",
+          523.25,
+          0.64,
+          0.36
+        ],
+        [
+          1.43,
+          "E4",
+          329.63,
+          0.65,
+          0.15
+        ],
+        [
+          1.43,
+          "G4",
+          392.0,
+          0.65,
+          0.16
+        ],
+        [
+          1.43,
+          "C4",
+          261.63,
+          0.66,
+          0.19
+        ]
+      ],
+      "percussionFields": [
+        "startSeconds",
+        "gainBeforeNormalization"
+      ],
+      "snare": [
+        [
+          0.0,
+          0.22
+        ],
+        [
+          0.065,
+          0.17
+        ],
+        [
+          0.12,
+          0.27
+        ],
+        [
+          0.48,
+          0.22
+        ],
+        [
+          0.7,
+          0.26
+        ],
+        [
+          1.21,
+          0.18
+        ],
+        [
+          1.43,
+          0.31
+        ]
+      ],
+      "lowDrum": [
+        [
+          0.12,
+          0.23
+        ],
+        [
+          0.7,
+          0.21
+        ],
+        [
+          1.43,
+          0.32
+        ]
+      ]
+    },
+    "defeat": {
+      "noteFields": [
+        "startSeconds",
+        "pitch",
+        "frequencyHz",
+        "durationSeconds",
+        "gainBeforeNormalization"
+      ],
+      "notes": [
+        [
+          0.06,
+          "E4",
+          329.63,
+          0.31,
+          0.35
+        ],
+        [
+          0.4,
+          "C4",
+          261.63,
+          0.31,
+          0.34
+        ],
+        [
+          0.74,
+          "A3",
+          220.0,
+          0.39,
+          0.33
+        ],
+        [
+          1.17,
+          "E3",
+          164.81,
+          0.64,
+          0.32
+        ],
+        [
+          1.17,
+          "A2",
+          110.0,
+          0.65,
+          0.12
+        ]
+      ],
+      "percussionFields": [
+        "startSeconds",
+        "gainBeforeNormalization"
+      ],
+      "snare": [
+        [
+          0.0,
+          0.11
+        ],
+        [
+          0.74,
+          0.09
+        ]
+      ],
+      "lowDrum": [
+        [
+          0.06,
+          0.23
+        ],
+        [
+          0.74,
+          0.2
+        ],
+        [
+          1.17,
+          0.24
+        ]
+      ]
+    }
+  },
+  "impactParameters": {
+    "resonanceFields": [
+      "frequencyHz",
+      "gainBeforeNormalization",
+      "exponentialDecayPerSecond"
+    ],
+    "cues": {
+      "impact": {
+        "duration": 0.44,
+        "seed": 2402,
+        "resonances": [
+          [
+            119.0,
+            0.3,
+            14.0
+          ],
+          [
+            229.0,
+            0.18,
+            17.0
+          ],
+          [
+            387.0,
+            0.08,
+            23.0
+          ]
+        ],
+        "rumbleDecay": 11.0,
+        "debrisDecay": 9.0
+      },
+      "damage": {
+        "duration": 0.58,
+        "seed": 2403,
+        "resonances": [
+          [
+            83.0,
+            0.34,
+            8.0
+          ],
+          [
+            137.0,
+            0.19,
+            11.0
+          ],
+          [
+            211.0,
+            0.11,
+            15.0
+          ]
+        ],
+        "rumbleDecay": 11.0,
+        "debrisDecay": 9.0
+      },
+      "sunk": {
+        "duration": 0.68,
+        "seed": 2404,
+        "resonances": [
+          [
+            65.0,
+            0.38,
+            5.8
+          ],
+          [
+            103.0,
+            0.22,
+            8.0
+          ],
+          [
+            173.0,
+            0.12,
+            13.0
+          ]
+        ],
+        "rumbleDecay": 7.0,
+        "debrisDecay": 5.0
+      }
+    },
+    "attackSeconds": 0.003,
+    "burstDecayPerSecond": 29.0,
+    "rumbleFrequencyHz": "40 + 39 * exp(-24 * t)",
+    "reflectionTaps": [
+      [
+        0.038,
+        0.1
+      ],
+      [
+        0.081,
+        0.055
+      ]
+    ],
+    "friendlyAccent": {
+      "frequencyHz": 164.81,
+      "startSeconds": 0.11,
+      "durationSeconds": 0.23,
+      "gain": 0.075,
+      "seed": 2451
+    },
+    "sunkDrumAccent": {
+      "startSeconds": 0.095,
+      "durationSeconds": 0.35,
+      "gain": 0.31,
+      "seed": 2452
+    },
+    "sunkSnareAccent": {
+      "startSeconds": 0.17,
+      "durationSeconds": 0.16,
+      "gain": 0.15,
+      "seed": 2453
+    }
+  },
+  "scoreParameters": {
+    "baseNoiseSeeds": {
+      "victory": 2800,
+      "defeat": 2900
+    },
+    "reflectionTaps": [
+      [
+        0.041,
+        0.12
+      ],
+      [
+        0.089,
+        0.08
+      ],
+      [
+        0.151,
+        0.045
+      ]
+    ],
+    "heldNoteDouble": {
+      "frequencyRatio": 0.9985,
+      "relativeGain": 0.16,
+      "delaySeconds": 0.007
+    },
+    "snare": {
+      "durationSeconds": 0.16,
+      "noiseFilterCoefficients": [
+        0.1,
+        0.64
+      ],
+      "drumheadFrequenciesHz": [
+        177.0,
+        289.0
+      ],
+      "decayPerSecond": 26.0
+    },
+    "lowDrum": {
+      "durationSeconds": 0.33,
+      "frequencyHz": "56 + 69 * exp(-31 * t)",
+      "secondModeRatio": 1.61,
+      "decayPerSecond": 12.0
+    }
+  },
+  "assets": {
+    "impact": {
+      "path": "apps/battleship/src/main/res/raw/impact.wav",
+      "description": "Enemy hit: short cannon impact, steel resonances, and filtered debris.",
+      "durationSeconds": 0.44,
+      "sampleRateHz": 22050,
+      "channels": 1,
+      "bitsPerSample": 16,
+      "encoding": "PCM signed little-endian WAV",
+      "peak": 0.819977,
+      "rms": 0.078728,
+      "rmsDbfs": -22.08,
+      "decodedBytes": 19404,
+      "fileBytes": 19448,
+      "sha256": "2e382313cee0a383fda1aa34bc6399d2edc122dfab1c471080d5fc7412d0c8b0",
+      "firstSample": 0,
+      "lastSample": 0
+    },
+    "damage": {
+      "path": "apps/battleship/src/main/res/raw/damage.wav",
+      "description": "Friendly hit: lower hull thud, metallic decay, and a brief lower brass creak.",
+      "durationSeconds": 0.58,
+      "sampleRateHz": 22050,
+      "channels": 1,
+      "bitsPerSample": 16,
+      "encoding": "PCM signed little-endian WAV",
+      "peak": 0.819977,
+      "rms": 0.076461,
+      "rmsDbfs": -22.33,
+      "decodedBytes": 25578,
+      "fileBytes": 25622,
+      "sha256": "b1ae7e7fb27bc6caf891ffc4d00fff0fa377e3d7e4de4b8346d3c686d75367cc",
+      "firstSample": 0,
+      "lastSample": 0
+    },
+    "sunk": {
+      "path": "apps/battleship/src/main/res/raw/sunk.wav",
+      "description": "Ship sunk: deeper impact with a second drum accent and a longer debris decay.",
+      "durationSeconds": 0.68,
+      "sampleRateHz": 22050,
+      "channels": 1,
+      "bitsPerSample": 16,
+      "encoding": "PCM signed little-endian WAV",
+      "peak": 0.819977,
+      "rms": 0.096543,
+      "rmsDbfs": -20.31,
+      "decodedBytes": 29988,
+      "fileBytes": 30032,
+      "sha256": "09a6fb1c9952b4d0d4896228f2bed1b9095414ae32956ef715b82da0863a675e",
+      "firstSample": 0,
+      "lastSample": 0
+    },
+    "victory": {
+      "path": "apps/battleship/src/main/res/raw/victory.wav",
+      "description": "Original bright major naval brass fanfare with snare pickup and low drum accents.",
+      "durationSeconds": 2.3,
+      "sampleRateHz": 22050,
+      "channels": 1,
+      "bitsPerSample": 16,
+      "encoding": "PCM signed little-endian WAV",
+      "peak": 0.819977,
+      "rms": 0.139268,
+      "rmsDbfs": -17.12,
+      "decodedBytes": 101430,
+      "fileBytes": 101474,
+      "sha256": "963ee9c8c67510d07410d2d8057ea68bd853e615c77c5b108ee3a7b4a6f2578c",
+      "firstSample": 0,
+      "lastSample": 0
+    },
+    "defeat": {
+      "path": "apps/battleship/src/main/res/raw/defeat.wav",
+      "description": "Original restrained descending minor bugle phrase with muted low drum, without speech or sirens.",
+      "durationSeconds": 2.049977,
+      "sampleRateHz": 22050,
+      "channels": 1,
+      "bitsPerSample": 16,
+      "encoding": "PCM signed little-endian WAV",
+      "peak": 0.819977,
+      "rms": 0.219418,
+      "rmsDbfs": -13.17,
+      "decodedBytes": 90404,
+      "fileBytes": 90448,
+      "sha256": "7cbbf867806598fca8ba1906d51e86940533de780bf8db218d2011b06a24e1a4",
+      "firstSample": 0,
+      "lastSample": 0
+    }
+  },
+  "review": "PCM format, reproducibility, finite duration, peak/RMS, zero endpoints, and SoundPool decoded-size limits are measured locally. Listening through TV speakers remains separate."
+}

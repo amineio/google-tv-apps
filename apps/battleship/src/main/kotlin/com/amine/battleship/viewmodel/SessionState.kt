@@ -14,7 +14,7 @@ data class SessionState(
     val paused: Boolean = false,
     val confirmation: Confirmation? = null,
     val resolving: Boolean = false,
-    val message: String = "Ready to sail?",
+    val message: String = "",
     val soundEnabled: Boolean = true,
     val showHint: Boolean = true,
     val saveWarning: String? = null,
