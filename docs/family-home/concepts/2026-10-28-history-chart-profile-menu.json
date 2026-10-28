@@ -1,0 +1,15 @@
+{
+  "purpose": "Preview-only TV chart and profile menu reference",
+  "prompt": "Use case ui-mockup. Preview-only two-screen reference for native Google TV Family Home, stacked vertically, wide landscape each. Restrained dark charcoal #0D0E12, warm white Outfit-like sans serif, gold focus #F6CD83, no decorative artwork, no device frame, no charts library visual style, no real family names. TOP SCREEN weekly usage report: left third title 'Alex', subtitle 'Usage history', brief caption 'Selected-profile screen-on time'. Right two-thirds: week range '26 Oct – 1 Nov', two small native TV buttons 'Earlier week' and 'Later week'; text 'Recorded this week' and '2 h 15 min'. Seven clean vertical bars labelled Mon Tue Wed Thu Fri Sat Sun with one common scale labelled '1 h'. Values invented: 35,25,45,30 minutes then absent baseline days. Wednesday full-height focus target has a pale gold outline, its bar gold; other bars muted warm gold. Under plot readable selected date 'Wednesday, 28 October' and '45 min'. Small disclosure 'Up to 30 recorded dates'. Everything ends well above lower-right Clock area. BOTTOM SCREEN launcher with profile menu open. Home background plain subdued gradient, title Family Home top left, generic selected profile avatar/name 'Parent' as a native outlined button top right. Bottom has only app tile row (generic Chess, Music, Video icons), no bottom action buttons. Compact native dark profile panel aligned on right, profile heading Parent and exactly two vertically stacked full-width native rows 'Switch profile' (gold focused) and 'Family configuration'. No new account action, no visible Back button, no bottom toolbar. Keep panel text above lower-right Clock. Use generic simple initial portraits. This is design reference only; real implementation uses Compose for TV, code-drawn bars and native controls.",
+  "source": "OpenAI ImageGen",
+  "dimensions": {
+    "width": 1672,
+    "height": 940
+  },
+  "license": "Generated reference with invented names and values. No third-party raster assets. Not bundled.",
+  "references": [
+    "https://support.google.com/android/answer/9346420",
+    "https://support.apple.com/en-gb/guide/iphone/iphbfa595995/18.0/ios/18.0",
+    "https://support.google.com/youtube/answer/3015415"
+  ]
+}

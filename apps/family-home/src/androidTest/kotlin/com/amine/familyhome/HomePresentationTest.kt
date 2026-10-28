@@ -19,6 +19,17 @@ import org.junit.Test
 class HomePresentationTest {
     @get:Rule val screen = createComposeRule()
 
+    // Each key uses the current window, including a dialog opened by the preceding key.
+    private fun pressRemote(keys: List<Key>) {
+        keys.forEach { key ->
+            screen.waitForIdle()
+            val target = if (screen.onAllNodes(isDialog()).fetchSemanticsNodes().isNotEmpty()) {
+                screen.onNode(isDialog())
+            } else screen.onRoot()
+            target.performKeyInput { pressKey(key) }
+        }
+    }
+
     private fun app(pkg: String, label: String = pkg) = LauncherApp(pkg, label,
         ComponentName(pkg, "$pkg.Main"), Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888).apply {
             eraseColor(android.graphics.Color.rgb(35, 80, 105))
@@ -26,8 +37,11 @@ class HomePresentationTest {
 
     private fun capture(name: String) {
         val directory = requireNotNull(InstrumentationRegistry.getInstrumentation().targetContext.getExternalFilesDir(null))
+        val target = if (screen.onAllNodes(isDialog()).fetchSemanticsNodes().isNotEmpty()) {
+            screen.onNode(isDialog())
+        } else screen.onRoot()
         directory.resolve("$name.png").outputStream().use {
-            screen.onRoot().captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)
+            target.captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)
         }
     }
 
@@ -56,14 +70,14 @@ class HomePresentationTest {
         }
     }
 
-    @Test fun childHomeFiltersAppsAndSupportsVerticalAndFooterNavigation() {
+    @Test fun childHomeFiltersAppsAndSupportsProfileMenuNavigation() {
         val catalog = DefaultApps.labels.map { app(it.key, it.value) } + app("com.google.android.youtube.tv", "YouTube")
         var launched = false
         screen.setContent {
             FamilyTheme {
                 var focused by remember { mutableStateOf<String?>(null) }
                 HomeScreen(Viewer.ELIAS, 1_200_000, orderedApps(catalog, Viewer.ELIAS, DefaultApps.labels.keys),
-                    focused, 0, { focused = it }, { launched = true }, {}, {})
+                    focused, 0, { focused = it }, { launched = true }, {}, {}, displayName = "Child")
             }
         }
         screen.onNodeWithText("left", substring = true).assertIsDisplayed()
@@ -72,14 +86,15 @@ class HomePresentationTest {
         screen.onNodeWithTag("app:com.amine.chessmath").assertIsFocused()
         capture("home-chess")
         screen.onNodeWithText("Open app").assertDoesNotExist()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionUp) }
-        screen.onNodeWithTag("app:com.amine.chessmath").assertIsFocused()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionCenter) }
+        pressRemote(listOf(Key.DirectionUp))
+        screen.onNodeWithTag("home-profile").assertIsFocused()
+        pressRemote(listOf(Key.DirectionDown, Key.DirectionCenter))
         assertTrue(launched)
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        pressRemote(listOf(Key.DirectionUp, Key.DirectionCenter))
         screen.onNodeWithText("Switch profile").assertIsFocused()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
+        pressRemote(listOf(Key.DirectionDown))
         screen.onNodeWithText("End session").assertIsFocused()
+        capture("home-child-profile-menu")
     }
 
     @Test fun resumeRestoresAnAppBeyondTheFirstVisibleRow() {
@@ -91,14 +106,14 @@ class HomePresentationTest {
                 HomeScreen(Viewer.AMINE, null, catalog, focused, resume, { focused = it }, {}, {}, {})
             }
         }
-        repeat(9) { screen.onRoot().performKeyInput { pressKey(Key.DirectionRight) }; screen.waitForIdle() }
+        repeat(9) { pressRemote(listOf(Key.DirectionRight)); screen.waitForIdle() }
         screen.onNodeWithTag("app:example.app9").assertIsFocused()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
-        screen.onNodeWithText("Switch profile").assertIsFocused()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionUp) }
+        pressRemote(listOf(Key.DirectionUp))
+        screen.onNodeWithTag("home-profile").assertIsFocused()
+        pressRemote(listOf(Key.DirectionDown))
         screen.onNodeWithTag("app:example.app9").assertIsFocused()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
-        screen.onNodeWithText("Switch profile").assertIsFocused()
+        pressRemote(listOf(Key.DirectionUp))
+        screen.onNodeWithTag("home-profile").assertIsFocused()
         screen.runOnIdle { resume++ }
         screen.waitUntil(10_000) { screen.onAllNodes(isFocused() and hasTestTag("app:example.app9")).fetchSemanticsNodes().isNotEmpty() }
         screen.onNodeWithTag("app:example.app9").assertIsDisplayed()
@@ -122,12 +137,12 @@ class HomePresentationTest {
         }
         screen.onNodeWithTag("app:example.cinema").assertIsFocused()
         capture("home-banner")
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionCenter) }
+        pressRemote(listOf(Key.DirectionCenter))
         assertEquals("example.cinema", launched)
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
+        pressRemote(listOf(Key.DirectionRight))
         screen.onNodeWithTag("app:example.music").assertIsFocused()
         capture("home-square")
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionCenter) }
+        pressRemote(listOf(Key.DirectionCenter))
         assertEquals("example.music", launched)
     }
 
@@ -157,16 +172,21 @@ class HomePresentationTest {
     @Test fun emptyCatalogKeepsParentAndChildControlsUsable() {
         var viewer by mutableStateOf(Viewer.AMINE)
         screen.setContent {
-            FamilyTheme { HomeScreen(viewer, null, emptyList(), null, 0, {}, {}, {}, {}) }
+            FamilyTheme { HomeScreen(viewer, null, emptyList(), null, 0, {}, {}, {}, {},
+                displayName = if (viewer.isChild) "Child" else "Parent") }
         }
-        screen.onNodeWithText("Switch profile").assertIsFocused()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
+        screen.onNodeWithTag("home-profile").assertIsFocused()
+        pressRemote(listOf(Key.DirectionCenter, Key.DirectionDown))
         screen.onNodeWithText("Family configuration").assertIsFocused()
+        capture("home-parent-profile-menu")
         screen.onNodeWithText("No TV apps are installed.").assertIsDisplayed()
+        pressRemote(listOf(Key.DirectionCenter))
         capture("home-empty")
         screen.runOnIdle { viewer = Viewer.ELIAS }
+        screen.onNodeWithTag("home-profile").assertIsFocused()
+        pressRemote(listOf(Key.DirectionCenter))
         screen.onNodeWithText("Switch profile").assertIsFocused()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
+        pressRemote(listOf(Key.DirectionDown))
         screen.onNodeWithText("End session").assertIsFocused()
         screen.onAllNodesWithText("Your apps").assertCountEquals(1)
         screen.onNodeWithText("Your time, your choice").assertDoesNotExist()

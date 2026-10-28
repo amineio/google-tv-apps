@@ -40,8 +40,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 private data class SettingsRow(val key: String, val title: String, val subtitle: String = "",
     val checked: Boolean? = null, val profile: FamilyProfile? = null, val value: String? = null,
@@ -70,10 +68,6 @@ internal fun SettingsScreen(ui: FamilyUi, apps: List<LauncherApp>, helperActive:
     val usageProfile = destination.removePrefix("usage:").takeIf { destination.startsWith("usage:") }
         ?.let { id -> ui.state.profiles.firstOrNull { it.viewer.id == id } }
     val today = remember(ui.now) { LocalDate.now() }
-    val usageDates = usageProfile?.let { profile ->
-        listOf(today.toString()) + ui.state.usage.filterValues { profile.viewer in it }.keys
-            .filter { it != today.toString() }.sortedDescending().take(30)
-    }.orEmpty()
     val title = when (destination) {
         "profiles" -> "Profiles"
         "device" -> "Device setup"
@@ -86,7 +80,7 @@ internal fun SettingsScreen(ui: FamilyUi, apps: List<LauncherApp>, helperActive:
         "device" -> "Android controls the Home app and accessibility helper."
         "add" -> "Create a child profile with the default allowed apps."
         "usage" -> "Today"
-        else -> if (usageProfile != null) "Daily history" else if (child != null) "Allowed apps" else "Family Home"
+        else -> if (usageProfile != null) "Weekly history" else if (child != null) "Allowed apps" else "Family Home"
     }
     Row(Modifier.fillMaxSize().padding(start = 48.dp, end = 48.dp, top = 58.dp, bottom = 42.dp),
         horizontalArrangement = Arrangement.spacedBy(44.dp)) {
@@ -113,6 +107,8 @@ internal fun SettingsScreen(ui: FamilyUi, apps: List<LauncherApp>, helperActive:
                         profileFocus = "profile:${viewer.id}"
                         destination = "profiles"
                     }
+                } else if (usageProfile != null) {
+                    UsageHistoryScreen(ui.state.usage, usageProfile.viewer, today, resumeGeneration, restoreFocus)
                 } else {
                     val rows = when (destination) {
                         "root" -> listOf(
@@ -134,10 +130,7 @@ internal fun SettingsScreen(ui: FamilyUi, apps: List<LauncherApp>, helperActive:
                         "device" -> listOf(
                             SettingsRow("helper", "Home helper", if (helperActive) "Enabled · Open Android accessibility" else "Not enabled · Open Android accessibility", action = onSetup),
                             SettingsRow("home", "Default Home app", if (homeRoleHeld) "Family Home · Open Android Home selection" else "Not Family Home · Open Android Home selection", action = onHome))
-                        else -> if (usageProfile != null) usageDates.map { date ->
-                            SettingsRow("usage-date:$date", usageDate(date, today),
-                                value = usageTotal(ui.state.usage[date]?.get(usageProfile.viewer)))
-                        } else child?.let { profile -> apps.map { app ->
+                        else -> child?.let { profile -> apps.map { app ->
                             val allowed = app.pkg in ui.state.allowed[profile.viewer].orEmpty()
                             SettingsRow("app:${app.pkg}", app.label, checked = allowed) {
                                 onAccess(profile.viewer, app.pkg, !allowed)
@@ -161,10 +154,7 @@ internal fun SettingsScreen(ui: FamilyUi, apps: List<LauncherApp>, helperActive:
                             }
                             Spacer(Modifier.height(20.dp))
                         }) else null,
-                        footer = if (usageProfile != null && usageDates.none { it != today.toString() }) ({
-                            Text("No earlier recorded use.", color = Muted, fontSize = 17.sp,
-                                modifier = Modifier.padding(16.dp))
-                        }) else if (child != null) ({
+                        footer = if (child != null) ({
                             val missing = DefaultApps.labels.filterKeys { pkg -> apps.none { it.pkg == pkg } }
                             if (apps.isEmpty()) Text("No TV apps are installed.", color = Muted, fontSize = 18.sp,
                                 modifier = Modifier.padding(16.dp))
@@ -308,22 +298,4 @@ private fun AddChildForm(ui: FamilyUi, restoreFocus: Boolean, onAdd: suspend (St
         }
     }
     LaunchedEffect(restoreFocus) { if (restoreFocus) field.requestFocus() }
-}
-
-private fun usageTotal(milliseconds: Long?): String {
-    if (milliseconds == null || milliseconds <= 0) return "No recorded use"
-    val minutes = milliseconds / 60_000
-    if (minutes == 0L) return "Less than 1 min"
-    val hours = minutes / 60
-    return when {
-        hours == 0L -> "$minutes min"
-        minutes % 60 == 0L -> "$hours h"
-        else -> "$hours h ${minutes % 60} min"
-    }
-}
-
-private fun usageDate(date: String, today: LocalDate): String = when (date) {
-    today.toString() -> "Today"
-    today.minusDays(1).toString() -> "Yesterday"
-    else -> LocalDate.parse(date).format(DateTimeFormatter.ofPattern("EEE, d MMM yyyy", Locale.getDefault()))
 }
