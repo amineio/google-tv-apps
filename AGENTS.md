@@ -54,7 +54,9 @@ Keep presentation tests separate from timer, accessibility helper, playback, wak
 For variable fonts, make sure that the configured weights render correctly in device captures.
 Keep launcher controls clear of the separate Clock overlay.
 Use the physical TV for hardware behavior and final visual review when it is available.
-If someone is watching, stop device input and finish work that does not need the TV.
+Requested development, testing, and installation take priority over TV viewing.
+Do not delay authorized TV work because playback is active or paused.
+Stop device input when the user explicitly asks you to stop.
 Report deferred physical tests without claiming that emulator tests prove them.
 Preserve Google TV Home and `com.google.android.tungsten.setupwraith` for Cast credentials.
 
