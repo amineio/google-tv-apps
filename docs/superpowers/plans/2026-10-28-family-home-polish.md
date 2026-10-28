@@ -47,3 +47,17 @@ Interfaces: Preserve HomeScreen parameters and existing controller APIs. Duratio
 After emulator acceptance, install the release APK on the authorized Chromecast with an explicit serial.
 Preserve device data and capture local recovery evidence. Make sure that the app opens.
 Push the branch and merge the PR to main. Make sure that origin/main contains the installed change and the PR is closed.
+
+
+### Task 2: Fit fixed-size banner layers
+
+The TV capture exposes a fixed-size layer inside the Chess banner drawable.
+Changing outer bounds does not scale that layer. Keep the correction inside Family Home.
+
+Files: LauncherCatalog.kt and HomePresentationTest.kt under apps/family-home/src/.
+
+- [x] Add an Android regression with a fixed-size colored layer rendered into a larger bitmap.
+- [x] Make sure that the current renderer fails the corner coverage assertion.
+- [x] Scale the canvas from intrinsic drawable bounds and preserve aspect ratio.
+- [x] Operate the full local build and emulator suite. Repeat independent code and rendered artwork review.
+- [x] Install the corrected release. Merge the small follow-up PR and make sure that it closes.
