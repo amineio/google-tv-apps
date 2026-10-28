@@ -3,6 +3,8 @@ package com.amine.familyhome
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,6 +15,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.*
@@ -27,8 +30,11 @@ internal fun ProfileScreen(ui: FamilyUi, onSelect: (Viewer) -> Unit) {
             Spacer(Modifier.height(7.dp))
             Text("Choose your profile to begin", color = Muted, fontSize = 20.sp)
             Spacer(Modifier.height(39.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(44.dp), verticalAlignment = Alignment.CenterVertically) {
-                Viewer.entries.forEachIndexed { index, viewer ->
+            LazyRow(Modifier.fillMaxWidth(), contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(44.dp, Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.CenterVertically) {
+                itemsIndexed(ui.state.profiles, key = { _, profile -> profile.viewer.id }) { index, profile ->
+                    val viewer = profile.viewer
                     var focused by remember { mutableStateOf(false) }
                     Surface(onClick = { onSelect(viewer) },
                         modifier = Modifier.width(172.dp)
@@ -40,10 +46,11 @@ internal fun ProfileScreen(ui: FamilyUi, onSelect: (Viewer) -> Unit) {
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(5.dp)) {
                             Box(Modifier.border(BorderStroke(2.dp, if (focused) Gold else Color.Transparent), CircleShape).padding(5.dp)) {
-                                ProfilePortrait(viewer, 152.dp)
+                                ProfilePortrait(viewer, 152.dp, displayName = profile.name, portrait = profile.portrait)
                             }
                             Spacer(Modifier.height(13.dp))
-                            Text(viewer.label, color = if (focused) Ink else Muted, fontSize = 25.sp,
+                            Text(profile.name, color = if (focused) Ink else Muted, fontSize = 25.sp,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis,
                                 fontWeight = if (focused) FontWeight.Medium else FontWeight.Normal)
                         }
                     }

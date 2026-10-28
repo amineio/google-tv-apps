@@ -3,6 +3,7 @@ package com.amine.familyhome
 import android.text.format.DateFormat
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +19,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.Font
@@ -111,15 +114,27 @@ private fun FamilyClock() {
 }
 
 @Composable
-internal fun ProfilePortrait(viewer: Viewer, size: Dp, modifier: Modifier = Modifier) {
-    val resource = when (viewer) {
-        Viewer.AMINE -> R.drawable.avatar_amine
-        Viewer.ELIAS -> R.drawable.avatar_elias
-        Viewer.SOFIA -> R.drawable.avatar_sofia
+internal fun ProfilePortrait(viewer: Viewer, size: Dp, modifier: Modifier = Modifier,
+    displayName: String = viewer.label, portrait: Portrait = viewer.defaultPortrait) {
+    val resource = when (portrait) {
+        Portrait.AMINE -> R.drawable.avatar_amine
+        Portrait.ELIAS -> R.drawable.avatar_elias
+        Portrait.SOFIA -> R.drawable.avatar_sofia
+        Portrait.CHILD -> null
     }
-    Box(modifier.size(size).clip(CircleShape)) {
-        Image(painterResource(resource), "${viewer.label} profile portrait",
+    Box(modifier.size(size).clip(CircleShape), contentAlignment = Alignment.Center) {
+        if (resource != null) Image(painterResource(resource), "$displayName profile portrait",
             Modifier.fillMaxSize().graphicsLayer { scaleX = 1.09f; scaleY = 1.09f }, contentScale = ContentScale.Crop)
+        else {
+            val initials = displayName.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }.take(2).joinToString("") {
+                it.codePoints().findFirst().orElse(0).let { point -> String(Character.toChars(point)) }
+            }.uppercase(java.util.Locale.ROOT).ifEmpty { "?" }
+            Box(Modifier.fillMaxSize().background(Panel).semantics {
+                contentDescription = "$displayName profile portrait"
+            }, contentAlignment = Alignment.Center) {
+                Text(initials, color = Gold, fontSize = (size.value * .34f).sp, fontWeight = FontWeight.SemiBold)
+            }
+        }
     }
 }
 

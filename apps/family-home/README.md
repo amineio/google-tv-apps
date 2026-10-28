@@ -8,7 +8,7 @@ Build and test locally. GitHub APK builds are paused until the user requests the
 
 ## Interface
 
-Version 1.3 refines the native family launcher interface.
+Version 1.4 adds native TV settings and optional child profiles.
 The profile screen uses circular illustrated portraits, Outfit text, and a gold focus outline.
 The home screen keeps the profile at the upper right and gives the countdown fixed bounds and equal-width digit cells.
 Select an app tile with the remote center key to open it.
@@ -48,9 +48,25 @@ Android can stop or disable the helper. These family controls do not provide man
 
 Both children initially get Chess & Math, MasterClass, VTM GO, VRT MAX, Spotify, and Prime Video.
 Amine can change each child's app list in Family configuration.
+Settings has three rows: Profiles, Parent PIN, and Device setup.
+Open a child under Profiles to switch allowed apps on or off.
+Unavailable default apps appear after the installed apps and cannot receive focus.
+Each row has one focus target. Up and Down move through rows. OK opens or changes a row.
+Remote Back returns to the previous page and restores its row and scroll position.
+Device setup opens Android controls for the Home helper and default Home app.
 The parent PIN starts off. When enabled, it protects Amine, family configuration, and new or replacement sessions.
 Existing child balances resume without the PIN. The app saves only a salted PIN hash.
 The helper reads app and window names. It cannot retrieve screen content.
+
+To create a child, open Profiles and select Add child profile.
+Enter a unique name with 1 through 24 characters, then select Save.
+The Android keyboard uses the remote. Dismiss the keyboard to keep editing the same form.
+Only Save creates a profile. Remote Back leaves the form without creating one.
+A new child uses an initials portrait, the six default apps, and no saved session.
+Additional profiles remain reachable by scrolling right on the chooser.
+This release does not add rename, deletion, portrait selection, or additional parent roles.
+Upgrades preserve existing profiles, balances, allowed apps, and the parent PIN.
+Enabling the helper can return to the profile chooser under the existing wake privacy rule.
 
 ## Build and install
 

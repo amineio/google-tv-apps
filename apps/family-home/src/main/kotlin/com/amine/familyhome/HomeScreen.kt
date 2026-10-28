@@ -47,6 +47,9 @@ internal fun HomeScreen(
     onSwitchProfile: () -> Unit,
     onManage: () -> Unit,
     notice: String? = null,
+    displayName: String = viewer.label,
+    portrait: Portrait = viewer.defaultPortrait,
+    focusManageOnEntry: Boolean = false,
 ) {
     val featured = apps.firstOrNull { it.pkg == focusedPackage } ?: apps.firstOrNull()
     val keys = apps.map { it.pkg }
@@ -71,9 +74,9 @@ internal fun HomeScreen(
                     Spacer(Modifier.width(20.dp))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.testTag("home-profile")) {
-                    ProfilePortrait(viewer, 30.dp)
+                    ProfilePortrait(viewer, 30.dp, displayName = displayName, portrait = portrait)
                     Spacer(Modifier.width(10.dp))
-                    Text(viewer.label, fontSize = 18.sp)
+                    Text(displayName, fontSize = 18.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
             Spacer(Modifier.height(20.dp))
@@ -114,7 +117,9 @@ internal fun HomeScreen(
         }
     }
     LaunchedEffect(viewer, keys, resume) {
-        if (featured != null) {
+        if (focusManageOnEntry) {
+            manage.requestFocus()
+        } else if (featured != null) {
             row.scrollToItem(apps.indexOfFirst { it.pkg == featured.pkg }.coerceAtLeast(0))
             withFrameNanos { }
             targets.getValue(featured.pkg).requestFocus()

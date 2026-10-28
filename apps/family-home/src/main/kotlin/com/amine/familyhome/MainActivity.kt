@@ -12,8 +12,6 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -81,7 +79,8 @@ fun FamilyScreen(activity: MainActivity) {
     val ui by controller.ui.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var apps by remember { mutableStateOf<List<LauncherApp>>(emptyList()) }
-    var configuration by remember { mutableStateOf(false) }
+    var configuration by rememberSaveable { mutableStateOf(false) }
+    var restoreManageFocus by rememberSaveable { mutableStateOf(false) }
     var durationFor by remember { mutableStateOf<Viewer?>(null) }
     var parentAction by remember { mutableStateOf<ParentAction?>(null) }
     val selected = ui.state.selected
@@ -102,10 +101,9 @@ fun FamilyScreen(activity: MainActivity) {
             controller.chooseProfiles()
         }
     }
-    BackHandler {
+    BackHandler(enabled = !configuration || parentAction != null) {
         when {
             parentAction != null -> parentAction = null
-            configuration -> configuration = false
             durationFor != null -> durationFor = null
             selected?.isChild == true && !ui.state.sessions.containsKey(selected) -> scope.launch { controller.chooseProfiles() }
             selected == Viewer.AMINE -> scope.launch { controller.chooseProfiles() }
@@ -123,10 +121,26 @@ fun FamilyScreen(activity: MainActivity) {
             SessionEngine.remaining(ui.state, selected, ui.now) > 0))) {
         HomeScreen(selected, if (selected.isChild) SessionEngine.remaining(ui.state, selected, ui.now) else null,
             orderedApps(apps, selected, ui.state.allowed[selected].orEmpty()), focusedPackage, resume,
-            { focusedPackage = it }, activity::launch, ::confirmSwitchProfile, {
+            { focusedPackage = it; restoreManageFocus = false }, activity::launch, ::confirmSwitchProfile, {
                 if (!selected.isChild) configuration = true
-                else protect("End ${selected.label}'s session?", "The remaining time will be discarded.") { controller.end(selected, it) }
-            }, ui.notice)
+                else protect("End ${ui.state.label(selected)}'s session?", "The remaining time will be discarded.") { controller.end(selected, it) }
+            }, ui.notice, displayName = ui.state.label(selected),
+            portrait = requireNotNull(ui.state.profile(selected)).portrait,
+            focusManageOnEntry = restoreManageFocus)
+    } else if (ui.ready && !ui.storageFailed && selected == Viewer.AMINE && configuration) {
+        SettingsScreen(ui, apps, FamilyAccessService.active,
+            activity.getSystemService(RoleManager::class.java).isRoleHeld(RoleManager.ROLE_HOME), resume,
+            restoreFocus = parentAction == null,
+            onClose = { configuration = false; restoreManageFocus = true }, onPin = {
+                parentAction = if (ui.state.pinEnabled) ParentAction("Turn off the parent PIN?", "New sessions will use family trust.", false) {
+                    controller.setPin(null)
+                } else ParentAction("Set a parent PIN", "Choose four digits. This protects Amine and new sessions.", true) {
+                    controller.setPin(it)
+                }
+            }, onAccess = { viewer, pkg, enabled -> scope.launch { controller.setAllowed(viewer, pkg, enabled) } },
+            onAddChild = controller::addChild,
+            onSetup = { activity.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
+            onHome = { activity.startActivity(activity.getSystemService(RoleManager::class.java).createRequestRoleIntent(RoleManager.ROLE_HOME)) })
     } else Column(Modifier.fillMaxSize().padding(horizontal = 40.dp, vertical = 26.dp)) {
         FamilyHeader()
         Spacer(Modifier.height(16.dp))
@@ -140,24 +154,14 @@ fun FamilyScreen(activity: MainActivity) {
             ActionButton("Retry saved state") { scope.launch { controller.load() } }
         } else if (selected == null) {
             // The chooser is rendered by ProfileScreen above.
-        } else if (configuration) {
-            Configuration(ui, apps, onBack = { configuration = false }, onPin = {
-                parentAction = if (ui.state.pinEnabled) ParentAction("Turn off the parent PIN?", "New sessions will use family trust.", false) {
-                    controller.setPin(null)
-                } else ParentAction("Set a parent PIN", "Choose four digits. This protects Amine and new sessions.", true) {
-                    controller.setPin(it)
-                }
-            }, onAccess = { viewer, pkg, enabled -> scope.launch { controller.setAllowed(viewer, pkg, enabled) } },
-                onSetup = { activity.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
-                onHome = { activity.startActivity(activity.getSystemService(RoleManager::class.java).createRequestRoleIntent(RoleManager.ROLE_HOME)) })
         } else if (selected.isChild && (durationFor == selected || !ui.state.sessions.containsKey(selected))) {
             DurationScreen(selected, modifier = Modifier.weight(1f), onStart = { minutes ->
-                if (ui.state.pinEnabled) protect("Parent PIN", "Approve ${minutes} minutes for ${selected.label}.") {
+                if (ui.state.pinEnabled) protect("Parent PIN", "Approve ${minutes} minutes for ${ui.state.label(selected)}.") {
                     controller.start(selected, minutes, it).also { ok -> if (ok) durationFor = null }
                 } else scope.launch { if (controller.start(selected, minutes)) durationFor = null }
-            })
+            }, displayName = ui.state.label(selected), portrait = requireNotNull(ui.state.profile(selected)).portrait)
         } else if (selected.isChild && SessionEngine.remaining(ui.state, selected, ui.now) == 0L) {
-            Text("Time is up, ${selected.label}", fontSize = 38.sp)
+            Text("Time is up, ${ui.state.label(selected)}", fontSize = 38.sp)
             Spacer(Modifier.height(16.dp))
             Text("Your session has ended.", color = Muted, fontSize = 23.sp)
             Spacer(Modifier.height(32.dp))
@@ -192,16 +196,16 @@ private fun ActionButton(text: String, initial: Boolean = false, primary: Boolea
 
 @Composable
 internal fun DurationScreen(viewer: Viewer, onStart: (Int) -> Unit,
-    modifier: Modifier = Modifier) {
+    modifier: Modifier = Modifier, displayName: String = viewer.label, portrait: Portrait = viewer.defaultPortrait) {
     var minutes by remember(viewer) { mutableIntStateOf(20) }
     val decrease = remember { FocusRequester() }
     val increase = remember { FocusRequester() }
     val start = remember { FocusRequester() }
     Column(modifier.fillMaxSize().padding(bottom = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        ProfilePortrait(viewer, 76.dp)
+        ProfilePortrait(viewer, 76.dp, displayName = displayName, portrait = portrait)
         Spacer(Modifier.height(8.dp))
-        Text("Time for ${viewer.label}", fontSize = 34.sp, fontWeight = FontWeight.SemiBold)
+        Text("Time for $displayName", fontSize = 34.sp, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.height(20.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
             TvAction("− 5", Modifier.width(84.dp).focusRequester(decrease).focusProperties {
@@ -222,41 +226,6 @@ internal fun DurationScreen(viewer: Viewer, onStart: (Int) -> Unit,
         }) { onStart(minutes) }
     }
     LaunchedEffect(viewer) { start.requestFocus() }
-}
-
-@Composable
-private fun Configuration(ui: FamilyUi, apps: List<LauncherApp>, onBack: () -> Unit, onPin: () -> Unit,
-    onAccess: (Viewer, String, Boolean) -> Unit, onSetup: () -> Unit, onHome: () -> Unit) {
-    var child by remember { mutableStateOf(Viewer.ELIAS) }
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text("Family configuration", fontSize = 30.sp, modifier = Modifier.weight(1f))
-        ActionButton("Back", onClick = onBack)
-    }
-    Spacer(Modifier.height(18.dp))
-    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        ActionButton("Parent PIN: ${if (ui.state.pinEnabled) "on" else "off"}", initial = true, onClick = onPin)
-        ActionButton("Enable helper", onClick = onSetup)
-        ActionButton("Select Home", onClick = onHome)
-    }
-    Spacer(Modifier.height(20.dp))
-    Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text("Allowed apps for", color = Muted, fontSize = 20.sp)
-        ActionButton(if (child == Viewer.ELIAS) "Elias · selected" else "Elias") { child = Viewer.ELIAS }
-        ActionButton(if (child == Viewer.SOFIA) "Sofia · selected" else "Sofia") { child = Viewer.SOFIA }
-    }
-    Spacer(Modifier.height(14.dp))
-    LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        val installed = apps.map { it.pkg }.toSet()
-        val missing = DefaultApps.labels.filterKeys { it !in installed }
-        items(missing.entries.toList(), key = { "missing:${it.key}" }) { entry ->
-            Text("${entry.value}: not installed", color = Muted, fontSize = 18.sp)
-        }
-        items(apps, key = { it.pkg }) { app ->
-            val allowed = app.pkg in ui.state.allowed[child].orEmpty()
-            TvAction("${if (allowed) "Allowed" else "Hidden"}    ${app.label}",
-                Modifier.fillMaxWidth().height(52.dp)) { onAccess(child, app.pkg, !allowed) }
-        }
-    }
 }
 
 @Composable

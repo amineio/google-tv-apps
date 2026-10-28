@@ -3,13 +3,14 @@ package com.amine.familyhome
 /** Pure elapsed-time rules. Android lifecycle and durable writes belong to the controller. */
 object SessionEngine {
     fun remaining(state: FamilyState, viewer: Viewer, now: Long): Long {
+        require(state.profile(viewer) != null) { "Unknown family profile" }
         val session = state.sessions[viewer] ?: return 0
         return (session.deadlineElapsedMs?.let { it - now } ?: session.remainingMs)
             .coerceIn(0, session.totalMs)
     }
 
     fun canUseApps(state: FamilyState, now: Long): Boolean = state.selected?.let {
-        !it.isChild || remaining(state, it, now) > 0
+        state.profile(it) != null && (!it.isChild || remaining(state, it, now) > 0)
     } ?: false
 
     fun checkpoint(state: FamilyState, now: Long): FamilyState = state.copy(
@@ -26,6 +27,7 @@ object SessionEngine {
     }
 
     fun select(state: FamilyState, viewer: Viewer, now: Long): FamilyState {
+        require(state.profile(viewer) != null) { "Unknown family profile" }
         if (state.selected == viewer) return tick(state, now, state.revision)
         val paused = suspend(state, now)
         val session = paused.sessions[viewer]
@@ -36,7 +38,9 @@ object SessionEngine {
     }
 
     fun start(state: FamilyState, viewer: Viewer, minutes: Int, now: Long): FamilyState {
-        require(viewer.isChild && minutes in 5..60 && minutes % 5 == 0) { "Choose 5 to 60 minutes in five-minute steps" }
+        require(state.profile(viewer) != null && viewer.isChild && minutes in 5..60 && minutes % 5 == 0) {
+            "Choose a child and 5 to 60 minutes in five-minute steps"
+        }
         val paused = suspend(state, now)
         val duration = minutes * 60_000L
         return paused.copy(selected = viewer,
@@ -48,8 +52,9 @@ object SessionEngine {
         return checkpoint(state, now)
     }
 
-    fun end(state: FamilyState, viewer: Viewer, now: Long): FamilyState = suspend(state, now).let {
-        it.copy(sessions = it.sessions - viewer)
+    fun end(state: FamilyState, viewer: Viewer, now: Long): FamilyState {
+        require(state.profile(viewer) != null) { "Unknown family profile" }
+        return suspend(state, now).let { it.copy(sessions = it.sessions - viewer) }
     }
 
     fun recover(state: FamilyState): FamilyState {
