@@ -1,0 +1,12 @@
+{
+  "use": "Preview only; no generated image bundled",
+  "prompt": "Use case: ui-mockup. Create a crisp design reference sheet for Family Home native Google TV settings. Three clearly separate 16:9 television screen mockups stacked vertically, each uses actual TV-safe margins and large couch-readable text. Dark charcoal, warm white, restrained pale gold focus, sans serif matching Outfit, no device frame. SCREEN 1: small Family Home wordmark upper left; large 'Family settings' heading in left third; a clean continuous vertical list in right two-thirds with exactly three full-width rows: 'Profiles' with summary '3 profiles' and chevron, 'Parent PIN' with summary 'Off' and an OFF switch, 'Device setup' with summary 'Ready' and chevron. Only Profiles row is focused with muted gold outline and subtle bright surface. No visible Back button, no tabs, no multiple action pills. SCREEN 2: left heading 'Profiles'; right-side continuous vertical list shows 'Parent' as a neutral informational row, 'Alex' and 'Sam' as child navigation rows with small circular generic portraits and right chevrons, followed by 'Add child profile' navigation row with simple plus. Exactly three existing profiles, no fourth profile. SCREEN 3: left title 'Alex' and short subtitle 'Allowed apps'; right-side vertical app rows: Chess & Math, VRT MAX, Spotify, Prime Video, each with icon, readable name and right-aligned switch. Mix On and Off, switches distinct from focus. Only Spotify row focused, its On state readable. Small 'Unavailable apps' section below with a disabled neutral missing-app row, no toggle for unavailable app. Comfortable row height, simple native TV list design, no nested cards, no decorative marketing text, no on-screen Back buttons, leave lower-right safe area for independent Clock overlay. Generated image is a design reference; final interface uses native Compose for TV controls. No personal data or real family names.",
+  "dimensions": "1672x941",
+  "image": "exec-c936273d-6b59-4e4a-9297-345970282515.png",
+  "source": "OpenAI ImageGen",
+  "license": "Generated concept. No third-party image assets are bundled.",
+  "references": [
+    "https://source.android.com/docs/core/settings/settings-guidelines",
+    "https://developer.android.com/design/ui/tv/guides/foundations/navigation-on-tv"
+  ]
+}
