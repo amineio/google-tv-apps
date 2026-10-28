@@ -52,3 +52,24 @@ No existing streaming account data was cleared.
 
 The source passed independent review with no actionable findings.
 All Java app source and the existing root build tools remain unchanged.
+
+
+## Version 1.2
+
+The duration screen centers the portrait and controls. Start session receives initial focus.
+The countdown uses fixed bounds and digit cells. The profile stays at the right edge.
+App tiles launch directly. Other apps use a subdued icon tint instead of a large banner background.
+Landscape banners and square icons use matching tile proportions.
+
+Both unit variants passed 32 tests each. All 12 repository tests passed.
+Release lint and the release, debug, and Android test builds passed.
+The build used a fresh Gradle process with one worker after the parallel lint process stalled.
+All 11 Android UI tests passed on an isolated 1080p Google TV emulator.
+The coordinator used an explicit ADB serial and a separate ADB server to prevent concurrent test input.
+The tests cover duration limits, initial focus, label alignment, recovery notices, fixed countdown geometry, tile launch, scrolling, focus restoration, empty lists, configuration, and PIN input.
+The label test permits one dp of font rounding and rejects the original 15.5-pixel alignment error.
+Independent code and rendered UI reviews report zero actionable findings.
+
+New screenshots remain outside Git because the repository is public.
+The generic home fixtures use solid-color artwork. Installed TV apps retain their native artwork.
+Physical playback, timer expiry, wake, and Cast tests remain separate from this presentation evidence.
