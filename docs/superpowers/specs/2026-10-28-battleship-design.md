@@ -19,7 +19,7 @@ These choices follow the supplied specification. No network, accounts, database,
 
 ## Presentation
 
-The generated naval concept is `docs/battleship/concepts/naval-concept.png`.
+The generated naval concept is `docs/battleship/concepts/naval-concept.webp`.
 It is a visual reference. All boards, text, ships, markers, and controls render from native state.
 The enemy board is square and larger than the friendly board. Five-percent margins protect essential content.
 Dark navy water, steel ships, cyan focus, red crosses, and pale miss rings define the palette.

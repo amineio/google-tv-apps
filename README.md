@@ -9,6 +9,7 @@ Each app has its own package, version, permissions, tests, and APK.
 | [TV Clock](apps/clock/) | `:clock` | `com.amine.tvclock` | A clock overlay, session timer, daily bedtime, and viewing reminders. |
 | [Schaak & Reken](apps/chess-math/) | `:chessMath` | `com.amine.chessmath` | Offline chess and arithmetic with remote controls and local progress. |
 | [Family Home](apps/family-home/) | Separate Kotlin build | `com.amine.familyhome` | Family profiles, child timers, allowed apps, and an optional parent PIN. |
+| [Battleship](apps/battleship/) | Separate Kotlin build | `com.amine.battleship` | Offline naval strategy against the computer with remote targeting and saved matches. |
 
 TV Clock works independently of TV Home. Its stop screen supports voluntary viewing limits.
 It remains dismissible and does not guarantee that another app pauses playback.
@@ -41,6 +42,14 @@ Its independent build requires SDK platform `android-37.0` and build tools `36.0
 apps/family-home/gradlew -p apps/family-home testReleaseUnitTest lintRelease assembleRelease
 ```
 
+Battleship uses the same independent Kotlin tools and requires Android 8 or later:
+
+```sh
+apps/battleship/gradlew -p apps/battleship testDebugUnitTest testReleaseUnitTest lintRelease assembleDebug assembleRelease
+```
+
+Read the [Battleship guide](apps/battleship/README.md) for remote controls, saved matches, installation, and emulator tests.
+
 ## Install
 
 Read the [home installation guide](apps/home/README.md) before changing the default home app.
@@ -70,6 +79,7 @@ apps/home/       TV Home app, resources, and unit tests
 apps/clock/      TV Clock app, resources, and device tests
 apps/chess-math/ Offline chess and arithmetic app
 apps/family-home/ Independent Kotlin family launcher and Gradle build
+apps/battleship/  Independent Kotlin offline naval game and Gradle build
 gradle/          Shared Gradle wrapper
 tools/           App installers and existing TV tools
 tests/           Repository and installer tests

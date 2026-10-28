@@ -29,14 +29,20 @@ Spec: `docs/superpowers/specs/2026-10-28-battleship-design.md` and the full user
 
 ## Tasks
 
-- [ ] Create independent build and failing engine tests. Run the tests before engine implementation.
-- [ ] Implement `game` models, rules, placement, visibility, Normal strategy, and 1,000 seeded full-game simulations.
-- [ ] Run unit tests. Review the engine API before session integration.
-- [ ] Add failing persistence and session tests, then implement `persistence` and `viewmodel`.
-- [ ] Add remote UI tests, then implement native menus, boards, results, dialogs, controls, and effects under `ui`.
-- [ ] Generate a separate naval background. Compress the artwork and record prompts, origin, dimensions, and audio parameters.
-- [ ] Add the launcher manifest, vector icon, banner, installer, app guide, and root README entry.
-- [ ] Run debug and release unit tests, lint, APK builds, repository tests, and emulator instrumented tests.
-- [ ] Inspect 1080p and 4K captures. Exercise save/restore, repeat input, restart, and complete-match flows.
-- [ ] Obtain independent whole-change review. Fix material findings and repeat affected tests.
+- [x] Create independent build and failing engine tests. Run the tests before engine implementation.
+- [x] Implement `game` models, rules, placement, visibility, Normal strategy, and 1,000 seeded full-game simulations.
+- [x] Run unit tests. Review the engine API before session integration.
+- [x] Add failing persistence and session tests, then implement `persistence` and `viewmodel`.
+- [x] Add remote UI tests, then implement native menus, boards, results, dialogs, controls, and effects under `ui`.
+- [x] Generate a separate naval background. Compress the artwork and record prompts, origin, dimensions, and audio parameters.
+- [x] Add the launcher manifest, vector icon, banner, installer, app guide, and root README entry.
+- [x] Run debug and release unit tests, lint, APK builds, repository tests, and emulator instrumented tests.
+- [x] Inspect 1080p and 4K captures. Exercise save/restore, repeat input, restart, and complete-match flows.
+- [x] Obtain independent whole-change review. Fix material findings and repeat affected tests.
 - [ ] Update the tracking PR with exact evidence. Merge tested installed changes into `origin/main` and report the APK path.
+
+## Results and evidence limits
+
+See `docs/battleship/validation.md` for the exact local results.
+The emulator reports a 4K physical mode but caps its logical UI and captures at 1080p.
+Native 4K rendering and physical TV observations remain deferred.
