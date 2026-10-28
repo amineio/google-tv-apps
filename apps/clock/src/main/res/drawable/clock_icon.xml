@@ -1,11 +1,14 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="96dp" android:height="96dp" android:viewportWidth="96" android:viewportHeight="96">
-    <path android:fillColor="#142C46" android:pathData="M85,48 A37,37 0,1 1,11 48 A37,37 0,1 1,85 48" />
-    <path android:fillColor="#00000000" android:strokeColor="#B7D4FF" android:strokeWidth="5"
-        android:pathData="M85,48 A37,37 0,1 1,11 48 A37,37 0,1 1,85 48" />
-    <path android:fillColor="#00000000" android:strokeColor="#B7D4FF" android:strokeWidth="2.5"
-        android:strokeLineCap="round" android:pathData="M48,20 V24 M72,48 H76 M48,72 V76 M20,48 H24" />
-    <path android:fillColor="#00000000" android:strokeColor="#FFFFFF" android:strokeWidth="5.5"
-        android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M29,37 L48,48 L69,31" />
-    <path android:fillColor="#B7D4FF" android:pathData="M52,48 A4,4 0,1 1,44 48 A4,4 0,1 1,52 48" />
+    <path android:fillColor="#12243D" android:pathData="M85,48 A37,37 0,1 1,11 48 A37,37 0,1 1,85 48" />
+    <path android:fillColor="#00000000" android:strokeColor="#6BA7FA" android:strokeWidth="5"
+        android:strokeLineCap="round" android:pathData="M51,11 A37,37 0,0 1,85 45 M85,51 A37,37 0,0 1,51 85 M45,85 A37,37 0,0 1,11 51 M11,45 A37,37 0,0 1,45 11" />
+    <path android:fillColor="#00000000" android:strokeColor="#EDEFF3" android:strokeWidth="3"
+        android:strokeLineCap="round" android:pathData="M48,18 V23 M73,48 H78 M48,73 V78 M18,48 H23" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFF" android:strokeWidth="6"
+        android:strokeLineCap="round" android:pathData="M48,48 L32,38" />
+    <path android:fillColor="#00000000" android:strokeColor="#B7D4FF" android:strokeWidth="4"
+        android:strokeLineCap="round" android:pathData="M48,48 L69,32" />
+    <path android:fillColor="#B7D4FF" android:pathData="M53,48 A5,5 0,1 1,43 48 A5,5 0,1 1,53 48" />
+    <path android:fillColor="#6BA7FA" android:pathData="M50.5,48 A2.5,2.5 0,1 1,45.5 48 A2.5,2.5 0,1 1,50.5 48" />
 </vector>

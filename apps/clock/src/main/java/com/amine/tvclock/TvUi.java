@@ -10,7 +10,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.Switch;
 
@@ -87,27 +86,26 @@ final class TvUi {
     @android.annotation.SuppressLint("ViewConstructor")
     static final class SettingsPage extends LinearLayout {
         final LinearLayout list;
-        final TextView summary, help;
+        final TextView summary;
+        final AnalogClockView clock;
         SettingsPage(Context c, String heading, String description) {
             super(c);
             setBackgroundColor(BACKGROUND);
             setPadding(dp(c, 48), dp(c, 28), dp(c, 48), dp(c, 28));
             LinearLayout brand = column(c);
-            brand.setPadding(0, dp(c, 32), 0, dp(c, 8));
-            ImageView logo = new ImageView(c);
-            logo.setImageResource(R.drawable.clock_icon);
-            logo.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-            brand.addView(logo, new LinearLayout.LayoutParams(dp(c, 96), dp(c, 96)));
-            gap(brand, 20);
-            brand.addView(text(c, "TV Clock", 36, false));
+            brand.setPadding(0, dp(c, 36), 0, 0);
+            brand.setGravity(Gravity.CENTER_HORIZONTAL);
+            clock = new AnalogClockView(c);
+            brand.addView(clock, new LinearLayout.LayoutParams(dp(c, 160), dp(c, 160)));
+            gap(brand, 24);
+            TextView brandTitle = text(c, "TV Clock", 32, false);
+            brandTitle.setGravity(Gravity.CENTER);
+            brand.addView(brandTitle);
             gap(brand, 12);
-            summary = text(c, description, 17, true);
+            summary = text(c, description, 16, true);
+            summary.setGravity(Gravity.CENTER);
             summary.setLineSpacing(dp(c, 4), 1);
             brand.addView(summary);
-            brand.addView(new View(c), new LinearLayout.LayoutParams(1, 0, 1));
-            help = text(c, "↑ ↓  Choose\n← →  Adjust\nBack  Return", 14, true);
-            help.setLineSpacing(dp(c, 8), 1);
-            brand.addView(help);
             LinearLayout.LayoutParams brandLayout = new LinearLayout.LayoutParams(dp(c, 272), -1);
             brandLayout.setMarginEnd(dp(c, 40));
             addView(brand, brandLayout);
@@ -131,7 +129,7 @@ final class TvUi {
         view.setTextSize(20);
         view.setShowText(false);
         view.setSwitchPadding(dp(c, 20));
-        view.setMinimumHeight(dp(c, 76));
+        view.setMinimumHeight(dp(c, 64));
         view.setPadding(dp(c, 16), dp(c, 12), dp(c, 16), dp(c, 12));
         view.setBackground(preferenceBackground(c));
         view.setTextColor(new ColorStateList(new int[][]{new int[]{android.R.attr.state_focused}, new int[]{}},
@@ -151,6 +149,11 @@ final class TvUi {
     }
 
     static void switchLabel(Switch view, String title, String detail) {
+        if (detail.isEmpty()) {
+            view.setText(title);
+            view.setOnFocusChangeListener(null);
+            return;
+        }
         android.text.SpannableString text = new android.text.SpannableString(title + "\n" + detail);
         text.setSpan(new android.text.style.AbsoluteSizeSpan(14, true), title.length() + 1, text.length(), 0);
         text.setSpan(new android.text.style.ForegroundColorSpan(view.isFocused() ? FOCUSED_DETAIL : MUTED),

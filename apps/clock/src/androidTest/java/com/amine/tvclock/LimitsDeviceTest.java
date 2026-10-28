@@ -3,7 +3,6 @@ package com.amine.tvclock;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.SystemClock;
 import android.view.View;
@@ -18,8 +17,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 import static org.junit.Assert.*;
@@ -27,7 +24,7 @@ import static org.junit.Assert.*;
 @RunWith(AndroidJUnit4.class)
 public class LimitsDeviceTest {
     private Context context;
-    private Map<String, ?> limits, clock, mainPreferences;
+    private boolean backupOwned;
 
     private void main(Runnable action) { InstrumentationRegistry.getInstrumentation().runOnMainSync(action); }
     private void waitUntil(BooleanSupplier condition) {
@@ -85,10 +82,9 @@ public class LimitsDeviceTest {
 
     @Before public void prepare() {
         context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        limits = new HashMap<>(context.getSharedPreferences("limits", Context.MODE_PRIVATE).getAll());
-        clock = new HashMap<>(context.getSharedPreferences("clock", Context.MODE_PRIVATE).getAll());
-        mainPreferences = new HashMap<>(context.getSharedPreferences("MainActivity", Context.MODE_PRIVATE).getAll());
         assertTrue("Overlay and exact alarm access are required", LimitsController.access(context));
+        ClockTestBackup.save(context);
+        backupOwned = true;
         main(() -> {
             context.stopService(new Intent(context, ClockService.class));
             ClockPreferences.setEnabled(context, false);
@@ -98,25 +94,15 @@ public class LimitsDeviceTest {
     }
 
     @After public void restore() {
+        if (!backupOwned) return;
         main(() -> {
             for (Activity a : ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)) a.finish();
-            restorePreferences("limits", limits); restorePreferences("clock", clock);
-            restorePreferences("MainActivity", mainPreferences);
+            ClockTestBackup.restore(context);
             LimitsController.check(context);
         });
         home();
-    }
-    private void restorePreferences(String name, Map<String, ?> data) {
-        if (data == null) return;
-        SharedPreferences.Editor edit = context.getSharedPreferences(name, Context.MODE_PRIVATE).edit().clear();
-        for (Map.Entry<String, ?> entry : data.entrySet()) {
-            Object value = entry.getValue(); String key = entry.getKey();
-            if (value instanceof Boolean) edit.putBoolean(key, (Boolean) value);
-            else if (value instanceof Long) edit.putLong(key, (Long) value);
-            else if (value instanceof Integer) edit.putInt(key, (Integer) value);
-            else if (value instanceof String) edit.putString(key, (String) value);
-        }
-        assertTrue(edit.commit());
+        ClockTestBackup.clear(context);
+        backupOwned = false;
     }
 
     private Activity openMain() {
@@ -158,27 +144,135 @@ public class LimitsDeviceTest {
         screenshot("settings-appearance");
     }
 
-    @Test public void durationChoiceReturnsToTheRowAndDoesNotStartATimer() {
+    private boolean dialogHas(String text) {
+        AccessibilityNodeInfo root = InstrumentationRegistry.getInstrumentation().getUiAutomation().getRootInActiveWindow();
+        return root != null && !root.findAccessibilityNodeInfosByText(text).isEmpty();
+    }
+
+    @Test public void customDurationSavesWithoutStartingAndBackCancelsEdits() {
+        context.getSharedPreferences("MainActivity", Context.MODE_PRIVATE).edit().putInt("minutes", 60).commit();
         Activity page = openMain();
         AtomicReference<View> duration = new AtomicReference<>();
         main(() -> {
             duration.set(page.findViewById(android.R.id.content).findViewWithTag("timer-duration"));
-            assertNotNull("Timer duration needs a settings row", duration.get());
-            duration.get().requestFocus();
+            duration.get().requestFocus(); duration.get().performClick();
         });
-        shell("input keyevent KEYCODE_DPAD_CENTER");
-        clickDialog("30 minutes");
-        waitUntil(() -> context.getSharedPreferences("MainActivity", Context.MODE_PRIVATE).getInt("minutes", 60) == 30);
+        waitUntil(() -> dialogHas("Hours") && dialogHas("Minutes"));
+        shell("input keyevent KEYCODE_DPAD_UP KEYCODE_DPAD_RIGHT " +
+                "KEYCODE_DPAD_UP KEYCODE_DPAD_UP KEYCODE_DPAD_UP KEYCODE_DPAD_CENTER");
+        waitUntil(() -> context.getSharedPreferences("MainActivity", Context.MODE_PRIVATE).getInt("minutes", 60) == 123);
         assertEquals(0, LimitsController.read(context).timerElapsed);
         main(() -> assertTrue(duration.get().isFocused()));
         main(() -> duration.get().performClick());
-        shell("input keyevent KEYCODE_BACK");
-        assertEquals(30, context.getSharedPreferences("MainActivity", Context.MODE_PRIVATE).getInt("minutes", 60));
+        waitUntil(() -> dialogHas("Hours"));
+        shell("input keyevent KEYCODE_DPAD_UP KEYCODE_BACK");
+        assertEquals(123, context.getSharedPreferences("MainActivity", Context.MODE_PRIVATE).getInt("minutes", 60));
         main(() -> page.findViewById(R.id.timer_start).performClick());
         long remaining = LimitsController.read(context).timerElapsed - SystemClock.elapsedRealtime();
-        assertTrue(remaining > 1_790_000 && remaining <= 1_800_000);
+        assertTrue(remaining > 7_370_000 && remaining <= 7_380_000);
         main(() -> page.findViewById(R.id.timer_start).performClick());
         assertEquals(0, LimitsController.read(context).timerElapsed);
+    }
+
+    @Test public void zeroDurationCannotBeSavedOrStartATimer() {
+        context.getSharedPreferences("MainActivity", Context.MODE_PRIVATE).edit().putInt("minutes", 60).commit();
+        Activity page = openMain();
+        main(() -> page.findViewById(android.R.id.content).findViewWithTag("timer-duration").performClick());
+        waitUntil(() -> dialogHas("Hours") && dialogHas("Minutes"));
+        shell("input keyevent KEYCODE_DPAD_DOWN KEYCODE_DPAD_RIGHT KEYCODE_DPAD_CENTER");
+        waitUntil(() -> dialogHas("Hours"));
+        assertEquals(60, context.getSharedPreferences("MainActivity", Context.MODE_PRIVATE).getInt("minutes", 60));
+        assertEquals(0, LimitsController.read(context).timerElapsed);
+        shell("input keyevent KEYCODE_DPAD_UP KEYCODE_DPAD_CENTER");
+        waitUntil(() -> context.getSharedPreferences("MainActivity", Context.MODE_PRIVATE).getInt("minutes", 60) == 1);
+    }
+
+    @Test public void analogClockShowsTheCurrentTvTime() {
+        Activity page = openMain();
+        AtomicReference<CharSequence> description = new AtomicReference<>();
+        AtomicReference<View> clockFace = new AtomicReference<>();
+        main(() -> {
+            View face = page.findViewById(android.R.id.content).findViewWithTag("live-clock");
+            assertNotNull("A live analog clock must be visible", face);
+            assertTrue(face.isShown());
+            clockFace.set(face);
+            description.set(face.getContentDescription());
+        });
+        String current = new java.text.SimpleDateFormat("HH:mm", java.util.Locale.ROOT).format(new java.util.Date());
+        assertNotNull(description.get());
+        assertTrue(description.get().toString(), description.get().toString().contains(current));
+        screenshot("live-clock-main");
+        main(() -> {
+            TimeLimits changed = new TimeLimits();
+            changed.startTimer(3L * 24 * 60 * 60_000, System.currentTimeMillis(),
+                    SystemClock.elapsedRealtime(), LimitsController.boot(context));
+            LimitsStore.save(context, changed);
+        });
+        String original = description.get().toString();
+        long end = SystemClock.elapsedRealtime() + 70_000;
+        while (original.equals(description.get().toString()) && SystemClock.elapsedRealtime() < end) {
+            SystemClock.sleep(1_500);
+            main(() -> description.set(clockFace.get().getContentDescription()));
+        }
+        assertNotEquals("The analog clock must update as the minute changes", original, description.get().toString());
+        main(() -> assertTrue("The next deadline must refresh on a time tick",
+                ((android.widget.TextView) page.findViewById(R.id.limits_summary)).getText().toString().startsWith("Next:")));
+        current = new java.text.SimpleDateFormat("HH:mm", java.util.Locale.ROOT).format(new java.util.Date());
+        assertTrue(description.get().toString(), description.get().toString().contains(current));
+    }
+
+    @Test public void timerFieldsSupportAccessibilityAdjustment() {
+        context.getSharedPreferences("MainActivity", Context.MODE_PRIVATE).edit().putInt("minutes", 60).commit();
+        Activity page = openMain();
+        main(() -> page.findViewById(android.R.id.content).findViewWithTag("timer-duration").performClick());
+        waitUntil(() -> dialogHas("Hours"));
+        AccessibilityNodeInfo root = InstrumentationRegistry.getInstrumentation().getUiAutomation().getRootInActiveWindow();
+        java.util.List<AccessibilityNodeInfo> hours = root.findAccessibilityNodeInfosByViewId("com.amine.tvclock:id/duration_hour");
+        assertFalse(hours.isEmpty());
+        assertTrue("The screen reader must be able to increase the hours", hours.get(0).performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD));
+        waitUntil(() -> dialogHas("Hours: 2"));
+        assertEquals(60, context.getSharedPreferences("MainActivity", Context.MODE_PRIVATE).getInt("minutes", 60));
+        shell("input keyevent KEYCODE_DPAD_CENTER");
+        waitUntil(() -> context.getSharedPreferences("MainActivity", Context.MODE_PRIVATE).getInt("minutes", 60) == 120);
+    }
+
+    @Test public void skippedBedtimeShowsTheNewDay() {
+        main(() -> LimitsController.setBedtime(context, true, 22 * 60 + 30));
+        Activity page = openMain();
+        AtomicReference<String> before = new AtomicReference<>(), after = new AtomicReference<>();
+        main(() -> {
+            before.set(page.findViewById(R.id.bedtime_time).getContentDescription().toString());
+            page.findViewById(R.id.bedtime_skip).performClick();
+        });
+        clickDialog("Skip next");
+        main(() -> after.set(page.findViewById(R.id.bedtime_time).getContentDescription().toString()));
+        assertTrue("The next bedtime day must be visible", before.get().contains("Next:"));
+        assertNotEquals("Skipping must change the displayed day", before.get(), after.get());
+    }
+
+    @Test public void longTimerShowsItsEndDate() {
+        main(() -> LimitsController.startTimer(context, 3 * 24 * 60 * 60_000L));
+        Activity page = openMain();
+        long wall = LimitsController.read(context).timerWall;
+        String date = java.time.Instant.ofEpochMilli(wall).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                .format(java.time.format.DateTimeFormatter.ofPattern("EEE, MMM d", java.util.Locale.getDefault()));
+        AtomicReference<String> label = new AtomicReference<>();
+        main(() -> label.set(page.findViewById(R.id.timer_start).getContentDescription().toString()));
+        assertTrue(label.get(), label.get().contains(date));
+    }
+
+    @Test public void missingPermissionShowsThatLimitsAreInactive() {
+        shell("appops set --user 0 com.amine.tvclock SYSTEM_ALERT_WINDOW ignore");
+        try {
+            waitUntil(() -> !android.provider.Settings.canDrawOverlays(context));
+            Activity page = openMain();
+            AtomicReference<String> message = new AtomicReference<>();
+            main(() -> message.set(((android.widget.TextView) page.findViewById(R.id.limits_summary)).getText().toString()));
+            assertTrue(message.get(), message.get().toLowerCase(java.util.Locale.ROOT).contains("limits inactive"));
+        } finally {
+            shell("appops set --user 0 com.amine.tvclock SYSTEM_ALERT_WINDOW allow");
+            waitUntil(() -> LimitsController.access(context));
+        }
     }
 
     @Test public void reminderChoiceSavesAndBackKeepsTheSelectedAction() {
@@ -290,6 +384,7 @@ public class LimitsDeviceTest {
     }
 
     @Test public void remoteControlsCanStartCancelAndEditWithoutArmingBedtime() {
+        context.getSharedPreferences("MainActivity", Context.MODE_PRIVATE).edit().putInt("minutes", 60).commit();
         home();
         main(() -> context.startActivity(new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)));
         waitUntil(() -> activity() instanceof MainActivity);
