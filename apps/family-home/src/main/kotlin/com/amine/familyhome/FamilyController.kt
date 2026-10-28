@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.util.UUID
 
 interface FamilyRepository {
     suspend fun load(): FamilyState
@@ -71,6 +72,17 @@ class FamilyController(private val repository: FamilyRepository, private val ela
         return false
     }
 
+    private fun reject(message: String): Boolean {
+        mutable.update { it.copy(notice = message) }
+        return false
+    }
+
+    private fun known(viewer: Viewer, childOnly: Boolean = false): Boolean {
+        if (mutable.value.state.profile(viewer) == null) return reject("This family profile is unavailable.")
+        if (childOnly && !viewer.isChild) return reject("Choose a child profile.")
+        return true
+    }
+
     private suspend fun commit(next: FamilyState): Boolean {
         return try {
             val saved = SessionEngine.checkpoint(next.validated(), elapsed())
@@ -90,7 +102,7 @@ class FamilyController(private val repository: FamilyRepository, private val ela
     }
 
     suspend fun select(viewer: Viewer, pin: String = ""): Boolean = mutex.withLock {
-        if (!available(viewer.isChild)) return@withLock false
+        if (!known(viewer) || !available(viewer.isChild)) return@withLock false
         if (!viewer.isChild && !authenticated(pin)) return@withLock false
         val previous = mutable.value.state.selected
         val result = commit(SessionEngine.select(mutable.value.state, viewer, elapsed()))
@@ -102,7 +114,9 @@ class FamilyController(private val repository: FamilyRepository, private val ela
     }
 
     suspend fun start(viewer: Viewer, minutes: Int, pin: String = ""): Boolean = mutex.withLock {
-        if (!available(true) || !authenticated(pin)) return@withLock false
+        if (!known(viewer, childOnly = true) || !available(true) || !authenticated(pin)) return@withLock false
+        if (minutes !in 5..60 || minutes % 5 != 0)
+            return@withLock reject("Choose 5 to 60 minutes in five-minute steps.")
         val previous = mutable.value.state.selected
         val result = commit(SessionEngine.start(mutable.value.state, viewer, minutes, elapsed()))
         if (result) {
@@ -133,7 +147,7 @@ class FamilyController(private val repository: FamilyRepository, private val ela
     }
 
     suspend fun end(viewer: Viewer, pin: String = ""): Boolean = mutex.withLock {
-        if (!available() || !authenticated(pin)) return@withLock false
+        if (!known(viewer) || !available() || !authenticated(pin)) return@withLock false
         val result = commit(SessionEngine.end(mutable.value.state, viewer, elapsed()))
         if (result) { adminAuthorized = false; effect(FamilyEffect.PauseMedia) }
         result
@@ -148,11 +162,35 @@ class FamilyController(private val repository: FamilyRepository, private val ela
     }
 
     suspend fun setAllowed(viewer: Viewer, pkg: String, allowed: Boolean): Boolean = mutex.withLock {
-        if (!available() || mutable.value.state.selected != Viewer.AMINE || !adminAuthorized || !viewer.isChild) return@withLock false
-        require(pkg.matches(Regex("[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)+")))
+        if (!known(viewer, childOnly = true) || !available() || mutable.value.state.selected != Viewer.AMINE || !adminAuthorized) return@withLock false
+        if (!pkg.matches(Regex("[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)+")))
+            return@withLock reject("This app package is invalid.")
         val state = mutable.value.state
         val packages = state.allowed[viewer].orEmpty().let { if (allowed) it + pkg else it - pkg }
         commit(state.copy(allowed = state.allowed + (viewer to packages), revision = state.revision + 1))
+    }
+
+    suspend fun addChild(name: String): Viewer? = mutex.withLock {
+        if (!available()) return@withLock null
+        val state = mutable.value.state
+        if (state.selected != Viewer.AMINE || !adminAuthorized) {
+            reject("Open the parent profile before adding a child.")
+            return@withLock null
+        }
+        val trimmed = name.trim()
+        if (!validProfileName(trimmed) || name.any { it.isISOControl() }) {
+            reject("Enter a name with 1 to 24 characters and no control characters.")
+            return@withLock null
+        }
+        if (state.profiles.any { it.name.equals(trimmed, ignoreCase = true) }) {
+            reject("This profile name is already in use.")
+            return@withLock null
+        }
+        var viewer: Viewer
+        do { viewer = Viewer("child_${UUID.randomUUID()}") } while (state.profile(viewer) != null)
+        val next = state.copy(profiles = state.profiles + FamilyProfile(viewer, trimmed),
+            allowed = state.allowed + (viewer to DefaultApps.labels.keys.toSet()), revision = state.revision + 1)
+        if (commit(next)) viewer else null
     }
 
     fun mayLaunch(pkg: String): Boolean {
@@ -183,7 +221,7 @@ class FamilyController(private val repository: FamilyRepository, private val ela
         if (one || five) {
             val next = state.copy(sessions = state.sessions + (viewer to session.copy(
                 warnedFive = session.warnedFive || five, warnedOne = session.warnedOne || one)))
-            if (commit(next)) effect(FamilyEffect.Warning("${viewer.label}: ${if (one) "1 minute" else "5 minutes"} left"))
+            if (commit(next)) effect(FamilyEffect.Warning("${state.label(viewer)}: ${if (one) "1 minute" else "5 minutes"} left"))
         } else if (now - lastCheckpoint >= 10_000) commit(SessionEngine.checkpoint(state, now))
     }
 }

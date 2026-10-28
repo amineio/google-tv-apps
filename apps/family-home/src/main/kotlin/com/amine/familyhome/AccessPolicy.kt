@@ -8,6 +8,7 @@ object AccessPolicy {
     fun decide(state: FamilyState, pkg: String?, window: String?, now: Long): AccessDecision {
         if (pkg == null || pkg == FAMILY_PACKAGE || transientSystemWindow(pkg, window.orEmpty())) return AccessDecision.ALLOW
         val viewer = state.selected ?: return AccessDecision.CHOOSER
+        if (state.profile(viewer) == null) return AccessDecision.CHOOSER
         if (!viewer.isChild) return AccessDecision.ALLOW
         if (SessionEngine.remaining(state, viewer, now) <= 0) {
             return if (state.sessions.containsKey(viewer)) AccessDecision.TIME_UP else AccessDecision.CHILD_HOME

@@ -125,8 +125,9 @@ fun FamilyScreen(activity: MainActivity) {
             orderedApps(apps, selected, ui.state.allowed[selected].orEmpty()), focusedPackage, resume,
             { focusedPackage = it }, activity::launch, ::confirmSwitchProfile, {
                 if (!selected.isChild) configuration = true
-                else protect("End ${selected.label}'s session?", "The remaining time will be discarded.") { controller.end(selected, it) }
-            }, ui.notice)
+                else protect("End ${ui.state.label(selected)}'s session?", "The remaining time will be discarded.") { controller.end(selected, it) }
+            }, ui.notice, displayName = ui.state.label(selected),
+            portrait = requireNotNull(ui.state.profile(selected)).portrait)
     } else Column(Modifier.fillMaxSize().padding(horizontal = 40.dp, vertical = 26.dp)) {
         FamilyHeader()
         Spacer(Modifier.height(16.dp))
@@ -152,12 +153,12 @@ fun FamilyScreen(activity: MainActivity) {
                 onHome = { activity.startActivity(activity.getSystemService(RoleManager::class.java).createRequestRoleIntent(RoleManager.ROLE_HOME)) })
         } else if (selected.isChild && (durationFor == selected || !ui.state.sessions.containsKey(selected))) {
             DurationScreen(selected, modifier = Modifier.weight(1f), onStart = { minutes ->
-                if (ui.state.pinEnabled) protect("Parent PIN", "Approve ${minutes} minutes for ${selected.label}.") {
+                if (ui.state.pinEnabled) protect("Parent PIN", "Approve ${minutes} minutes for ${ui.state.label(selected)}.") {
                     controller.start(selected, minutes, it).also { ok -> if (ok) durationFor = null }
                 } else scope.launch { if (controller.start(selected, minutes)) durationFor = null }
-            })
+            }, displayName = ui.state.label(selected), portrait = requireNotNull(ui.state.profile(selected)).portrait)
         } else if (selected.isChild && SessionEngine.remaining(ui.state, selected, ui.now) == 0L) {
-            Text("Time is up, ${selected.label}", fontSize = 38.sp)
+            Text("Time is up, ${ui.state.label(selected)}", fontSize = 38.sp)
             Spacer(Modifier.height(16.dp))
             Text("Your session has ended.", color = Muted, fontSize = 23.sp)
             Spacer(Modifier.height(32.dp))
@@ -192,16 +193,16 @@ private fun ActionButton(text: String, initial: Boolean = false, primary: Boolea
 
 @Composable
 internal fun DurationScreen(viewer: Viewer, onStart: (Int) -> Unit,
-    modifier: Modifier = Modifier) {
+    modifier: Modifier = Modifier, displayName: String = viewer.label, portrait: Portrait = viewer.defaultPortrait) {
     var minutes by remember(viewer) { mutableIntStateOf(20) }
     val decrease = remember { FocusRequester() }
     val increase = remember { FocusRequester() }
     val start = remember { FocusRequester() }
     Column(modifier.fillMaxSize().padding(bottom = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        ProfilePortrait(viewer, 76.dp)
+        ProfilePortrait(viewer, 76.dp, displayName = displayName, portrait = portrait)
         Spacer(Modifier.height(8.dp))
-        Text("Time for ${viewer.label}", fontSize = 34.sp, fontWeight = FontWeight.SemiBold)
+        Text("Time for $displayName", fontSize = 34.sp, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.height(20.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
             TvAction("− 5", Modifier.width(84.dp).focusRequester(decrease).focusProperties {

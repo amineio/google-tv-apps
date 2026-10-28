@@ -6,6 +6,15 @@ import org.junit.Test
 class AccessPolicyTest {
     private val active = SessionEngine.start(FamilyState(), Viewer.ELIAS, 20, 0)
 
+    @Test fun unknownSelectedProfileNeverGrantsAnAppAccess() {
+        val unknown = Viewer("child_49d15187-5685-4722-bfb0-f340176fd340")
+        val invalid = active.copy(selected = unknown,
+            sessions = mapOf(unknown to ChildSession(600_000, 300_000, 300_000)),
+            allowed = mapOf(unknown to setOf("com.spotify.tv.android")))
+        assertEquals(AccessDecision.CHOOSER,
+            AccessPolicy.decide(invalid, "com.spotify.tv.android", "Player", 0))
+    }
+
     @Test fun remoteShortcutToYoutubeReturnsToChildHome() {
         assertEquals(AccessDecision.CHILD_HOME,
             AccessPolicy.decide(active, "com.google.android.youtube.tv", "WatchActivity", 100))

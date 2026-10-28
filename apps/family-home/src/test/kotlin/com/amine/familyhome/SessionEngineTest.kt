@@ -4,6 +4,15 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class SessionEngineTest {
+    @Test fun unknownProfilesCannotChangeSessionsOrUseApps() {
+        val unknown = Viewer("child_49d15187-5685-4722-bfb0-f340176fd340")
+        val state = FamilyState()
+        assertThrows(IllegalArgumentException::class.java) { SessionEngine.select(state, unknown, 0) }
+        assertThrows(IllegalArgumentException::class.java) { SessionEngine.start(state, unknown, 20, 0) }
+        assertThrows(IllegalArgumentException::class.java) { SessionEngine.end(state, unknown, 0) }
+        assertFalse(SessionEngine.canUseApps(state.copy(selected = unknown), 0))
+    }
+
     @Test fun newChildNeedsTimerBeforeApps() {
         val selected = SessionEngine.select(FamilyState(), Viewer.ELIAS, 100)
         assertFalse(SessionEngine.canUseApps(selected, 100))
