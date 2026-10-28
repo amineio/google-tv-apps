@@ -1,0 +1,11 @@
+{
+  "purpose": "Preview-only native TV settings reference",
+  "prompt": "Use case ui-mockup. Produce a preview-only reference sheet with TWO native Google TV settings screens stacked vertically. Match Family Home's restrained dark charcoal background #0D0E12, warm white Outfit-like sans serif, full pale-gold focused list row #F6CD83 with black text, large couch-readable labels, generous safe margins and a clear lower-right area for an independent Clock overlay. No decorative artwork, no tablet/device frame, no visible Back button, no charts, no tabs, no extra action pills. Each screen uses a large title in the left third and one continuous native settings list in the right two-thirds. SCREEN ONE: left title 'Daily usage', subtitle 'Today', small explanation 'Selected-profile screen-on time'. Right list exactly three generic profile rows, each with simple circular initials portrait and navigation chevron: Parent / 42 min, Alex / 20 min, Sam / No recorded use. Alex row focused, others dark and neutral. SCREEN TWO: left title 'Alex', subtitle 'Daily history', small explanation 'Up to 30 recorded days'. Right list read-only date and duration rows: Today / 20 min; Yesterday / 35 min; Monday, 26 October / 15 min; Sunday, 25 October / 28 min. Avoid focus treatment on read-only totals and preserve a clear native Android TV appearance. All names and numbers are invented examples for a design concept, not real family data. Final app will use native Compose for TV controls; this image is only a reference.",
+  "source": "OpenAI ImageGen",
+  "dimensions": {
+    "width": 1672,
+    "height": 941
+  },
+  "license": "Generated design reference. No third-party source assets. Not bundled in app.",
+  "names": "Invented generic examples"
+}
