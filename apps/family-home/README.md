@@ -50,6 +50,54 @@ It keeps Google TV Home and setupwraith enabled for Cast credentials.
 It removes the competing Home helper from the active helper list and preserves unrelated helpers.
 It does not erase data or reinstall the other apps. The installer prints the backup directory.
 
+## Local TV emulator
+
+The development Mac has a Google TV emulator named `Family_TV_API_34`.
+It uses Android 14, ARM64, a 1920 × 1080 screen, and keyboard input.
+Family Home owns its Home role and uses its accessibility helper.
+
+On this Mac, set the SDK and JDK paths in your terminal:
+
+```sh
+export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools
+export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+```
+
+Start the emulator:
+
+```sh
+"$ANDROID_HOME/emulator/emulator" -avd Family_TV_API_34 -port 5554 -gpu auto -scale 0.7
+```
+
+From this app directory, build and open a local preview in a second terminal:
+
+```sh
+./gradlew assembleDebug --console=plain
+adb -s emulator-5554 install -r build/outputs/apk/debug/family-home-debug.apk
+adb -s emulator-5554 shell am start -W -n com.amine.familyhome/.MainActivity
+```
+
+The explicit emulator address keeps these commands separate from the Chromecast.
+Use the arrow keys and Enter to navigate. Capture a full-resolution image with:
+
+```sh
+adb -s emulator-5554 exec-out screencap -p > /tmp/family-home.png
+```
+
+Run the Android UI tests against this emulator:
+
+```sh
+ANDROID_SERIAL=emulator-5554 ./gradlew connectedDebugAndroidTest --console=plain
+```
+
+The emulator supports layout, text contrast, and remote navigation tests.
+Use the Chromecast for Cast, streaming playback, wake behavior, and final visual acceptance.
+The emulator does not contain the family's streaming accounts or all installed TV apps.
+
+For manual helper tests, use `adb input` and `screencap`.
+Android's default UI automation suppresses accessibility services, which interrupts the helper during a hierarchy dump.
+See [Android UI automation flags](https://developer.android.com/reference/android/app/UiAutomation#FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES).
+
 ## Recovery
 
 If the helper fails, select Amine and open Family configuration to enable it again.

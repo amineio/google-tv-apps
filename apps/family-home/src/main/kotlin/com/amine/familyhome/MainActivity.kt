@@ -50,7 +50,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme(colorScheme = darkColorScheme(primary = Gold, surface = Panel, onSurface = Color.White)) {
-                FamilyScreen(this)
+                CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
+                    FamilyScreen(this)
+                }
             }
         }
     }
