@@ -3,6 +3,8 @@
 Family Home is a separate Android TV launcher in Kotlin with Compose for TV.
 It requires Android 14 or later. It uses no cloud service or network permission.
 The existing Java apps keep their own packages, source, and build tools.
+For reusable patterns and development lessons, read [the Kotlin TV guide](../../docs/kotlin-tv-development.md).
+Build and test locally. GitHub APK builds are paused until the user requests them again.
 
 ## Interface
 

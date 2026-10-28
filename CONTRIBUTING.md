@@ -1,6 +1,7 @@
 # Contributing
 
-This fork maintains independent Google TV apps in one Gradle build.
+This repository maintains independent Google TV apps with two Gradle builds.
+The Java apps share the root build. Family Home uses a separate Kotlin build.
 Read [README.md](README.md) for the layout and commands.
 The original CleanYourTV project remains credited in [UPSTREAM.md](UPSTREAM.md).
 
@@ -13,14 +14,18 @@ Keep runtime dependencies, memory use, and permissions small.
 Do not add tracking, ads, or device access without a clear product requirement.
 
 Use `amine/` as the branch prefix.
-Run the affected unit tests and Android lint before publishing a change.
-Build both releases when changing the shared build or repository layout.
-For visible changes, include actual TV screenshots and describe device validation separately from unit tests.
+Run the affected unit tests, Android lint, and release build locally before delivery.
+If shared build files change, build all apps that use them.
+For Kotlin work, read the [development guide](docs/kotlin-tv-development.md) and [agent instructions](AGENTS.md).
+For visible changes, include emulator captures and describe physical TV results separately from local tests.
+Use generic names in shared captures. Keep personal account screens and device data out of Git.
+Keep the repository private and GitHub APK builds paused unless the user explicitly requests a change.
 
 ## Device tools and lists
 
 Run `python3 -m unittest discover -s tests -v` from the repository root.
-Device tests and installation commands operate a real TV. Use them only as part of an authorized device task.
+Device tests and installation commands operate the selected emulator or TV. Use an explicit ADB serial.
+Use physical TV commands only as part of an authorized device task.
 Keep backups, device identifiers, local SDK files, build outputs, and credentials out of Git.
 
 Existing device lists remain in `examples/`. Keep their package syntax and index tables consistent.

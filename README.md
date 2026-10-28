@@ -57,7 +57,7 @@ From the repository root, run local tests and Android lint:
 python3 -m unittest discover -s tests -v
 ```
 
-GitHub Actions builds the releases, runs these checks, and retains APK artifacts.
+Run tests locally before delivery. GitHub builds are paused as described below.
 TV Home retains a baseline for 29 existing upstream lint errors. New lint errors still fail the build.
 See [the lint record](docs/upstream-lint.md) for the scope.
 Device tests require a connected TV and run separately.
@@ -84,12 +84,33 @@ New apps belong in `apps/<name>/`. Apps that use the shared build register in th
 Family Home has its own build so that modern Kotlin tooling does not change the Java app builds.
 Keep app-specific code and permissions inside that app. Add shared code only when apps need it.
 
+## Kotlin app development
+
+Use Kotlin and Compose for TV for new apps. Keep the existing Java apps independent.
+A Java migration is separate work and is not a prerequisite for a new Kotlin app.
+Use Family Home as the working reference for build tools, native TV controls, focus, and local tests.
+
+Read the [Kotlin development guide](docs/kotlin-tv-development.md) for the workflow and lessons from Family Home.
+It covers emulator iteration, scoped subagents, ImageGen concepts, bundled artwork, and separate audio tools.
+[AGENTS.md](AGENTS.md) gives the instructions for coding agents.
+
+## Privacy and GitHub builds
+
+Keep this repository private because it contains family names and device screenshots.
+Use generic names in shared previews. Keep device backups and personal account captures out of Git.
+Share review images through the chat as attachments, without public image hosting.
+
+Local builds and tests are the default. Both GitHub build workflows are paused.
+Their definitions accept manual runs only, so pushes and pull requests do not start APK builds.
+Do not enable cloud builds or publish APKs without an explicit request.
+The retained workflow definitions upload APKs and reports when an operator enables and starts them.
+
 ## Upstream and license
 
-This repository is a fork of [Gathin23/cleanyourtv](https://github.com/Gathin23/cleanyourtv).
+This repository derives from [Gathin23/cleanyourtv](https://github.com/Gathin23/cleanyourtv).
 It retains the original history, TV Home implementation, tools, themes, and device lists.
 [UPSTREAM.md](UPSTREAM.md) preserves the original project guide.
-[CONTRIBUTING.md](CONTRIBUTING.md) explains this fork's contribution workflow.
+[CONTRIBUTING.md](CONTRIBUTING.md) explains the contribution workflow.
 
 The code uses the [MIT license](LICENSE).
 The Outfit font retains its [SIL Open Font License](apps/home/FONT-LICENSE-OFL.txt).
