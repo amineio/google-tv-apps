@@ -97,6 +97,11 @@ fun FamilyScreen(activity: MainActivity) {
     fun protect(title: String, message: String, action: suspend (String) -> Boolean) {
         parentAction = ParentAction(title, message, ui.state.pinEnabled, action)
     }
+    fun confirmSwitchProfile() {
+        parentAction = ParentAction("Switch profile?", "Return to the profile chooser?", false) {
+            controller.chooseProfiles()
+        }
+    }
     BackHandler {
         when {
             parentAction != null -> parentAction = null
@@ -118,7 +123,7 @@ fun FamilyScreen(activity: MainActivity) {
             SessionEngine.remaining(ui.state, selected, ui.now) > 0))) {
         HomeScreen(selected, if (selected.isChild) SessionEngine.remaining(ui.state, selected, ui.now) else null,
             orderedApps(apps, selected, ui.state.allowed[selected].orEmpty()), focusedPackage, resume,
-            { focusedPackage = it }, activity::launch, { scope.launch { controller.chooseProfiles() } }, {
+            { focusedPackage = it }, activity::launch, ::confirmSwitchProfile, {
                 if (!selected.isChild) configuration = true
                 else protect("End ${selected.label}'s session?", "The remaining time will be discarded.") { controller.end(selected, it) }
             }, ui.notice)
@@ -146,10 +151,7 @@ fun FamilyScreen(activity: MainActivity) {
                 onSetup = { activity.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
                 onHome = { activity.startActivity(activity.getSystemService(RoleManager::class.java).createRequestRoleIntent(RoleManager.ROLE_HOME)) })
         } else if (selected.isChild && (durationFor == selected || !ui.state.sessions.containsKey(selected))) {
-            DurationScreen(selected, modifier = Modifier.weight(1f), onCancel = {
-                durationFor = null
-                if (!ui.state.sessions.containsKey(selected)) scope.launch { controller.chooseProfiles() }
-            }, onStart = { minutes ->
+            DurationScreen(selected, modifier = Modifier.weight(1f), onStart = { minutes ->
                 if (ui.state.pinEnabled) protect("Parent PIN", "Approve ${minutes} minutes for ${selected.label}.") {
                     controller.start(selected, minutes, it).also { ok -> if (ok) durationFor = null }
                 } else scope.launch { if (controller.start(selected, minutes)) durationFor = null }
@@ -160,7 +162,7 @@ fun FamilyScreen(activity: MainActivity) {
             Text("Your session has ended.", color = Muted, fontSize = 23.sp)
             Spacer(Modifier.height(32.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                ActionButton("Switch profile", initial = true) { scope.launch { controller.chooseProfiles() } }
+                ActionButton("Switch profile", initial = true, onClick = ::confirmSwitchProfile)
                 ActionButton("Start a new session") { durationFor = selected }
             }
         }
@@ -189,13 +191,12 @@ private fun ActionButton(text: String, initial: Boolean = false, primary: Boolea
 }
 
 @Composable
-internal fun DurationScreen(viewer: Viewer, onCancel: () -> Unit, onStart: (Int) -> Unit,
+internal fun DurationScreen(viewer: Viewer, onStart: (Int) -> Unit,
     modifier: Modifier = Modifier) {
     var minutes by remember(viewer) { mutableIntStateOf(20) }
     val decrease = remember { FocusRequester() }
     val increase = remember { FocusRequester() }
     val start = remember { FocusRequester() }
-    val cancel = remember { FocusRequester() }
     Column(modifier.fillMaxSize().padding(bottom = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
         ProfilePortrait(viewer, 76.dp)
@@ -215,16 +216,10 @@ internal fun DurationScreen(viewer: Viewer, onCancel: () -> Unit, onStart: (Int)
             }) { minutes = (minutes + 5).coerceAtMost(60) }
         }
         Spacer(Modifier.height(24.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            TvAction("Start session", Modifier.focusRequester(start).focusProperties {
-                up = increase; down = FocusRequester.Cancel
-                left = FocusRequester.Cancel; right = cancel
-            }) { onStart(minutes) }
-            TvAction("Cancel", Modifier.focusRequester(cancel).focusProperties {
-                up = increase; down = FocusRequester.Cancel
-                left = start; right = FocusRequester.Cancel
-            }, onClick = onCancel)
-        }
+        TvAction("Start session", Modifier.focusRequester(start).focusProperties {
+            up = increase; down = FocusRequester.Cancel
+            left = FocusRequester.Cancel; right = FocusRequester.Cancel
+        }) { onStart(minutes) }
     }
     LaunchedEffect(viewer) { start.requestFocus() }
 }
@@ -291,9 +286,11 @@ private fun ParentDialog(action: ParentAction, onDismiss: () -> Unit, onSubmit: 
             }
             notice?.let { Text(it, color = Gold, fontSize = 16.sp) }
             Spacer(Modifier.height(16.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                ActionButton("Cancel", initial = !action.needsPin, onClick = onDismiss)
-                TvAction("Continue", primary = true, enabled = !action.needsPin || pin.length == 4) { onSubmit(pin) }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                InitialFocus(!action.needsPin) { focus ->
+                    TvAction("Continue", modifier = focus, primary = true,
+                        enabled = !action.needsPin || pin.length == 4) { onSubmit(pin) }
+                }
             }
         }
     }
