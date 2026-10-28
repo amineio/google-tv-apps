@@ -431,23 +431,26 @@ public final class MainActivity extends Activity {
         settingsHeading(list,R.string.settings_play,"settings-play",true);
         android.widget.Switch maths=TvStyle.switchControl(this,s(R.string.maths_practice));
         TvStyle.preferenceRow(maths);
+        TvStyle.settingIcon(maths,R.drawable.ic_setting_calculator);
         maths.setTag("maths-practice");maths.setChecked(play.mathsEnabled());
         maths.setOnCheckedChangeListener((button,enabled)->changeMathsMode(enabled));
         list.addView(maths,new LinearLayout.LayoutParams(-1,-2));
         TextView modeHelp=TvStyle.text(this,s(R.string.maths_practice_help),16,false);
         modeHelp.setTextColor(TvStyle.MUTED);modeHelp.setPadding(dp(16),dp(4),dp(16),dp(12));
         list.addView(modeHelp,new LinearLayout.LayoutParams(-1,-2));
-        settingsAction(list,R.string.settings,()->{
+        settingsAction(list,R.string.settings,R.drawable.ic_setting_calculator,()->{
             draft=controller.state().config.copy();java.util.Arrays.fill(settingsMemory,-1);menu="settings";render();
         });
         settingsHeading(list,R.string.settings_app,"settings-app",false);
         android.widget.Switch sound=TvStyle.switchControl(this,s(R.string.sound_effects));
         TvStyle.preferenceRow(sound);
+        TvStyle.settingIcon(sound,R.drawable.ic_setting_sound);
         sound.setTag("sound-effects");sound.setChecked(effects.sound());
         sound.setOnCheckedChangeListener((button,enabled)->changeEffect(true));
         list.addView(sound,new LinearLayout.LayoutParams(-1,-2));
         android.widget.Switch motion=TvStyle.switchControl(this,s(R.string.piece_motion));
         TvStyle.preferenceRow(motion);
+        TvStyle.settingIcon(motion,R.drawable.ic_setting_motion);
         motion.setTag("piece-motion");motion.setChecked(effects.motion());
         motion.setOnCheckedChangeListener((button,enabled)->changeEffect(false));
         list.addView(motion,new LinearLayout.LayoutParams(-1,-2));
@@ -457,6 +460,7 @@ public final class MainActivity extends Activity {
                     (dialog,which)->{dialog.dismiss();changeLanguage(which==1?"en":"nl");}).show();
         });
         TvStyle.preferenceRow(languageChoice);
+        TvStyle.settingIcon(languageChoice,R.drawable.ic_setting_language);
         String label=s(R.string.language);
         String value=s("en".equals(language.language())?R.string.english:R.string.dutch);
         android.text.SpannableString languageText=new android.text.SpannableString(label+"\n"+value);
@@ -465,14 +469,14 @@ public final class MainActivity extends Activity {
         languageChoice.setText(languageText);
         list.addView(languageChoice,new LinearLayout.LayoutParams(-1,-2));
         settingsHeading(list,R.string.settings_session,"settings-session",false);
-        if(play.mathsEnabled())settingsAction(list,R.string.to_math,()->confirmSkip(true));
-        settingsAction(list,R.string.to_chess,()->confirmSkip(false));
-        settingsAction(list,R.string.restart_chess,()->{started=true;menu="";controller.restartGame();render();});
-        settingsAction(list,R.string.reset,()->confirmReset());
+        if(play.mathsEnabled())settingsAction(list,R.string.to_math,R.drawable.ic_setting_calculator,()->confirmSkip(true));
+        settingsAction(list,R.string.to_chess,R.drawable.ic_setting_chess,()->confirmSkip(false));
+        settingsAction(list,R.string.restart_chess,R.drawable.ic_setting_restart,()->{started=true;menu="";controller.restartGame();render();});
+        settingsAction(list,R.string.reset,R.drawable.ic_setting_reset,()->confirmReset());
         settingsHeading(list,R.string.settings_information,"settings-information",false);
-        settingsAction(list,R.string.about_game,()->{menu="help";render();});
-        settingsAction(list,R.string.licenses,()->{menu="licenses";render();});
-        settingsAction(list,R.string.exit,this::finish);
+        settingsAction(list,R.string.about_game,R.drawable.ic_setting_info,()->{menu="help";render();});
+        settingsAction(list,R.string.licenses,R.drawable.ic_setting_licenses,()->{menu="licenses";render();});
+        settingsAction(list,R.string.exit,R.drawable.ic_setting_exit,this::finish);
         verticalClamp(list);
     }
     private void settingsHeading(LinearLayout list,int label,String tag,boolean first){
@@ -483,9 +487,10 @@ public final class MainActivity extends Activity {
         heading.setPadding(dp(16),dp(first?8:24),dp(16),dp(8));
         list.addView(heading,new LinearLayout.LayoutParams(-1,-2));
     }
-    private void settingsAction(LinearLayout list,int label,Runnable action){
+    private void settingsAction(LinearLayout list,int label,int icon,Runnable action){
         Button row=button(s(label),s(label),action);
         TvStyle.preferenceRow(row);
+        TvStyle.settingIcon(row,icon);
         list.addView(row,new LinearLayout.LayoutParams(-1,-2));
     }
     private void confirmSkip(boolean math){

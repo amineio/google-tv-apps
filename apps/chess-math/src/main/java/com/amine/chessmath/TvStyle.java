@@ -60,6 +60,15 @@ final class TvStyle {
         row.setPadding(dp(context,16),dp(context,12),dp(context,16),dp(context,12));
         row.setBackground(new PreferenceSurface(context));
     }
+    static void settingIcon(TextView row,int resource){
+        android.graphics.drawable.Drawable icon=row.getContext().getDrawable(resource).mutate();
+        int size=dp(row.getContext(),24);
+        icon.setBounds(0,0,size,size);
+        icon.setTintList(new android.content.res.ColorStateList(
+                new int[][]{new int[]{android.R.attr.state_focused},new int[]{}},new int[]{AMBER,IVORY}));
+        row.setCompoundDrawablesRelative(icon,null,null,null);
+        row.setCompoundDrawablePadding(dp(row.getContext(),14));
+    }
     private static final class PreferenceSurface extends android.graphics.drawable.Drawable {
         private final Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG);
         private final float density;
