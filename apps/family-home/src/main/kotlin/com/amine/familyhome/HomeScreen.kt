@@ -49,6 +49,7 @@ internal fun HomeScreen(
     notice: String? = null,
     displayName: String = viewer.label,
     portrait: Portrait = viewer.defaultPortrait,
+    focusManageOnEntry: Boolean = false,
 ) {
     val featured = apps.firstOrNull { it.pkg == focusedPackage } ?: apps.firstOrNull()
     val keys = apps.map { it.pkg }
@@ -116,7 +117,9 @@ internal fun HomeScreen(
         }
     }
     LaunchedEffect(viewer, keys, resume) {
-        if (featured != null) {
+        if (focusManageOnEntry) {
+            manage.requestFocus()
+        } else if (featured != null) {
             row.scrollToItem(apps.indexOfFirst { it.pkg == featured.pkg }.coerceAtLeast(0))
             withFrameNanos { }
             targets.getValue(featured.pkg).requestFocus()
