@@ -69,6 +69,62 @@ Family Home loads 128-pixel icons and 384-by-216-pixel banners off the main thre
 Keep timer and access policy outside presentation components.
 Do not copy the family's profile names into a new app or generic test fixtures.
 
+## Launcher artwork for new apps
+
+Every new app or game must include matching launcher artwork before release.
+Plan the artwork with the app's visual design. Use ImageGen for suitable illustrated icons, banners, and backgrounds.
+Show the generated artwork in chat for review before integration.
+Use a consistent palette, subject, and style across these three separate files.
+Use these repository defaults for raster assets:
+
+| Asset | Bundled size | Composition |
+| --- | --- | --- |
+| App icon | 512 by 512 pixels | Use a clear central silhouette that remains recognizable at 64 and 128 pixels. Keep essential details inside the central 70 percent. |
+| TV banner | 640 by 360 pixels, 16:9 | Include the app title. Keep it readable at 384 by 216 pixels and inside safe margins. |
+| Launcher background | 1920 by 1080 pixels, 16:9 | Use a separate image without text or controls. Keep the left half quiet and the lower quarter dark. |
+
+Keep the background's main subject clear of the native title, profile control, app row, and Clock overlay.
+Do not derive the background from the icon, stretch the banner, or use a complete interface screenshot.
+Keep all three resources inside the app.
+Store raster artwork as compressed WebP files in `src/main/res/drawable-nodpi`. Use vectors for simple symbols.
+Record the prompts, sources, dimensions, compression, file hashes, and rights beside the app's design record.
+
+The app owns its artwork. Family Home owns presentation, contrast, focus, and fallback.
+Register the icon, banner, and background in the app's `AndroidManifest.xml`:
+
+```xml
+<application
+    android:icon="@drawable/app_icon"
+    android:banner="@drawable/app_banner">
+    <meta-data
+        android:name="com.amine.familyhome.HERO_IMAGE"
+        android:resource="@drawable/app_hero" />
+</application>
+```
+
+Add these attributes and metadata to the existing `application` element.
+The metadata value is a local drawable resource, not a file path or URL.
+Use stable icon and banner names. For bitmap wrappers, use `android:gravity="fill"` and `android:filter="true"` with the matching source proportions.
+Use [Battleship's manifest](../apps/battleship/src/main/AndroidManifest.xml) and [bitmap wrapper](../apps/battleship/src/main/res/drawable/battleship_icon.xml) as examples.
+Family Home reads this metadata generically. Do not copy app artwork into the launcher or add a special case for each new app.
+
+Family Home decodes only the selected background off the main thread, with a maximum size of 1920 by 1080 pixels.
+It preserves aspect ratio and does not enlarge small images during decoding.
+The existing Chess artwork takes precedence. Missing or unusable backgrounds retain the app tile and its gradient.
+
+Before delivery, inspect the installed app through the actual Family Home launcher:
+
+1. Inspect the icon at small sizes and the banner at 320 by 180 and 384 by 216 pixels.
+2. Make sure that artwork fills its bounds, preserves proportions, and shows the correct title without clipping.
+3. Select the app with the D-pad and inspect title contrast, background crop, focus, and safe margins.
+4. Move to another app and make sure that the previous background clears.
+5. Open the app and return to the launcher, then make sure that focus and artwork match.
+6. Replace the installed APK and make sure that the launcher refreshes its artwork while preserving the selected app.
+
+Use the emulator first. Keep physical TV observations separate from emulator results.
+Reuse the patterns in [Battleship's artwork tests](../apps/battleship/src/androidTest/kotlin/com/amine/battleship/LauncherArtworkTest.kt).
+Read its [asset record](battleship/launcher-art/assets.json) and [validation record](battleship/launcher-art/validation.md) for a completed example.
+
 ## Generate and prepare assets
 
 Use ImageGen for portraits, illustrations, textures, and background artwork when these improve the app.

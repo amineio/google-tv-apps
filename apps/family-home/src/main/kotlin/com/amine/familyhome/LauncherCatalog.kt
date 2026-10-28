@@ -11,7 +11,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 data class LauncherApp(val pkg: String, val label: String, val component: ComponentName,
-    val icon: Bitmap, val banner: Bitmap? = null) {
+    val icon: Bitmap, val banner: Bitmap? = null, val heroArtwork: AppHeroArtworkReference? = null) {
     val backdropColor: Int = icon.darkBackdrop()
 }
 
@@ -25,7 +25,8 @@ internal fun loadLauncherCatalog(manager: PackageManager, ownPackage: String): L
             val banner = info.activityInfo.loadBanner(manager)
                 ?: runCatching { manager.getApplicationBanner(pkg) }.getOrNull()
             LauncherApp(pkg, label, ComponentName(pkg, info.activityInfo.name),
-                info.loadIcon(manager).render(128, 128), banner?.render(384, 216))
+                info.loadIcon(manager).render(128, 128), banner?.render(384, 216),
+                readAppHeroArtwork(manager, pkg))
         } catch (_: RuntimeException) { null }
     }.distinctBy { it.pkg }.sortedBy { it.label.lowercase() }
 }
