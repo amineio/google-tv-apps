@@ -26,4 +26,6 @@ The exact temporary retirement backup from the preceding task is deleted from th
 
 ## Limits
 
+The canonical installer installs release 1.6, code 7, on the physical TV. Family Home retains its Home role and a bound helper with no crashed services. Directional input opens the profile menu, Family configuration, Daily usage, and the weekly chart. The chart retains the existing parent total after upgrade. Actual app tiles render on Home. The Clock overlay remains visible without overlap on Home, the menu, and the chart. No real fourth profile is created.
+
 History contains up to 30 recorded dates. Missing records do not establish zero use. This change adds no hourly or per-app records. Emulator evidence does not establish Cast or physical streaming behavior.
