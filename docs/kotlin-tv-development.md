@@ -171,7 +171,8 @@ Preserve Google TV Home and `com.google.android.tungsten.setupwraith` because Ca
 
 Keep device identifiers, personal account screens, and backups out of Git.
 Use generic names in shared captures. Attach review images directly in chat without public hosting.
-Keep this repository private unless the user explicitly requests a visibility change.
+The user deferred repository privatization. Do not detach the fork or change visibility without a new explicit request.
+While the repository remains public, keep new family screenshots and personal data out of Git.
 
 Report local tests, emulator results, physical observations, installation, and Git delivery separately.
 State which physical tests remain deferred. Do not infer their results from interface tests.

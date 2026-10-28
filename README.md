@@ -96,7 +96,8 @@ It covers emulator iteration, scoped subagents, ImageGen concepts, bundled artwo
 
 ## Privacy and GitHub builds
 
-Keep this repository private because it contains family names and device screenshots.
+The user deferred the change to a private repository.
+While the repository remains public, keep new family screenshots and personal data out of Git.
 Use generic names in shared previews. Keep device backups and personal account captures out of Git.
 Share review images through the chat as attachments, without public image hosting.
 

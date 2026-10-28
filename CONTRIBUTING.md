@@ -19,7 +19,8 @@ If shared build files change, build all apps that use them.
 For Kotlin work, read the [development guide](docs/kotlin-tv-development.md) and [agent instructions](AGENTS.md).
 For visible changes, include emulator captures and describe physical TV results separately from local tests.
 Use generic names in shared captures. Keep personal account screens and device data out of Git.
-Keep the repository private and GitHub APK builds paused unless the user explicitly requests a change.
+Keep GitHub APK builds paused unless the user explicitly requests a change.
+Do not detach the fork or change repository visibility without a new explicit request.
 
 ## Device tools and lists
 

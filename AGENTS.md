@@ -60,7 +60,8 @@ Preserve Google TV Home and `com.google.android.tungsten.setupwraith` for Cast c
 
 ## Privacy
 
-Keep this repository private. Do not change its visibility without an explicit request.
+The user deferred repository privatization. Do not detach the fork or change visibility without a new explicit request.
+While the repository remains public, keep new family screenshots and personal data out of Git.
 Use generic names in shared concepts, test data, and screenshots.
 Keep account screens, device identifiers, credentials, and backups out of Git.
 Do not use public raw GitHub URLs or public image hosting to share family screenshots.
