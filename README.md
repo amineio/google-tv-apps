@@ -8,6 +8,7 @@ Each app has its own package, version, permissions, tests, and APK.
 | [TV Home](apps/home/) | `:home` | `com.gathin.tvhome` | A home screen with an app dock, grid, themes, and screensaver. |
 | [TV Clock](apps/clock/) | `:clock` | `com.amine.tvclock` | A clock overlay, session timer, daily bedtime, and viewing reminders. |
 | [Schaak & Reken](apps/chess-math/) | `:chessMath` | `com.amine.chessmath` | Offline chess and arithmetic with remote controls and local progress. |
+| [Family Home](apps/family-home/) | Separate Kotlin build | `com.amine.familyhome` | Family profiles, child timers, allowed apps, and an optional parent PIN. |
 
 TV Clock works independently of TV Home. Its stop screen supports voluntary viewing limits.
 It remains dismissible and does not guarantee that another app pauses playback.
@@ -33,12 +34,19 @@ apps/chess-math/build/outputs/apk/release/chessMath-release.apk
 These local release builds use the existing Android debug signing configuration.
 Store publishing and production signing require separate configuration.
 TV Home and Schaak & Reken support Android 8 and later. TV Clock requires Android 14 and later.
+Family Home requires Android 14 and uses Compose for TV.
+Its independent build requires SDK platform `android-37.0` and build tools `36.0.0`:
+
+```sh
+apps/family-home/gradlew -p apps/family-home testReleaseUnitTest lintRelease assembleRelease
+```
 
 ## Install
 
 Read the [home installation guide](apps/home/README.md) before changing the default home app.
 The [clock guide](apps/clock/README.md) covers overlay permission, timers, and bedtime.
 Both apps install separately. Building an app does not change the TV.
+The [Family Home guide](apps/family-home/README.md) covers its separate installer and device configuration.
 
 ## Test
 
@@ -61,6 +69,7 @@ Local tests do not establish playback behavior inside every streaming app.
 apps/home/       TV Home app, resources, and unit tests
 apps/clock/      TV Clock app, resources, and device tests
 apps/chess-math/ Offline chess and arithmetic app
+apps/family-home/ Independent Kotlin family launcher and Gradle build
 gradle/          Shared Gradle wrapper
 tools/           App installers and existing TV tools
 tests/           Repository and installer tests
@@ -71,7 +80,8 @@ themes/          Existing TV Home themes
 launcher/        Compatible entry points for the original installers
 ```
 
-New apps belong in `apps/<name>/`. Register each app in the root `settings.gradle`.
+New apps belong in `apps/<name>/`. Apps that use the shared build register in the root `settings.gradle`.
+Family Home has its own build so that modern Kotlin tooling does not change the Java app builds.
 Keep app-specific code and permissions inside that app. Add shared code only when apps need it.
 
 ## Upstream and license

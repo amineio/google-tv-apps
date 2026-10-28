@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Family Home</string>
+    <string name="helper_name">Family Home profiles and timers</string>
+    <string name="helper_description">Handles Home, child timers, and allowed apps. Reads app and window names only. Does not read screen content.</string>
+</resources>

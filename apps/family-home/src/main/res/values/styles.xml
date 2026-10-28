@@ -1,0 +1,9 @@
+<resources>
+    <style name="FamilyTheme" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowBackground">#101C26</item>
+        <item name="android:colorAccent">#F6CD71</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+</resources>
