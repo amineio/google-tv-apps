@@ -66,6 +66,20 @@ Keep footer controls clear of the independent Clock overlay at the bottom right.
 Variable fonts need rendered inspection. Family Home sets the Outfit weight axis explicitly with `FontVariation.Settings`.
 Use bounded bitmap sizes when loading installed app artwork.
 Family Home loads 128-pixel icons and 384-by-216-pixel banners off the main thread.
+An app can supply a separate text-free launcher background through application metadata:
+
+```xml
+<meta-data android:name="com.amine.familyhome.HERO_IMAGE"
+    android:resource="@drawable/app_hero" />
+```
+
+Place this declaration inside the app's `application` element.
+Use a compressed raster drawable in `drawable-nodpi`. Keep the left half quiet for the native title.
+Keep the lower quarter dark for the app row and controls.
+Family Home decodes only the selected background off the main thread, with a maximum size of 1920 by 1080 pixels.
+It preserves aspect ratio and does not enlarge small images during decoding.
+The existing Chess artwork takes precedence. Missing or unusable backgrounds retain the app tile and its gradient.
+The app owns its icon, banner, and background. The launcher owns presentation, focus, and fallback.
 Keep timer and access policy outside presentation components.
 Do not copy the family's profile names into a new app or generic test fixtures.
 

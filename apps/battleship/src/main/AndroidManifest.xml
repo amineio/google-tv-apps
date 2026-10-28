@@ -5,6 +5,7 @@
         android:banner="@drawable/battleship_banner" android:theme="@style/BattleshipTheme"
         android:allowBackup="false" android:fullBackupContent="false"
         android:dataExtractionRules="@xml/data_extraction_rules" android:supportsRtl="true">
+        <meta-data android:name="com.amine.familyhome.HERO_IMAGE" android:resource="@drawable/battleship_hero" />
         <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -36,13 +36,18 @@ class MainActivity : ComponentActivity() {
     var resumeGeneration by mutableIntStateOf(0)
         private set
     private val packages = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) { resumeGeneration++ }
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == Intent.ACTION_PACKAGE_REMOVED &&
+                intent.getBooleanExtra(Intent.EXTRA_REPLACING, false)) return
+            resumeGeneration++
+        }
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         registerReceiver(packages, IntentFilter().apply {
             addAction(Intent.ACTION_PACKAGE_ADDED); addAction(Intent.ACTION_PACKAGE_REMOVED)
-            addAction(Intent.ACTION_PACKAGE_CHANGED); addDataScheme("package")
+            addAction(Intent.ACTION_PACKAGE_CHANGED); addAction(Intent.ACTION_PACKAGE_REPLACED)
+            addDataScheme("package")
         }, RECEIVER_NOT_EXPORTED)
         setContent {
             FamilyTheme { FamilyScreen(this) }

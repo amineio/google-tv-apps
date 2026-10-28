@@ -1,5 +1,2 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="160dp" android:height="90dp" android:viewportWidth="320" android:viewportHeight="180">
-    <path android:fillColor="#061421" android:pathData="M0,0h320v180h-320z" />
-    <path android:fillColor="#A7BAC8" android:pathData="M42,102L281,102L251,138L80,138zM112,67h104v35h-104zM141,42h37v25h-37zM158,20h5v22h-5zM207,81h62v7h-62z" />
-    <path android:strokeColor="#65E0F4" android:strokeWidth="4" android:pathData="M35,151Q65,136 95,151Q125,166 155,151Q185,136 215,151Q245,166 285,151" />
-</vector>
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+    android:src="@drawable/launcher_banner_v1" android:gravity="fill" android:filter="true" />
