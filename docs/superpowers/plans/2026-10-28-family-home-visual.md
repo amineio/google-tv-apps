@@ -47,6 +47,12 @@
 - [ ] Load real app banners and approved labels. Refresh after resume. Implement the feature area, app row, timer header, and footer. Preserve focused app identity across resume.
 - [ ] Apply the theme and compact focus controls to duration, expiry, configuration, and PIN screens.
 - [ ] Run all unit and emulator UI tests, release lint/build, and installer tests. Compare full-resolution captures against both references.
-- [ ] Obtain an independent review. Fix important findings with failing regressions and repeat the relevant suite.
-- [ ] Install the release on the Chromecast, capture both screens, and test remote profile/session flows. Preserve unrelated device state and the Java apps.
-- [ ] Commit, push, and merge the installed source to origin/main. Make sure that both CI workflows pass and share the actual captures in chat.
+- [ ] Commit the app presentation.
+
+## Delivery
+
+Obtain an independent review. Fix important findings with failing regressions and repeat the relevant suite.
+Install the release on the Chromecast, capture both screens, and test remote profile/session flows.
+Preserve unrelated device state and the Java apps.
+Commit, push, and merge the installed source to origin/main.
+Make sure that both CI workflows pass and share the actual captures in chat.

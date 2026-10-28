@@ -3,8 +3,10 @@
 Date: 2026-10-28.
 
 These images are design references from the built-in image generation tool.
-They are not screenshots of the app or approved implementation requirements.
+They are not screenshots of the app.
 The user requested a more refined design inspired by Google TV and YouTube.
+Amine approved both screens and requested implementation on 2026-10-28.
+Version 1.1 uses this direction with native text, app data, controls, and focus behavior.
 
 [Profile entry](profile-entry.png) uses three circular avatars, clear text, and a restrained gold focus ring.
 [Child home](child-home.png) uses a featured app, landscape app tiles, and a visible session timer.

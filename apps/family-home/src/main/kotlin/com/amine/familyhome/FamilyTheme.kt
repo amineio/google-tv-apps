@@ -23,7 +23,10 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontVariation
+import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -36,7 +39,13 @@ internal val Background = Color(0xFF0D0E12)
 internal val Panel = Color(0xFF25252A)
 internal val Muted = Color(0xFFB4B0AC)
 internal val Ink = Color(0xFFF8F5F0)
-internal val Outfit = FontFamily(Font(R.font.outfit))
+@OptIn(ExperimentalTextApi::class)
+internal val Outfit = FontFamily(
+    *listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold).map { weight ->
+        Font(R.font.outfit, weight = weight,
+            variationSettings = FontVariation.Settings(FontVariation.weight(weight.weight)))
+    }.toTypedArray()
+)
 
 @Composable
 internal fun FamilyTheme(content: @Composable () -> Unit) {
@@ -115,9 +124,10 @@ internal fun ProfilePortrait(viewer: Viewer, size: Dp, modifier: Modifier = Modi
 }
 
 @Composable
-internal fun TvAction(text: String, modifier: Modifier = Modifier, primary: Boolean = false, onClick: () -> Unit) {
+internal fun TvAction(text: String, modifier: Modifier = Modifier, primary: Boolean = false,
+    enabled: Boolean = true, onClick: () -> Unit) {
     val shape = RoundedCornerShape(14.dp)
-    Button(onClick, modifier.height(42.dp),
+    Button(onClick, modifier.height(42.dp), enabled = enabled,
         shape = ButtonDefaults.shape(shape),
         scale = ButtonDefaults.scale(focusedScale = 1.035f),
         colors = ButtonDefaults.colors(
@@ -129,5 +139,5 @@ internal fun TvAction(text: String, modifier: Modifier = Modifier, primary: Bool
             border = Border(BorderStroke(1.dp, Color.White.copy(alpha = .12f)), shape = shape),
             focusedBorder = Border(BorderStroke(2.dp, Gold), shape = shape)),
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
-    ) { Text(text, fontSize = 17.sp, maxLines = 1) }
+    ) { Text(text, fontSize = 17.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) }
 }

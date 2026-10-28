@@ -22,3 +22,16 @@ It does not establish directional navigation to the configuration control.
 The release app opened successfully in the emulator.
 Manual D-pad input reached the Elias duration screen with a default of 20 minutes.
 Cast, streaming playback, physical wake behavior, and final design acceptance remain separate device tests.
+
+## Version 1.1
+
+Amine approved the two concept images before implementation.
+`04-profiles-redesign-emulator.png` captures the native profile screen with the final font weights.
+`05-child-home-redesign-emulator.png` captures a real Elias session in the release app.
+Only Chess & Math was installed from the child allowlist in this emulator.
+The image does not use invented app tiles or account data.
+
+Eight emulator UI tests passed for this version.
+They cover profiles, text contrast, duration limits, app filtering, row navigation, catalog changes, focus restoration, configuration, and PIN input.
+The configuration test now uses directional navigation rather than an explicit focus request.
+The release remains below the existing 4 MiB limit.

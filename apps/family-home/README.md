@@ -4,6 +4,19 @@ Family Home is a separate Android TV launcher in Kotlin with Compose for TV.
 It requires Android 14 or later. It uses no cloud service or network permission.
 The existing Java apps keep their own packages, source, and build tools.
 
+## Interface
+
+Version 1.1 implements the approved family launcher concepts.
+The profile screen uses circular illustrated portraits, Outfit text, and a gold focus outline.
+The home screen shows app artwork, landscape app banners, and the remaining child time.
+The feature area follows the focused app. Open app launches that same app.
+Children see installed permitted apps in the approved order. Amine keeps all installed TV apps.
+
+The launcher restores the selected app after returning from it.
+It refreshes the catalog after resume or a package change.
+Profile and session controls stay below the app row, clear of the independent Clock overlay.
+The artwork is bundled locally. The launcher does not fetch recommendations or viewing history.
+
 ## Family use
 
 Select Amine, Elias, or Sofia. Profiles belong to this app and share the existing streaming sign-ins.
