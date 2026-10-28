@@ -18,4 +18,10 @@ A later badge-boundary assertion compared scaled child coordinates with unscaled
 
 The final full emulator run passed all 53 Android tests. The suite includes real held-OK and directional input, save and cancel, boundary scrolling, direct switching, resume badges, and dialog return after scrolling.
 
-Physical installation results follow after execution.
+## Physical TV evidence
+
+The installer successfully updated the TV to version 1.8, code 9, from source commit `d290ecdb`. Family Home remained the Home role holder. Google TV Home and setupwraith remained enabled. The removed Java Home package remained absent.
+
+The chooser showed initial parent focus and the existing resumable child badge. Held OK entered move mode without launching an app. Right moved the app, and Back restored the original order. The move hint and chooser footer stayed clear of the separate Clock overlay. No real profile was added. Family captures remain outside Git.
+
+This delivery did not repeat standby, child expiry, or phone Cast tests on the physical TV. Emulator timer and usage regressions passed. Those hardware behaviors remain separate from the observed layout and remote-input results.

@@ -11,7 +11,7 @@ Spec: `docs/superpowers/specs/2026-10-28-profile-flow.md`.
 - [x] Center the chooser and add noninteractive timer badges. Remove obsolete text-based test selectors.
 - [x] Run unit tests, release lint, APK builds, and explicit-serial emulator instrumentation.
 - [x] Obtain fresh code review and expert review of actual captures. Resolve actionable findings.
-- [ ] Install version 1.8, code 9, on the TV. Commit and push installed source, merge the PR, and synchronize main.
+- [x] Install version 1.8, code 9, on the TV. Commit and push installed source, merge the PR, and synchronize main.
 
 The implementation worker owns MainActivity, ProfileScreen, and affected Android tests. The coordinator owns builds, Git, version, documentation, and devices. Reviewers perform read-only work.
 
