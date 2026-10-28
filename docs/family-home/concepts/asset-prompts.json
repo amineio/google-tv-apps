@@ -1,0 +1,22 @@
+[
+  {
+    "name": "avatar_amine",
+    "ref": "profile-entry.png",
+    "prompt": "Create a square production avatar asset for the adult Amine in the reference UI. Preserve exactly his illustrated appearance: warm medium skin, dark swept hair, short dark beard, dark crew-neck shirt, warm friendly expression, looking slightly right. Show only this portrait inside a perfect circle filled with muted warm ochre, centered and nearly filling the square. Keep the polished illustration style from the reference. Everything outside the circle is transparent. No gold outline, text, labels, UI, other people, shadows outside the circle or frame. 1024x1024. This is an asset extracted and recreated from the approved concept, not a new screen."
+  },
+  {
+    "name": "avatar_elias",
+    "ref": "profile-entry.png",
+    "prompt": "Create a square production avatar asset for the boy Elias in the reference UI. Preserve exactly his illustrated appearance: warm medium skin, tousled dark brown hair, blue hoodie, bright friendly expression, looking slightly right. Show only this portrait inside a perfect circle filled with muted soft blue, centered and nearly filling the square. Keep the polished illustration style from the reference. Everything outside the circle is transparent. No gold outline, text, labels, UI, other people, shadows outside the circle or frame. 1024x1024. This is an asset extracted and recreated from the approved concept, not a new screen."
+  },
+  {
+    "name": "avatar_sofia",
+    "ref": "profile-entry.png",
+    "prompt": "Create a square production avatar asset for the girl Sofia in the reference UI. Preserve exactly her illustrated appearance: warm medium skin, long brown hair, small pink flower hair clip, lilac top, warm friendly expression, looking slightly right. Show only this portrait inside a perfect circle filled with muted dusty pink, centered and nearly filling the square. Keep the polished illustration style from the reference. Everything outside the circle is transparent. No gold outline, text, labels, UI, other people, shadows outside the circle or frame. 1024x1024. This is an asset extracted and recreated from the approved concept, not a new screen."
+  },
+  {
+    "name": "chess_hero",
+    "ref": "child-home.png",
+    "prompt": "Create the production background artwork for the approved TV UI reference. Recreate only the elegant cinematic chess photograph behind its interface: warm ivory king and knight on the right half of a chessboard, a few softly out-of-focus pieces further back, warm gold side lighting, charcoal brown atmosphere. The left 45 percent is near-black empty negative space with a smooth fade, ready for real UI text. Lower edge fades to near-black. Preserve the polished photographic appearance and right-weighted composition. Wide 16:9 landscape 1920x1080-style. Remove all UI, all text, avatars, logos, app tiles, controls, outlines and clock. Artwork only. No words, no border, no watermark."
+  }
+]

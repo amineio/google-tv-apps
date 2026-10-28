@@ -38,22 +38,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private val Gold = Color(0xFFF6CD71)
-private val Background = Color(0xFF101C26)
-private val Panel = Color(0xFF20343F)
-private val Muted = Color(0xFFB3C5CC)
-
 data class LauncherApp(val pkg: String, val label: String, val component: android.content.ComponentName, val icon: Bitmap)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme(colorScheme = darkColorScheme(primary = Gold, surface = Panel, onSurface = Color.White)) {
-                CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
-                    FamilyScreen(this)
-                }
-            }
+            FamilyTheme { FamilyScreen(this) }
         }
     }
 
@@ -116,8 +107,15 @@ fun FamilyScreen(activity: MainActivity) {
             selected == Viewer.AMINE -> scope.launch { controller.chooseProfiles() }
         }
     }
-    Column(Modifier.fillMaxSize().background(Background).padding(horizontal = 40.dp, vertical = 26.dp)) {
-        Text("FAMILY HOME", color = Gold, fontSize = 15.sp, letterSpacing = 3.sp)
+    FamilyBackdrop {
+    if (ui.ready && !ui.storageFailed && selected == null) {
+        ProfileScreen(ui) { viewer ->
+            if (!viewer.isChild && ui.state.pinEnabled) {
+                protect("Parent PIN", "Enter the PIN to open Amine.") { controller.select(viewer, it) }
+            } else scope.launch { controller.select(viewer) }
+        }
+    } else Column(Modifier.fillMaxSize().padding(horizontal = 40.dp, vertical = 26.dp)) {
+        FamilyHeader()
         Spacer(Modifier.height(16.dp))
         if (!ui.ready) {
             Text("Opening your family profiles…", fontSize = 28.sp)
@@ -128,28 +126,7 @@ fun FamilyScreen(activity: MainActivity) {
             Spacer(Modifier.height(24.dp))
             ActionButton("Retry saved state") { scope.launch { controller.load() } }
         } else if (selected == null) {
-            Text("Who is watching?", fontSize = 38.sp)
-            Text("Choose a profile to begin.", color = Muted, fontSize = 20.sp)
-            Spacer(Modifier.height(32.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                Viewer.entries.forEachIndexed { index, viewer ->
-                    InitialFocus(index == 0) { focus ->
-                        Button(onClick = {
-                            if (!viewer.isChild && ui.state.pinEnabled) {
-                                protect("Parent PIN", "Enter the PIN to open Amine.") { controller.select(viewer, it) }
-                            } else scope.launch { controller.select(viewer) }
-                        }, modifier = focus.width(205.dp).height(140.dp)) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                                Text(viewer.label.take(1), fontSize = 40.sp)
-                                Text(viewer.label, fontSize = 26.sp)
-                            }
-                        }
-                    }
-                }
-            }
-            Spacer(Modifier.height(26.dp))
-            if (ui.state.recovered) Text("Unfinished sessions are paused. Each child keeps the last saved balance.", color = Muted, fontSize = 18.sp)
-            if (!ui.helper) Text("Parent setup: open Amine to enable the Home helper.", color = Muted, fontSize = 18.sp)
+            // The chooser is rendered by ProfileScreen above.
         } else if (configuration) {
             Configuration(ui, apps, onBack = { configuration = false }, onPin = {
                 parentAction = if (ui.state.pinEnabled) ParentAction("Turn off the parent PIN?", "New sessions will use family trust.", false) {
@@ -210,6 +187,7 @@ fun FamilyScreen(activity: MainActivity) {
         }
         ui.notice?.let { Spacer(Modifier.height(14.dp)); Text(it, color = Gold, fontSize = 18.sp) }
     }
+    }
     parentAction?.let { action ->
         ParentDialog(action, onDismiss = { parentAction = null }, onSubmit = { pin ->
             scope.launch { if (action.action(pin)) parentAction = null }
@@ -227,7 +205,7 @@ private fun InitialFocus(initial: Boolean, content: @Composable (Modifier) -> Un
 @Composable
 private fun ActionButton(text: String, initial: Boolean = false, onClick: () -> Unit) {
     InitialFocus(initial) { focus ->
-        Button(onClick = onClick, modifier = focus.height(48.dp)) { Text(text, fontSize = 18.sp) }
+        TvAction(text, modifier = focus, onClick = onClick)
     }
 }
 

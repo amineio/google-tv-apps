@@ -38,6 +38,9 @@ class FamilyRemoteTest {
         screen.onNodeWithText("Amine").assertIsDisplayed()
         screen.onNodeWithText("Elias").assertIsDisplayed()
         screen.onNodeWithText("Sofia").assertIsDisplayed()
+        for (name in listOf("Amine", "Elias", "Sofia")) {
+            screen.onNodeWithContentDescription("$name profile portrait", useUnmergedTree = true).assertIsDisplayed()
+        }
         screen.onNodeWithText("Amine").assertIsFocused()
         screen.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
         screen.onNodeWithText("Elias").assertIsFocused()
