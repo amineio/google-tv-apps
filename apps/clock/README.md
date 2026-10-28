@@ -4,8 +4,9 @@ TV Clock shows white `HH:mm` text in the top-right corner over other apps.
 The background is transparent. The clock uses the TV time and time zone.
 Open TV Clock from the app grid. Select Clock appearance to turn Show clock on or off.
 The clock remembers this choice and starts after boot when enabled.
-Use Higher and Lower to move the clock vertically along the right edge.
-Use Smaller and Larger to change the text size.
+Focus Position, then use Left or Right to move the clock along the right edge.
+Focus Text size, then use Left or Right to change the text size.
+Use Up and Down to move between settings rows.
 Changes appear immediately and stay saved. Reset position and size restores the original layout.
 Changing the layout while the clock is off keeps it off.
 
@@ -17,7 +18,7 @@ Some apps and protected system screens can hide overlays.
 ## Viewing limits
 
 The main page contains a session timer and a daily bedtime.
-Select 30, 60, or 90 minutes, then select Start timer.
+Select Timer duration, choose 30, 60, or 90 minutes, then select Start timer.
 The timer counts elapsed time, including standby. It does not measure playback.
 Select Cancel timer to stop it.
 
@@ -29,8 +30,8 @@ If the selected time already passed, bedtime starts tomorrow.
 
 The app shows a brief warning five minutes before the deadline.
 The warning does not take remote focus.
-Select Stop screen for a full-screen reminder at the deadline.
-Select Remind me for a brief message instead.
+Select At the limit, then choose Stop screen for a full-screen reminder at the deadline.
+Choose Remind me for a brief message instead.
 The stop screen offers Go to Home and one five-minute extension after confirmation.
 Another active deadline can prevent an extension. An extension never moves the other deadline.
 Back and Home dismiss the occurrence without repeated interruptions.
@@ -74,7 +75,7 @@ The Android tests restore the saved app preferences after each case.
 ## Test on the TV
 
 The test changes the switch, opens Settings, and returns to the current home screen.
-It leaves the clock on. Operate this command from the repository root:
+It restores the clock layout and on/off state. Operate this command from the repository root:
 
 ```sh
 TV_SERIAL=192.168.1.121:34927 python3 apps/clock/tests/device_test.py
