@@ -27,6 +27,8 @@ The right panel shows the target coordinate and compact shot feedback. Named sun
 Version 1.2 adds a naval command panel, a generated battleship illustration, and five distinct native ship designs.
 Separate target and last-shot regions keep feedback clear during aiming. Damage slashes and larger labels improve visibility.
 The [three-round design review](../../docs/battleship/gameplay-design/review.md) records the native captures and expert scores.
+Version 1.3 adds a generated ship icon, a TV banner, and a text-free launcher background.
+Battleship owns these resources. Family Home reads the optional background through application metadata.
 
 ## Build
 
@@ -88,6 +90,7 @@ The [design record](../../docs/superpowers/specs/2026-10-28-battleship-design.md
 The [asset record](../../docs/battleship/concepts/assets.json) contains prompts, dimensions, synthesis details, and rights information.
 The [audio record](../../docs/battleship/audio-polish-assets.json) contains the original scores, levels, and file hashes for version 1.1.
 The [gameplay art record](../../docs/battleship/gameplay-design/assets.json) contains the ImageGen prompts, dimensions, compressed paths, and rights for version 1.2.
+The [launcher art record](../../docs/battleship/launcher-art/assets.json) records the same information for version 1.3.
 To reproduce its bundled effects, use Python 3 from the repository root:
 
 ```sh

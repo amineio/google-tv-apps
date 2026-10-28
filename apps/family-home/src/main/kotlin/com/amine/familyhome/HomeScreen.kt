@@ -59,9 +59,16 @@ internal fun HomeScreen(
     val row = rememberLazyListState()
     val activeTarget = targets[featured?.pkg]
     val chess = featured?.pkg == "com.amine.chessmath"
+    val hero = selectedAppHeroArtwork(featured?.pkg, if (chess) null else featured?.heroArtwork, resume)
     Box(Modifier.fillMaxSize()) {
         if (chess) Image(painterResource(R.drawable.chess_hero), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-        else Box(Modifier.fillMaxSize().drawWithCache {
+        else if (hero != null) {
+            Image(hero.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+            Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(
+                listOf(Color.Black.copy(alpha = .72f), Color.Transparent))))
+            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
+                listOf(Color.Transparent, Color.Black.copy(alpha = .82f)))))
+        } else Box(Modifier.fillMaxSize().drawWithCache {
             val gradient = Brush.radialGradient(
                 listOf(Color(featured?.backdropColor ?: 0xFF18202A.toInt()), Background),
                 center = Offset(size.width * .85f, size.height * .16f), radius = size.width * .9f)

@@ -12,7 +12,9 @@ Version 1.4 adds native TV settings and optional child profiles.
 The profile screen uses circular illustrated portraits, Outfit text, and a gold focus outline.
 The home screen keeps the profile at the upper right and gives the countdown fixed bounds and equal-width digit cells.
 Select an app tile with the remote center key to open it.
-Chess keeps its illustrated background. Other apps use a subdued gradient based on their icon color.
+Chess keeps its illustrated background. Apps can supply their own text-free background through application metadata.
+Family Home loads only the selected background and limits its decoded dimensions to 1920 by 1080 pixels.
+Apps without usable artwork use a subdued gradient based on their icon color.
 Landscape banners fill landscape tiles. Square icons fill square tiles.
 Children see installed permitted apps in the approved order. Amine keeps all installed TV apps.
 
