@@ -9,6 +9,8 @@ Build and test locally. GitHub APK builds are paused until the user requests the
 ## Interface
 
 Version 1.5 adds local daily usage totals for each profile.
+Version 1.6 adds backgrounds supplied by the selected app, including Battleship.
+Read the [artwork validation record](../../docs/battleship/launcher-art/validation.md) for its tests and device observations.
 The profile screen uses circular illustrated portraits, Outfit text, and a gold focus outline.
 The home screen keeps the profile at the upper right and gives the countdown fixed bounds and equal-width digit cells.
 Select an app tile with the remote center key to open it.

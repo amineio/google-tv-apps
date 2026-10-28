@@ -91,6 +91,7 @@ The [asset record](../../docs/battleship/concepts/assets.json) contains prompts,
 The [audio record](../../docs/battleship/audio-polish-assets.json) contains the original scores, levels, and file hashes for version 1.1.
 The [gameplay art record](../../docs/battleship/gameplay-design/assets.json) contains the ImageGen prompts, dimensions, compressed paths, and rights for version 1.2.
 The [launcher art record](../../docs/battleship/launcher-art/assets.json) records the same information for version 1.3.
+The [launcher validation record](../../docs/battleship/launcher-art/validation.md) records its tests, review, and installation results.
 To reproduce its bundled effects, use Python 3 from the repository root:
 
 ```sh

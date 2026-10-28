@@ -14,16 +14,16 @@ Do not run concurrent builds or test sessions against the same app or device.
 
 ## Work
 
-- [ ] Record generated prompts, dimensions, compression, source references, rights, and files.
-- [ ] Add failing metadata/branding tests in Battleship and focused selected-art tests in Family Home.
-- [ ] Observe the expected failures before integrating the contract.
-- [ ] Add the app's icon, banner, and hero. Use metadata android:resource, not a string or URL.
-- [ ] Implement selected-only bounded hero decoding, fallback, stale-image protection, and package refresh.
-- [ ] Inspect actual launcher captures with generic fixtures and actual installed Battleship resources.
-- [ ] Run app unit tests, release lint, APK builds, focused Battleship art tests, full Family Home emulator tests, and repository tests.
-- [ ] Obtain fresh independent source and native capture review. Fix material findings.
-- [ ] Install Battleship1.3code4 and FamilyHome1.5code6 without clearing data or altering Home/helper configuration.
-- [ ] Commit and push the tested installed changes, then merge the scoped PR into origin/main.
+- [x] Record generated prompts, dimensions, compression, source references, rights, and files.
+- [x] Add failing metadata/branding tests in Battleship and focused selected-art tests in Family Home.
+- [x] Observe the expected failures before integrating the contract.
+- [x] Add the app's icon, banner, and hero. Use metadata android:resource, not a string or URL.
+- [x] Implement selected-only bounded hero decoding, fallback, stale-image protection, and package refresh.
+- [x] Inspect actual launcher captures with generic fixtures and actual installed Battleship resources.
+- [x] Run app unit tests, release lint, APK builds, focused Battleship art tests, full Family Home emulator tests, and repository tests.
+- [x] Obtain fresh independent source and native capture review. Fix material findings.
+- [x] Install Battleship 1.3, code 4, and Family Home 1.6, code 7, without clearing data or changing Home/helper configuration.
+- Git delivery follows [PR #13](https://github.com/amineio/google-tv-apps/pull/13). The coordinator pushes the tested commits and merges into `origin/main`.
 
 ## Review focus
 
