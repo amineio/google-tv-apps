@@ -73,12 +73,6 @@ public final class ClockService extends Service {
         if (intent != null && STOP.equals(intent.getAction())) {
             ClockPreferences.setEnabled(this, false);
         }
-        if (!Settings.canDrawOverlays(this)) {
-            ClockPreferences.setEnabled(this, false);
-            stopSelf();
-            notifyState();
-            return START_NOT_STICKY;
-        }
         NotificationManager notifications = getSystemService(NotificationManager.class);
         notifications.createNotificationChannel(new NotificationChannel(
                 CHANNEL, "Clock", NotificationManager.IMPORTANCE_LOW));
@@ -93,6 +87,12 @@ public final class ClockService extends Service {
                 .setOngoing(true).setShowWhen(false)
                 .addAction(new Notification.Action.Builder(null, "Hide clock", stop).build()).build();
         startForeground(1, notification);
+        if (!Settings.canDrawOverlays(this)) {
+            ClockPreferences.setEnabled(this, false);
+            stopSelf();
+            notifyState();
+            return START_NOT_STICKY;
+        }
         windows = getSystemService(WindowManager.class);
         if (!receiverRegistered) registerTimeReceiver();
         if (!ClockPreferences.isEnabled(this) && clock != null) {

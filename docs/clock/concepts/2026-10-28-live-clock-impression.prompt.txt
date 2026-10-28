@@ -1,0 +1,8 @@
+Use case: logo-brand
+Asset type: Visual inspiration for a Google TV Clock app, to be implemented later as code-native vector drawing.
+Primary request: Create one restrained, distinctive modern clock identity, shown as a clean 16:9 launcher tile and a matching large analog clock face alongside it. The clock face represents a live analog clock, with clear, balanced hour and minute hands and simple readable dial markers. The launcher mark must be instantly recognizable at small tile size. Make the two share the same visual language and a refined premium television aesthetic.
+Scene/backdrop: Flat charcoal background, clean presentation, ample space.
+Style: Precise, flat, vector-like geometry. Balanced ring, dial, and hands; subtle distinctiveness; excellent contrast from a distance.
+Palette: Charcoal and deep blue, with soft white and pale blue.
+Text: No text or lettering anywhere.
+Constraints: Single concept; one launcher tile and one matching analog clock face. No UI instructions, gradients, shadows, textures, three-dimensional effects, or busy ornament. No surrounding television interface.

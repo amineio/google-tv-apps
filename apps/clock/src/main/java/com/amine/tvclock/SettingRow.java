@@ -63,7 +63,8 @@ final class SettingRow extends LinearLayout {
     void setValue(String text) {
         value.setText(less == null ? text : "‹   " + text + "   ›");
         value.setVisibility(text.isEmpty() ? GONE : VISIBLE);
-        setStateDescription("›".equals(text) ? null : text);
+        String spoken = text.replace("›", "").trim();
+        setStateDescription(spoken.isEmpty() ? null : spoken);
     }
     void setValueId(int id) { value.setId(id); }
     void setAdjustment(Runnable decrease, Runnable increase) { less = decrease; more = increase; }

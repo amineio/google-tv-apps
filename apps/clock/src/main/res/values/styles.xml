@@ -12,6 +12,8 @@
     <item name="size_control" type="id" />
     <item name="time_limits" type="id" />
     <item name="timer_duration" type="id" />
+    <item name="duration_hour" type="id" />
+    <item name="duration_minute" type="id" />
     <item name="limit_action" type="id" />
     <item name="position_up" type="id" />
     <item name="position_down" type="id" />

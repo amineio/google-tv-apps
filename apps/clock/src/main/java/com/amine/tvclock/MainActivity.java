@@ -18,8 +18,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.Switch;
-import java.time.Instant;
 import java.time.ZoneId;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 public final class MainActivity extends Activity {
@@ -36,7 +38,6 @@ public final class MainActivity extends Activity {
         super.onCreate(state);
         minutes = getPreferences(MODE_PRIVATE).getInt("minutes", 60);
         TvUi.SettingsPage page = new TvUi.SettingsPage(this, "Time limits", "");
-        page.help.setText("↑ ↓  Choose\nOK  Open\nBack  Return");
         summary = page.summary; summary.setId(R.id.limits_summary);
         appearance = new SettingRow(this, "Clock appearance", "", R.drawable.ic_clock, R.id.clock_settings,
                 () -> startActivity(new Intent(this, ClockSettingsActivity.class)));
@@ -44,7 +45,7 @@ public final class MainActivity extends Activity {
         duration = new SettingRow(this, "Timer duration", "", R.drawable.ic_timer, R.id.timer_duration,
                 this::chooseDuration);
         duration.setTag("timer-duration"); duration.setValue("›"); page.list.addView(duration);
-        start = new SettingRow(this, "Start timer", "Counts time in standby", R.drawable.ic_play, R.id.timer_start, () -> {
+        start = new SettingRow(this, "Start timer", "", R.drawable.ic_play, R.id.timer_start, () -> {
             TimeLimits s = LimitsController.read(this);
             if (s.timerElapsed > 0 || (s.extensionElapsed > 0 && !s.extensionBedtime)) {
                 LimitsController.change(this, TimeLimits::cancelTimer);
@@ -64,32 +65,120 @@ public final class MainActivity extends Activity {
         page.list.addView(bedtimeToggle, new LinearLayout.LayoutParams(-1, -2));
         bedtimeTime = new SettingRow(this, "Bedtime", "", R.drawable.ic_schedule, R.id.bedtime_time, this::editTime);
         bedtimeTime.setValue("›"); page.list.addView(bedtimeTime);
-        skip = new SettingRow(this, "Skip next bedtime", "The daily schedule continues after that", R.drawable.ic_skip,
+        skip = new SettingRow(this, "Skip next bedtime", "", R.drawable.ic_skip,
                 R.id.bedtime_skip, this::skipBedtime);
         page.list.addView(skip);
         limitAction = new SettingRow(this, "At the limit", "", R.drawable.ic_reminder, R.id.limit_action,
                 this::chooseAction);
         limitAction.setTag("limit-action"); limitAction.setValue("›"); page.list.addView(limitAction);
-        access = new SettingRow(this, "Enable reminders", "Allow reminders over other apps", R.drawable.ic_access,
+        access = new SettingRow(this, "Enable reminders", "", R.drawable.ic_access,
                 R.id.limits_access, this::requestAccess);
         access.setValue("›"); page.list.addView(access);
-        TvUi.gap(page.list, 12);
-        TextView note = TvUi.text(this, "5-minute warning · One 5-minute extension", 14, true);
-        note.setPadding(TvUi.dp(this, 16), 0, TvUi.dp(this, 16), TvUi.dp(this, 16));
-        page.list.addView(note);
-        setContentView(page); appearance.requestFocus();
+        setContentView(page);
+        page.clock.setOnTimeChanged(this::refresh);
+        appearance.requestFocus();
     }
 
     private void chooseDuration() {
-        int[] values = {30, 60, 90};
-        int selected = minutes == 30 ? 0 : minutes == 90 ? 2 : 1;
-        TvUi.choiceDialog(this, "Timer duration", new String[]{"30 minutes", "60 minutes", "90 minutes"},
-                selected, duration, which -> {
-                    minutes = values[which];
-                    getPreferences(MODE_PRIVATE).edit().putInt("minutes", minutes).apply();
-                    refresh();
-                });
+        int[] time = {minutes / 60, minutes % 60};
+        Dialog dialog = new Dialog(this);
+        LinearLayout page = TvUi.page(this);
+        page.setBackground(TvUi.surface(this, TvUi.BACKGROUND, 0));
+        page.addView(TvUi.text(this, "Timer duration", 28, false)); TvUi.gap(page, 24);
+        LinearLayout fields = TvUi.row(this);
+        Runnable save = () -> {
+            long selected = time[0] * 60L + time[1];
+            if (selected == 0 || selected > Integer.MAX_VALUE) {
+                Toast.makeText(this, selected == 0 ? "Set at least 1 minute" : "Duration is too long", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            minutes = (int) selected;
+            getPreferences(MODE_PRIVATE).edit().putInt("minutes", minutes).apply();
+            dialog.dismiss(); refresh();
+        };
+        Button hour = TvUi.button(this, String.valueOf(time[0]), R.id.duration_hour, save);
+        Button minute = TvUi.button(this, String.format(Locale.ROOT, "%02d", time[1]), R.id.duration_minute, save);
+        Button[] buttons = {hour, minute};
+        String[] labels = {"Hours", "Minutes"};
+        for (int i = 0; i < buttons.length; i++) {
+            final int index = i;
+            LinearLayout column = TvUi.column(this);
+            TextView label = TvUi.text(this, labels[i], 16, true);
+            label.setGravity(android.view.Gravity.CENTER);
+            column.addView(label, new LinearLayout.LayoutParams(-1, -2)); TvUi.gap(column, 8);
+            buttons[i].setTextSize(32);
+            buttons[i].setContentDescription(labels[i] + ": " + buttons[i].getText());
+            int max = index == 0 ? Integer.MAX_VALUE / 60 : 59;
+            java.util.function.IntConsumer change = value -> {
+                time[index] = Math.max(0, Math.min(max, value));
+                buttons[index].setText(index == 0 ? String.valueOf(time[index]) : String.format(Locale.ROOT, "%02d", time[index]));
+                buttons[index].setContentDescription(labels[index] + ": " + buttons[index].getText());
+            };
+            buttons[i].setAccessibilityDelegate(new View.AccessibilityDelegate() {
+                @Override public void onInitializeAccessibilityNodeInfo(View host, android.view.accessibility.AccessibilityNodeInfo info) {
+                    super.onInitializeAccessibilityNodeInfo(host, info);
+                    info.setClassName("android.widget.SeekBar");
+                    info.setScrollable(true);
+                    info.setRangeInfo(android.view.accessibility.AccessibilityNodeInfo.RangeInfo.obtain(
+                            android.view.accessibility.AccessibilityNodeInfo.RangeInfo.RANGE_TYPE_INT, 0, max, time[index]));
+                    info.addAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD);
+                    info.addAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD);
+                    info.addAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_PROGRESS);
+                }
+                @Override public boolean performAccessibilityAction(View host, int action, Bundle arguments) {
+                    if (action == android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
+                            || action == android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD) {
+                        change.accept(time[index] + (action == android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_FORWARD ? 1 : -1));
+                        host.announceForAccessibility(host.getContentDescription());
+                        return true;
+                    }
+                    if (action == android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_PROGRESS.getId() && arguments != null
+                            && arguments.containsKey(android.view.accessibility.AccessibilityNodeInfo.ACTION_ARGUMENT_PROGRESS_VALUE)) {
+                        change.accept((int) arguments.getFloat(android.view.accessibility.AccessibilityNodeInfo.ACTION_ARGUMENT_PROGRESS_VALUE));
+                        host.announceForAccessibility(host.getContentDescription());
+                        return true;
+                    }
+                    return super.performAccessibilityAction(host, action, arguments);
+                }
+            });
+            buttons[i].setOnKeyListener((v, key, event) -> {
+                if (key != KeyEvent.KEYCODE_DPAD_UP && key != KeyEvent.KEYCODE_DPAD_DOWN) return false;
+                if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                    change.accept(time[index] + (key == KeyEvent.KEYCODE_DPAD_UP ? 1 : -1));
+                }
+                return true;
+            });
+            column.addView(buttons[i], new LinearLayout.LayoutParams(-1, TvUi.dp(this, 72)));
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(TvUi.dp(this, i == 0 ? 200 : 150), -2);
+            if (i == 0) params.setMarginEnd(TvUi.dp(this, 16));
+            fields.addView(column, params);
+        }
+        page.addView(fields); TvUi.gap(page, 20);
+        page.addView(TvUi.text(this, "↑ ↓ Change   ·   OK Save", 14, true));
+        dialog.setContentView(page);
+        dialog.setOnDismissListener(d -> duration.requestFocus());
+        dialog.show();
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        dialog.getWindow().setLayout(TvUi.dp(this, 560), android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+        hour.requestFocus();
     }
+
+    private String durationLabel() {
+        int hours = minutes / 60, remainder = minutes % 60;
+        if (hours == 0) return remainder + " min";
+        return hours + " hr" + (remainder == 0 ? "" : " " + remainder + " min");
+    }
+
+    private String dayLabel(long wall) {
+        LocalDate day = Instant.ofEpochMilli(wall).atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate today = LocalDate.now();
+        if (day.equals(today)) return "today";
+        if (day.equals(today.plusDays(1))) return "tomorrow";
+        String pattern = day.getYear() == today.getYear() ? "EEE, MMM d" : "EEE, MMM d, uuuu";
+        return day.format(DateTimeFormatter.ofPattern(pattern, Locale.getDefault()));
+    }
+
+    private String deadlineLabel(long wall) { return dayLabel(wall) + " " + LimitsController.time(wall); }
 
     private void chooseAction() {
         TvUi.choiceDialog(this, "At the limit", new String[]{"Remind me", "Stop screen"},
@@ -117,26 +206,22 @@ public final class MainActivity extends Activity {
         TimeLimits s = LimitsController.read(this);
         long wall = System.currentTimeMillis(), elapsed = SystemClock.elapsedRealtime();
         TimeLimits.Deadline next = s.next(wall, elapsed, LimitsController.boot(this));
-        summary.setText(!LimitsController.access(this) ? "Reminders need permission. Limits are inactive."
-                : next == null ? "No limits active. Start a timer or set a daily bedtime."
-                : "Next stop at " + LimitsController.time(next.wall)
-                    + (ClockPreferences.isEnabled(this) ? " · The earlier limit applies." : " · Clock hidden; limits stay active."));
-        appearance.setDetail(ClockPreferences.isEnabled(this) ? "On · Position and text size" : "Off · Position and text size");
-        duration.setDetail(minutes + " minutes");
+        summary.setText(!LimitsController.access(this) ? "Permission required. Limits inactive."
+                : next == null ? "No active limits" : "Next: " + deadlineLabel(next.wall));
+        appearance.setDetail(ClockPreferences.isEnabled(this) ? "On" : "Off");
+        duration.setValue(durationLabel() + "   ›");
         boolean timerActive = s.timerElapsed > 0 || (s.extensionElapsed > 0 && !s.extensionBedtime);
         start.setTitle(timerActive ? "Cancel timer" : "Start timer");
         long timerEnd = s.timerElapsed > 0 ? wall + s.timerElapsed - elapsed : wall + s.extensionElapsed - elapsed;
-        start.setDetail(timerActive ? "Ends at " + LimitsController.time(timerEnd) : "Counts time in standby");
-        bedtimeTime.setDetail(String.format(Locale.ROOT, "%02d:%02d", s.bedtimeMinute / 60, s.bedtimeMinute % 60));
+        start.setDetail(timerActive ? "Ends " + deadlineLabel(timerEnd) : "");
+        bedtimeTime.setValue(String.format(Locale.ROOT, "%02d:%02d   ›", s.bedtimeMinute / 60, s.bedtimeMinute % 60));
+        bedtimeTime.setDetail(s.bedtimeEnabled ? "Next: " + dayLabel(s.bedtimeWall) : "");
         updating = true;
         bedtimeToggle.setChecked(s.bedtimeEnabled);
         updating = false;
         skip.setVisibility(s.bedtimeEnabled ? View.VISIBLE : View.GONE);
-        boolean tomorrow = s.bedtimeEnabled && !Instant.ofEpochMilli(s.bedtimeWall).atZone(ZoneId.systemDefault())
-                .toLocalDate().equals(Instant.ofEpochMilli(wall).atZone(ZoneId.systemDefault()).toLocalDate());
-        TvUi.switchLabel(bedtimeToggle, "Daily bedtime", !s.bedtimeEnabled ? "Off · Repeats every day when enabled"
-                : "Next: " + (tomorrow ? "tomorrow at " : "today at ") + LimitsController.time(s.bedtimeWall));
-        limitAction.setDetail(s.stopScreen ? "Stop screen · Full-screen reminder" : "Remind me · Brief message");
+        TvUi.switchLabel(bedtimeToggle, "Daily bedtime", "");
+        limitAction.setValue((s.stopScreen ? "Stop screen" : "Remind me") + "   ›");
         access.setVisibility(LimitsController.access(this) ? View.GONE : View.VISIBLE);
     }
 
@@ -182,7 +267,7 @@ public final class MainActivity extends Activity {
             fields[i].getLayoutParams().height = TvUi.dp(this, 72);
         }
         page.addView(row); TvUi.gap(page, 24);
-        page.addView(TvUi.text(this, "Left / Right: hours or minutes\nUp / Down: change · OK: save · Back: cancel", 16, true));
+        page.addView(TvUi.text(this, "↑ ↓ Change   ·   OK Save", 14, true));
         dialog.setContentView(page); dialog.show();
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         dialog.getWindow().setLayout(TvUi.dp(this, 560), android.view.ViewGroup.LayoutParams.WRAP_CONTENT);

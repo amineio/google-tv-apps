@@ -18,7 +18,9 @@ Some apps and protected system screens can hide overlays.
 ## Viewing limits
 
 The main page contains a session timer and a daily bedtime.
-Select Timer duration, choose 30, 60, or 90 minutes, then select Start timer.
+Select Timer duration, then set the hours and minutes with the remote.
+Use Left and Right to select a field. Use Up and Down to change its value.
+Press OK to save, then select Start timer. Press Back to cancel.
 The timer counts elapsed time, including standby. It does not measure playback.
 Select Cancel timer to stop it.
 
@@ -70,7 +72,14 @@ From the repository root, use JDK 17 and the installed Android SDK:
 The unit tests cover deadline order, standby, clock corrections, reboot recovery, and the single extension.
 They also cover daylight saving time changes.
 Device tests must separately exercise Android alarms, remote focus, permissions, and background presentation.
-The Android tests restore the saved app preferences after each case.
+The Android tests restore the saved app preferences and overlay permission after each case.
+If a test stops before recovery, set `TV_SERIAL` to the TV address and run:
+
+```sh
+adb -s "$TV_SERIAL" shell am instrument -w -e class 'com.amine.tvclock.ClockTestRecoveryTest#restoreInterruptedTestBackup' com.amine.tvclock.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+Keep the test app installed until recovery finishes.
 
 ## Test on the TV
 
