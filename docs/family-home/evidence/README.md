@@ -35,3 +35,20 @@ Eight emulator UI tests passed for this version.
 They cover profiles, text contrast, duration limits, app filtering, row navigation, catalog changes, focus restoration, configuration, and PIN input.
 The configuration test now uses directional navigation rather than an explicit focus request.
 The release remains below the existing 4 MiB limit.
+
+`06-profiles-redesign-tv.png` and `07-child-home-redesign-tv.png` capture version 1.1 on the Chromecast.
+The child home shows the six installed permitted apps and the independent Clock overlay.
+The footer controls leave the Clock overlay clear.
+The installed helper was bound, with no crashed accessibility services.
+The YouTube shortcut redirected to child Home with the recorded decision `CHILD_HOME`.
+Home returned from an allowed app without granting a new balance.
+After standby, the device returned to the profile chooser.
+
+The user asked to finish delivery because someone was watching the TV.
+The physical expiry test was not completed. Cast and streaming pause were not retested for this visual change.
+A temporary Sofia test session remains paused with about 17 minutes left.
+End that session through the launcher when the TV is available to remove the test balance.
+No existing streaming account data was cleared.
+
+The source passed independent review with no actionable findings.
+All Java app source and the existing root build tools remain unchanged.
