@@ -211,7 +211,7 @@ class SettingsPresentationTest {
         screen.onNodeWithTag("setting:profile:ELIAS").assertIsFocused()
         back()
         screen.onNodeWithTag("setting:profiles").assertIsFocused()
-        key(Key.DirectionDown); key(Key.DirectionDown); key(Key.DirectionCenter)
+        key(Key.DirectionDown); key(Key.DirectionDown); key(Key.DirectionDown); key(Key.DirectionCenter)
         screen.onNodeWithText("Setup needed").assertIsDisplayed()
         capture("settings-device")
         screen.onNodeWithText("Ready").assertDoesNotExist()

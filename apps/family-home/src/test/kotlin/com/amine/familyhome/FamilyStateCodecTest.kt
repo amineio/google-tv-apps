@@ -26,7 +26,8 @@ class FamilyStateCodecTest {
         val original = Json.parseToJsonElement(legacy).jsonObject
         val encoded = Json.parseToJsonElement(FamilyStateCodec.encode(migrated)).jsonObject
 
-        assertEquals(2, migrated.schema)
+        assertEquals(3, migrated.schema)
+        assertTrue(migrated.usage.isEmpty())
         assertEquals(listOf(Viewer.AMINE, Viewer.ELIAS, Viewer.SOFIA), migrated.profiles.map { it.viewer })
         assertEquals(listOf("Amine", "Elias", "Sofia"), migrated.profiles.map { it.name })
         assertEquals(listOf(Portrait.AMINE, Portrait.ELIAS, Portrait.SOFIA), migrated.profiles.map { it.portrait })
@@ -70,7 +71,7 @@ class FamilyStateCodecTest {
         assertThrows(IllegalArgumentException::class.java) {
             FamilyStateCodec.decode(JsonObject(saved - "profiles").toString())
         }
-        for (schema in listOf(JsonPrimitive(3), JsonPrimitive("2"))) {
+        for (schema in listOf(JsonPrimitive(4), JsonPrimitive("2"))) {
             assertThrows(IllegalArgumentException::class.java) {
                 FamilyStateCodec.decode(JsonObject(saved + ("schema" to schema)).toString())
             }
@@ -102,5 +103,55 @@ class FamilyStateCodecTest {
         assertThrows(IllegalArgumentException::class.java) {
             FamilyStateCodec.encode(FamilyState(pinSalt = "salt", pinHash = "x".repeat(65_537)))
         }
+    }
+
+    @Test fun schemaTwoMigrationPreservesEveryExistingField() {
+        val child = Viewer("child_49d15187-5685-4722-bfb0-f340176fd340")
+        val saved = Json.parseToJsonElement(legacy).jsonObject + mapOf(
+            "schema" to JsonPrimitive(2),
+            "profiles" to Json { encodeDefaults = true }.encodeToJsonElement(defaultProfiles() + FamilyProfile(child, "Robin")),
+        )
+        val migrated = FamilyStateCodec.decode(JsonObject(saved).toString())
+        val encoded = Json.parseToJsonElement(FamilyStateCodec.encode(migrated)).jsonObject
+        assertEquals(3, migrated.schema)
+        assertTrue(migrated.usage.isEmpty())
+        for ((field, value) in saved) if (field != "schema") assertEquals(field, value, encoded[field])
+    }
+
+    @Test fun usageRoundTripAndValidationKeepKnownProfilesAndCanonicalDates() {
+        val saved = FamilyState(usage = mapOf("2026-10-28" to mapOf(Viewer.AMINE to 12_345L, Viewer.ELIAS to 50L)))
+        assertEquals(saved, FamilyStateCodec.decode(FamilyStateCodec.encode(saved)))
+        val unknown = Viewer("child_49d15187-5685-4722-bfb0-f340176fd340")
+        for (usage in listOf(
+            mapOf("2026-02-30" to mapOf(Viewer.AMINE to 1L)),
+            mapOf("2026-1-01" to mapOf(Viewer.AMINE to 1L)),
+            mapOf("2026-10-28" to mapOf(unknown to 1L)),
+            mapOf("2026-10-28" to mapOf(Viewer.AMINE to -1L)),
+        )) assertThrows(IllegalArgumentException::class.java) { saved.copy(usage = usage).validated() }
+    }
+
+    @Test fun oldHistoryIsPrunedBeforeItCanMakeCoreStateUnsavable() {
+        val core = FamilyState(pinSalt = "salt", pinHash = "x".repeat(64_000))
+        assertTrue(FamilyStateCodec.encode(core).length <= 65_536)
+        val dates = (1..30).associate { day -> "2026-09-%02d".format(day) to mapOf(
+            Viewer.AMINE to 10_000L, Viewer.ELIAS to 20_000L, Viewer.SOFIA to 30_000L) }
+        val prepared = FamilyStateCodec.prepareForSave(core.copy(usage = dates))
+        assertTrue(prepared.usage.size < dates.size)
+        assertEquals(core, prepared.copy(usage = emptyMap()))
+        assertTrue(FamilyStateCodec.encode(prepared).length <= 65_536)
+        assertEquals(prepared, FamilyStateCodec.decode(FamilyStateCodec.encode(prepared)))
+        if (prepared.usage.isNotEmpty()) assertTrue(prepared.usage.containsKey("2026-09-30"))
+    }
+
+    @Test fun emptyUsageDoesNotIncreaseTheCoreWireSize() {
+        val small = FamilyState(pinSalt = "salt", pinHash = "hash")
+        val smallText = FamilyStateCodec.encode(small)
+        assertFalse(Json.parseToJsonElement(smallText).jsonObject.containsKey("usage"))
+        val exact = small.copy(pinHash = "x".repeat(65_536 - smallText.length + 4))
+        assertEquals(65_536, FamilyStateCodec.encode(exact).length)
+        val prepared = FamilyStateCodec.prepareForSave(exact.copy(
+            usage = mapOf("2026-10-28" to mapOf(Viewer.AMINE to 1L))))
+        assertTrue(prepared.usage.isEmpty())
+        assertEquals(exact, prepared)
     }
 }

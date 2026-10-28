@@ -67,7 +67,14 @@ class FamilyAccessService : AccessibilityService() {
         registered = true
         scope.launch {
             if (ownsHome()) family.wake()
-            while (isActive) { family.pulse(); delay(1_000) }
+            while (isActive) {
+                val home = ownsHome()
+                family.helperConnected(home)
+                if (!home || !interactive()) {
+                    if (family.ui.value.state.selected != null) family.screenOff()
+                } else family.pulse()
+                delay(1_000)
+            }
         }
     }
 
