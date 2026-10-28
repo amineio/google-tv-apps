@@ -1,0 +1,8 @@
+<resources>
+    <style name="BattleshipTheme" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowBackground">#061421</item>
+        <item name="android:colorAccent">#65E0F4</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+</resources>
