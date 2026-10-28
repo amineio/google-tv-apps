@@ -8,6 +8,8 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.util.UUID
+import java.time.ZoneId
+import java.util.concurrent.atomic.AtomicReference
 
 interface FamilyRepository {
     suspend fun load(): FamilyState
@@ -30,20 +32,38 @@ sealed interface FamilyEffect {
 }
 
 /** One durable command queue shared by the UI and the Android accessibility helper. */
-class FamilyController(private val repository: FamilyRepository, private val elapsed: () -> Long) {
+class FamilyController(
+    private val repository: FamilyRepository,
+    private val elapsed: () -> Long,
+    private val usageSample: () -> UsageSample,
+) {
+    constructor(repository: FamilyRepository, elapsed: () -> Long) : this(repository, elapsed,
+        { UsageSample(elapsed(), System.currentTimeMillis(), ZoneId.systemDefault()) })
+
+    private data class HelperStatus(
+        val connected: Boolean = false,
+        val lostAt: UsageSample? = null,
+        val generation: Long = 0,
+    )
+
     private val mutable = MutableStateFlow(FamilyUi())
     val ui = mutable.asStateFlow()
     private val mutex = Mutex()
     private var adminAuthorized = false
     private var lastCheckpoint = 0L
+    private var usageCursor: UsageCursor? = null
+    private val helperStatus = AtomicReference(HelperStatus())
     var effect: (FamilyEffect) -> Unit = {}
 
     suspend fun load(): Boolean = mutex.withLock {
         try {
-            val restored = SessionEngine.recover(repository.load())
+            val restored = FamilyStateCodec.prepareForSave(SessionEngine.recover(repository.load()))
             repository.save(restored)
+            val sample = usageSample()
+            usageCursor = UsageCursor(sample, null)
+            lastCheckpoint = sample.elapsedMs
             adminAuthorized = false
-            mutable.update { it.copy(state = restored, ready = true, storageFailed = false, now = elapsed(), notice = null) }
+            mutable.update { it.copy(state = restored, ready = true, storageFailed = false, now = sample.elapsedMs, notice = null) }
             true
         } catch (_: Exception) {
             mutable.update { it.copy(ready = true, storageFailed = true,
@@ -52,7 +72,14 @@ class FamilyController(private val repository: FamilyRepository, private val ela
         }
     }
 
-    fun helperConnected(connected: Boolean) { mutable.update { it.copy(helper = connected) } }
+    fun helperConnected(connected: Boolean) {
+        val stopped = if (!connected) usageSample() else null
+        helperStatus.updateAndGet { current ->
+            if (current.connected == connected) current else HelperStatus(connected,
+                current.lostAt ?: stopped, current.generation + 1)
+        }
+        mutable.update { it.copy(helper = connected) }
+    }
 
     private fun available(child: Boolean = false): Boolean {
         val current = mutable.value
@@ -83,12 +110,25 @@ class FamilyController(private val repository: FamilyRepository, private val ela
         return true
     }
 
-    private suspend fun commit(next: FamilyState): Boolean {
+    private suspend fun commit(next: FamilyState, sample: UsageSample = usageSample()): Boolean {
         return try {
-            val saved = SessionEngine.checkpoint(next.validated(), elapsed())
+            val helper = helperStatus.get()
+            val cutoff = helper.lostAt?.takeIf { it.elapsedMs < sample.elapsedMs } ?: sample
+            val measured = UsageEngine.observe(mutable.value.state.usage, usageCursor, cutoff, null)
+            val saved = FamilyStateCodec.prepareForSave(
+                SessionEngine.checkpoint(next.validated(), sample.elapsedMs).copy(usage = measured.usage))
             repository.save(saved)
-            mutable.update { it.copy(state = saved, now = elapsed(), notice = null) }
-            lastCheckpoint = elapsed()
+            val viewer = saved.selected
+            val activity = if (helper.connected && viewer != null) {
+                if (!viewer.isChild) UsageActivity(viewer)
+                else saved.sessions[viewer]?.deadlineElapsedMs?.takeIf { it > sample.elapsedMs }
+                    ?.let { UsageActivity(viewer, it) }
+            } else null
+            usageCursor = UsageCursor(sample, activity)
+            // A newer loss remains pending when the helper changes while the write is suspended.
+            helperStatus.compareAndSet(helper, helper.copy(lostAt = null))
+            mutable.update { it.copy(state = saved, now = sample.elapsedMs, notice = null) }
+            lastCheckpoint = sample.elapsedMs
             true
         } catch (_: Exception) {
             mutable.update { it.copy(storageFailed = true,
@@ -127,7 +167,10 @@ class FamilyController(private val repository: FamilyRepository, private val ela
     }
 
     suspend fun chooseProfiles(): Boolean = mutex.withLock { pauseLocked() }
-    suspend fun screenOff(): Boolean = mutex.withLock { pauseLocked() }
+    suspend fun screenOff(): Boolean {
+        val sample = usageSample()
+        return mutex.withLock { pauseLocked(sample) }
+    }
 
     suspend fun wake(): Boolean = mutex.withLock {
         adminAuthorized = false
@@ -137,11 +180,11 @@ class FamilyController(private val repository: FamilyRepository, private val ela
         result
     }
 
-    private suspend fun pauseLocked(): Boolean {
+    private suspend fun pauseLocked(sample: UsageSample = usageSample()): Boolean {
         adminAuthorized = false
         if (!available()) return false
         val child = mutable.value.state.selected?.isChild == true
-        val result = commit(SessionEngine.suspend(mutable.value.state, elapsed()))
+        val result = commit(SessionEngine.suspend(mutable.value.state, sample.elapsedMs), sample)
         if (child) effect(FamilyEffect.PauseMedia)
         return result
     }
@@ -207,7 +250,10 @@ class FamilyController(private val repository: FamilyRepository, private val ela
         val state = mutable.value.state
         val viewer = state.selected
         val session = state.sessions[viewer]
-        if (viewer == null || !viewer.isChild || session?.deadlineElapsedMs == null) return@withLock
+        if (viewer == null || !viewer.isChild || session?.deadlineElapsedMs == null) {
+            if (viewer != null && now - lastCheckpoint >= 10_000) commit(state)
+            return@withLock
+        }
         val remaining = SessionEngine.remaining(state, viewer, now)
         if (remaining == 0L) {
             if (commit(SessionEngine.tick(state, now, state.revision))) {

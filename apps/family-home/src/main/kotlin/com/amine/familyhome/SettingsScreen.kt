@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -38,9 +39,13 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 private data class SettingsRow(val key: String, val title: String, val subtitle: String = "",
-    val checked: Boolean? = null, val profile: FamilyProfile? = null, val action: () -> Unit)
+    val checked: Boolean? = null, val profile: FamilyProfile? = null, val value: String? = null,
+    val action: (() -> Unit)? = null)
 
 /** All settings stay inside the authenticated parent route. Android owns device configuration. */
 @Composable
@@ -54,6 +59,7 @@ internal fun SettingsScreen(ui: FamilyUi, apps: List<LauncherApp>, helperActive:
     fun back() {
         destination = when {
             destination.startsWith("child:") || destination == "add" -> "profiles"
+            destination.startsWith("usage:") -> "usage"
             destination != "root" -> "root"
             else -> { onClose(); "root" }
         }
@@ -61,17 +67,26 @@ internal fun SettingsScreen(ui: FamilyUi, apps: List<LauncherApp>, helperActive:
     BackHandler(enabled = restoreFocus) { back() }
     val child = destination.removePrefix("child:").takeIf { destination.startsWith("child:") }
         ?.let { id -> ui.state.children.firstOrNull { it.viewer.id == id } }
+    val usageProfile = destination.removePrefix("usage:").takeIf { destination.startsWith("usage:") }
+        ?.let { id -> ui.state.profiles.firstOrNull { it.viewer.id == id } }
+    val today = remember(ui.now) { LocalDate.now() }
+    val usageDates = usageProfile?.let { profile ->
+        listOf(today.toString()) + ui.state.usage.filterValues { profile.viewer in it }.keys
+            .filter { it != today.toString() }.sortedDescending().take(30)
+    }.orEmpty()
     val title = when (destination) {
         "profiles" -> "Profiles"
         "device" -> "Device setup"
+        "usage" -> "Daily usage"
         "add" -> "Add child profile"
-        else -> if (child != null) child.name else "Settings"
+        else -> usageProfile?.name ?: child?.name ?: "Settings"
     }
     val description = when (destination) {
         "profiles" -> "Choose a child to manage allowed apps."
         "device" -> "Android controls the Home app and accessibility helper."
         "add" -> "Create a child profile with the default allowed apps."
-        else -> if (child != null) "Allowed apps" else "Family Home"
+        "usage" -> "Today"
+        else -> if (usageProfile != null) "Daily history" else if (child != null) "Allowed apps" else "Family Home"
     }
     Row(Modifier.fillMaxSize().padding(start = 48.dp, end = 48.dp, top = 58.dp, bottom = 42.dp),
         horizontalArrangement = Arrangement.spacedBy(44.dp)) {
@@ -80,6 +95,11 @@ internal fun SettingsScreen(ui: FamilyUi, apps: List<LauncherApp>, helperActive:
                 maxLines = 3, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(16.dp))
             Text(description, color = Muted, fontSize = 19.sp, lineHeight = 25.sp)
+            if (destination == "usage" || usageProfile != null) {
+                Spacer(Modifier.height(20.dp))
+                Text(if (usageProfile != null) "Up to 30 recorded days" else "Selected-profile screen-on time",
+                    color = Muted, fontSize = 16.sp, lineHeight = 22.sp)
+            }
             if (destination == "device") {
                 Spacer(Modifier.height(24.dp))
                 Text(if (helperActive && homeRoleHeld) "Ready" else "Setup needed", color = Gold, fontSize = 19.sp)
@@ -97,8 +117,15 @@ internal fun SettingsScreen(ui: FamilyUi, apps: List<LauncherApp>, helperActive:
                     val rows = when (destination) {
                         "root" -> listOf(
                             SettingsRow("profiles", "Profiles", "Allowed apps and child profiles") { destination = "profiles" },
+                            SettingsRow("usage", "Daily usage", "Screen-on time by profile") { destination = "usage" },
                             SettingsRow("pin", "Parent PIN", "Protect parent controls and new sessions", ui.state.pinEnabled, action = onPin),
                             SettingsRow("device", "Device setup", "Home helper and default Home app") { destination = "device" })
+                        "usage" -> ui.state.profiles.map { profile ->
+                            SettingsRow("usage:${profile.viewer.id}", profile.name, profile = profile,
+                                value = usageTotal(ui.state.usage[today.toString()]?.get(profile.viewer))) {
+                                destination = "usage:${profile.viewer.id}"
+                            }
+                        }
                         "profiles" -> ui.state.children.map { profile ->
                             SettingsRow("profile:${profile.viewer.id}", profile.name, "Allowed apps", profile = profile) {
                                 destination = "child:${profile.viewer.id}"
@@ -107,7 +134,10 @@ internal fun SettingsScreen(ui: FamilyUi, apps: List<LauncherApp>, helperActive:
                         "device" -> listOf(
                             SettingsRow("helper", "Home helper", if (helperActive) "Enabled · Open Android accessibility" else "Not enabled · Open Android accessibility", action = onSetup),
                             SettingsRow("home", "Default Home app", if (homeRoleHeld) "Family Home · Open Android Home selection" else "Not Family Home · Open Android Home selection", action = onHome))
-                        else -> child?.let { profile -> apps.map { app ->
+                        else -> if (usageProfile != null) usageDates.map { date ->
+                            SettingsRow("usage-date:$date", usageDate(date, today),
+                                value = usageTotal(ui.state.usage[date]?.get(usageProfile.viewer)))
+                        } else child?.let { profile -> apps.map { app ->
                             val allowed = app.pkg in ui.state.allowed[profile.viewer].orEmpty()
                             SettingsRow("app:${app.pkg}", app.label, checked = allowed) {
                                 onAccess(profile.viewer, app.pkg, !allowed)
@@ -131,7 +161,10 @@ internal fun SettingsScreen(ui: FamilyUi, apps: List<LauncherApp>, helperActive:
                             }
                             Spacer(Modifier.height(20.dp))
                         }) else null,
-                        footer = if (child != null) ({
+                        footer = if (usageProfile != null && usageDates.none { it != today.toString() }) ({
+                            Text("No earlier recorded use.", color = Muted, fontSize = 17.sp,
+                                modifier = Modifier.padding(16.dp))
+                        }) else if (child != null) ({
                             val missing = DefaultApps.labels.filterKeys { pkg -> apps.none { it.pkg == pkg } }
                             if (apps.isEmpty()) Text("No TV apps are installed.", color = Muted, fontSize = 18.sp,
                                 modifier = Modifier.padding(16.dp))
@@ -158,7 +191,24 @@ private fun SettingsList(rows: List<SettingsRow>, list: LazyListState, focused: 
         contentPadding = PaddingValues(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         if (header != null) item(key = "header") { header() }
         items(rows, key = { it.key }) { row ->
-            ListItem(selected = false, onClick = row.action,
+            if (row.action == null) {
+                var isFocused by remember { mutableStateOf(false) }
+                Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).testTag("setting:${row.key}")
+                    .focusRequester(targets.getValue(row.key))
+                    .focusProperties { left = FocusRequester.Cancel; right = FocusRequester.Cancel }
+                    .onFocusChanged {
+                        isFocused = it.isFocused
+                        if (it.isFocused) onFocused(row.key)
+                    }
+                    .background(if (isFocused) Gold else Panel, RoundedCornerShape(8.dp))
+                    .semantics(mergeDescendants = true) { }
+                    .focusable().padding(horizontal = 16.dp, vertical = 14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(row.title, Modifier.weight(1f), color = if (isFocused) Background else Ink,
+                        fontSize = 21.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    row.value?.let { Text(it, color = if (isFocused) Background else Ink, fontSize = 19.sp) }
+                }
+            } else ListItem(selected = false, onClick = row.action,
                 modifier = Modifier.fillMaxWidth().testTag("setting:${row.key}")
                     .focusRequester(targets.getValue(row.key))
                     .focusProperties { left = FocusRequester.Cancel; right = FocusRequester.Cancel }
@@ -180,7 +230,10 @@ private fun SettingsList(rows: List<SettingsRow>, list: LazyListState, focused: 
                             uncheckedThumbColor = Muted, uncheckedTrackColor = Panel,
                             uncheckedBorderColor = Muted, uncheckedIconColor = Background),
                         modifier = Modifier.focusProperties { canFocus = false }.clearAndSetSemantics { })
-                    else Text("›", fontSize = 27.sp)
+                    else Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        row.value?.let { Text(it, fontSize = 18.sp) }
+                        Text("›", fontSize = 27.sp)
+                    }
                 },
                 colors = ListItemDefaults.colors(focusedContainerColor = Gold, focusedContentColor = Background),
                 scale = ListItemDefaults.scale(focusedScale = 1f))
@@ -255,4 +308,22 @@ private fun AddChildForm(ui: FamilyUi, restoreFocus: Boolean, onAdd: suspend (St
         }
     }
     LaunchedEffect(restoreFocus) { if (restoreFocus) field.requestFocus() }
+}
+
+private fun usageTotal(milliseconds: Long?): String {
+    if (milliseconds == null || milliseconds <= 0) return "No recorded use"
+    val minutes = milliseconds / 60_000
+    if (minutes == 0L) return "Less than 1 min"
+    val hours = minutes / 60
+    return when {
+        hours == 0L -> "$minutes min"
+        minutes % 60 == 0L -> "$hours h"
+        else -> "$hours h ${minutes % 60} min"
+    }
+}
+
+private fun usageDate(date: String, today: LocalDate): String = when (date) {
+    today.toString() -> "Today"
+    today.minusDays(1).toString() -> "Yesterday"
+    else -> LocalDate.parse(date).format(DateTimeFormatter.ofPattern("EEE, d MMM yyyy", Locale.getDefault()))
 }

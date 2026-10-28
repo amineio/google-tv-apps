@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.time.ZoneId
 
 private val Context.familyData by preferencesDataStore("family")
 
@@ -32,7 +33,9 @@ class FamilyApplication : Application() {
         private set
     override fun onCreate() {
         super.onCreate()
-        controller = FamilyController(DataStoreFamilyRepository(this), SystemClock::elapsedRealtime)
+        controller = FamilyController(DataStoreFamilyRepository(this), SystemClock::elapsedRealtime) {
+            UsageSample(SystemClock.elapsedRealtime(), System.currentTimeMillis(), ZoneId.systemDefault())
+        }
         scope.launch { controller.load() }
     }
 }

@@ -1,6 +1,7 @@
 package com.amine.familyhome
 
 import kotlinx.serialization.Serializable
+import java.time.LocalDate
 
 @Serializable
 @JvmInline
@@ -61,7 +62,7 @@ object DefaultApps {
 
 @Serializable
 data class FamilyState(
-    val schema: Int = 2,
+    val schema: Int = 3,
     val selected: Viewer? = null,
     val sessions: Map<Viewer, ChildSession> = emptyMap(),
     val allowed: Map<Viewer, Set<String>> = DefaultApps.allowed(),
@@ -70,6 +71,7 @@ data class FamilyState(
     val revision: Long = 0,
     val recovered: Boolean = false,
     val profiles: List<FamilyProfile> = defaultProfiles(),
+    val usage: Map<String, Map<Viewer, Long>> = emptyMap(),
 ) {
     val pinEnabled: Boolean get() = pinHash.isNotEmpty()
     val children: List<FamilyProfile> get() = profiles.filter { it.viewer.isChild }
@@ -77,7 +79,7 @@ data class FamilyState(
     fun label(viewer: Viewer): String = requireNotNull(profile(viewer)) { "Unknown family profile" }.name
 
     fun validated(): FamilyState {
-        require(schema == 2 && revision >= 0) { "Unsupported saved family state" }
+        require(schema == 3 && revision >= 0) { "Unsupported saved family state" }
         require(pinSalt.isEmpty() == pinHash.isEmpty()) { "Incomplete parent PIN" }
         val ids = profiles.map { it.viewer }.toSet()
         require(ids.size == profiles.size && Viewer.AMINE in ids) { "Invalid family profiles" }
@@ -100,6 +102,11 @@ data class FamilyState(
             require(viewer in ids && viewer.isChild && session.totalMs in 300_000..3_600_000 && session.totalMs % 300_000 == 0L)
             require(session.remainingMs in 0..session.totalMs)
             require(session.deadlineElapsedMs == null || (selected == viewer && session.deadlineElapsedMs >= 0))
+        }
+        require(usage.size <= UsageEngine.HISTORY_DATES) { "Too many family usage dates" }
+        usage.forEach { (date, totals) ->
+            require(runCatching { LocalDate.parse(date).toString() == date }.getOrDefault(false)) { "Invalid family usage date" }
+            require(totals.keys.all { it in ids } && totals.values.all { it >= 0 }) { "Invalid family usage total" }
         }
         return this
     }
