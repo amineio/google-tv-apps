@@ -98,7 +98,9 @@ final class TvUi {
             clock = new AnalogClockView(c);
             brand.addView(clock, new LinearLayout.LayoutParams(dp(c, 160), dp(c, 160)));
             gap(brand, 24);
-            brand.addView(text(c, "TV Clock", 32, false));
+            TextView brandTitle = text(c, "TV Clock", 32, false);
+            brandTitle.setGravity(Gravity.CENTER);
+            brand.addView(brandTitle);
             gap(brand, 12);
             summary = text(c, description, 16, true);
             summary.setGravity(Gravity.CENTER);
