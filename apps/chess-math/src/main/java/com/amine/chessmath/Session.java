@@ -9,6 +9,7 @@ public final class Session {
     public enum Phase { CHESS, TO_MATH, MATH, TO_CHESS, BREAK }
     public String id = UUID.randomUUID().toString();
     public long revision, elapsedMs;
+    public long thinkingRemainingMs, thinkingTotalMs;
     public Phase phase = Phase.MATH;
     public boolean paused = true, chessPending, mathPending, solved;
     public int correct, selected = -1, focus = 52, promotionTo = -1, hintLevel;
@@ -30,6 +31,7 @@ public final class Session {
     public Session copy() {
         Session s = new Session(false);
         s.id=id; s.revision=revision; s.elapsedMs=elapsedMs; s.phase=phase;
+        s.thinkingRemainingMs=thinkingRemainingMs; s.thinkingTotalMs=thinkingTotalMs;
         s.paused=paused; s.chessPending=chessPending; s.mathPending=mathPending; s.solved=solved;
         s.correct=correct; s.selected=selected; s.focus=focus; s.promotionTo=promotionTo;
         s.hintLevel=hintLevel; s.intendedMove=intendedMove; s.input=input;

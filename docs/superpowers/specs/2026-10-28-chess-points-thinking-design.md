@@ -1,6 +1,6 @@
 # Chess points and thinking time
 
-Status: proposed design. A separate builder review found no unresolved implementation questions. User approval is pending.
+Status: approved by the user on 2026-10-28. A separate builder review found no unresolved implementation questions.
 
 ## Intent
 
@@ -31,7 +31,7 @@ Capture totals are an alternative. Each side starts at zero and gains the value 
 This makes captures rewarding, but losing a piece does not reduce the player's displayed total.
 
 A computer evaluation score is unsuitable for this change. Its meaning depends on position and search depth, which obscures the cost of losing pieces.
-The user did not select an approach yet. The remaining sections describe the recommended approach.
+The user approved the recommended remaining-piece approach and this design.
 
 ## Points
 
@@ -134,6 +134,6 @@ Report installation and merge separately.
 
 ## Coordinator decisions
 
-The point values, preset durations, side placement, and next-reply preference policy are proposals from the coordinator.
+The user approved the coordinator's point values, preset durations, side placement, and next-reply preference policy.
 The user requested points, signed motion feedback, a delay near 20 seconds, and an adjustable period.
-The user did not approve the detailed design yet.
+Implementation approval: "Looks good, go ahead."

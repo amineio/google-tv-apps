@@ -12,6 +12,7 @@ public final class SessionCodec {
         JSONObject j=new JSONObject();
         j.put("schema",2).put("id",s.id).put("revision",s.revision)
                 .put("phase",s.phase.name()).put("paused",s.paused).put("elapsedMs",s.elapsedMs)
+                .put("thinkingRemainingMs",s.thinkingRemainingMs).put("thinkingTotalMs",s.thinkingTotalMs)
                 .put("chessPending",s.chessPending).put("mathPending",s.mathPending)
                 .put("solved",s.solved).put("correct",s.correct).put("selected",s.selected)
                 .put("focus",s.focus).put("promotionTo",s.promotionTo).put("hintLevel",s.hintLevel)
@@ -50,6 +51,12 @@ public final class SessionCodec {
         JSONArray moves=j.getJSONArray("moves"); require(moves.length()<=20000,"Too many moves");
         for(int i=0;i<moves.length();i++) s.moves.add(moves.getString(i));
         ChessGame game=ChessGame.fromHistory(s.moves);
+        s.thinkingRemainingMs=j.optLong("thinkingRemainingMs",0);
+        s.thinkingTotalMs=j.optLong("thinkingTotalMs",0);
+        require(s.thinkingRemainingMs>=0 && s.thinkingRemainingMs<=60000
+                && s.thinkingTotalMs>=s.thinkingRemainingMs && s.thinkingTotalMs<=60000,"Invalid thinking time");
+        if(s.thinkingRemainingMs>0) require(!s.moves.isEmpty() && game.whiteToMove()
+                && game.result().isEmpty() && s.result.isEmpty(),"Thinking time without a computer move");
         if(!game.result().isEmpty()) require(s.result.equals(game.result()),"Missing game result");
         else require(s.result.isEmpty()||s.result.equals("Remise geclaimd"),"Invalid game result");
         if(s.selected>=0) require(game.whiteToMove() && Character.isUpperCase(game.pieceAt(s.selected)),"Invalid selection");

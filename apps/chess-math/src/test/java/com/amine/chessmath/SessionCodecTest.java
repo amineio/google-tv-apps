@@ -48,4 +48,31 @@ public class SessionCodecTest {
         assertEquals(0,oldMathHandoff.elapsedMs);assertEquals(s.moves,oldMathHandoff.moves);
         assertEquals(s.exercise.id,oldMathHandoff.exercise.id);assertTrue(oldMathHandoff.solved);assertTrue(oldMathHandoff.paused);
     }
+    @Test public void thinkingTimeRoundTripsAndOldSavesDefaultToZero() throws Exception {
+        Session s=new Session();s.moves.add("e2e4");s.moves.add("e7e5");
+        org.json.JSONObject json=new org.json.JSONObject(SessionCodec.encode(s));
+        json.put("thinkingRemainingMs",12345).put("thinkingTotalMs",20000);
+        org.json.JSONObject copy=new org.json.JSONObject(SessionCodec.encode(SessionCodec.decode(json.toString())));
+        assertEquals(12345,copy.getLong("thinkingRemainingMs"));assertEquals(20000,copy.getLong("thinkingTotalMs"));
+        json.remove("thinkingRemainingMs");json.remove("thinkingTotalMs");
+        copy=new org.json.JSONObject(SessionCodec.encode(SessionCodec.decode(json.toString())));
+        assertEquals(0,copy.getLong("thinkingRemainingMs"));assertEquals(0,copy.getLong("thinkingTotalMs"));
+    }
+    @Test public void rejectsInvalidThinkingTimeAndWrongBoardState() throws Exception {
+        Session s=new Session();s.moves.add("e2e4");s.moves.add("e7e5");
+        long[][] invalid={{-1,20000},{60001,60001},{20001,20000},{1,0},{0,60001}};
+        for(long[] value:invalid){
+            org.json.JSONObject json=new org.json.JSONObject(SessionCodec.encode(s));
+            json.put("thinkingRemainingMs",value[0]).put("thinkingTotalMs",value[1]);
+            try{SessionCodec.decode(json.toString());fail("Invalid thinking duration accepted");}catch(IllegalArgumentException expected){}
+        }
+        for(String[] moves:new String[][]{ {}, {"e2e4"}, {"f2f3","e7e5","g2g4","d8h4"} }){
+            s.moves=new java.util.ArrayList<>(java.util.Arrays.asList(moves));
+            s.result=ChessGame.fromHistory(s.moves).result();
+            org.json.JSONObject json=new org.json.JSONObject(SessionCodec.encode(s));
+            json.put("thinkingRemainingMs",1000).put("thinkingTotalMs",20000);
+            try{SessionCodec.decode(json.toString());fail("Wait on invalid board accepted");}catch(IllegalArgumentException expected){}
+        }
+    }
+
 }

@@ -25,13 +25,18 @@ public final class SessionController implements AutoCloseable {
     public PresentationEvent presentation(){return presentation;}
     public void setPresenter(Consumer<PresentationEvent> value){
         presenter=value;
-        if(value==null){cancelPresentation();main.execute(this::scheduleComputer);}
+        if(value==null){detachPresentation();main.execute(this::scheduleComputer);}
     }
     public void completePresentation(PresentationEvent.Id id){
         if(presentation==null||!presentation.id.equals(id))return;
         presentation=null;presentationDeadline=-1;
+        startThinkingClock();
         replyAt=foreground&&!state.paused?clock.getAsLong()+100:-1;
         changed();
+    }
+    private void detachPresentation(){
+        state.thinkingRemainingMs=thinkingRemainingMs();
+        cancelPresentation();startThinkingClock();
     }
     private void cancelPresentation(){presentation=null;presentationDeadline=-1;replyAt=-1;}
     public boolean previewSolvedDigit(int digit){
@@ -42,6 +47,8 @@ public final class SessionController implements AutoCloseable {
     private ChessGame game;
     private boolean foreground, busy, pendingPause, corrupt, closed, workerRunning;
     private boolean mathsEnabled=true;
+    private int thinkingSeconds=20;
+    private long thinkingAnchor=-1;
     private long anchor=-1, epoch, saveStarted;
     private long successAnchor=-1, successShownMs;
     private boolean successPending;
@@ -72,6 +79,30 @@ public final class SessionController implements AutoCloseable {
     }
 
     public Session state() { return state; }
+    /** Set only after the separate play preference has been saved successfully. */
+    public void setThinkingSeconds(int seconds){
+        if(!PlayPreferences.validThinkingSeconds(seconds))throw new IllegalArgumentException("Invalid thinking time");
+        thinkingSeconds=seconds;
+        if(seconds==0){
+            thinkingAnchor=-1;
+            if(canAct()&&(state.thinkingRemainingMs!=0||state.thinkingTotalMs!=0))
+                action(this::clearThinking,true);
+        }
+    }
+    public long thinkingRemainingMs(){
+        if(thinkingSeconds==0)return 0;
+        long remaining=state.thinkingRemainingMs;
+        if(thinkingActive()&&thinkingAnchor>=0)remaining-=Math.max(0,clock.getAsLong()-thinkingAnchor);
+        return Math.max(0,remaining);
+    }
+    public long thinkingTotalMs(){return thinkingSeconds==0?0:state.thinkingTotalMs;}
+    private boolean thinkingActive(){
+        return foreground&&!state.paused&&error==null&&!busy&&!closed&&presentation==null
+                &&state.phase==Session.Phase.CHESS&&state.result.isEmpty()
+                &&state.thinkingRemainingMs>0&&thinkingSeconds!=0;
+    }
+    private void startThinkingClock(){thinkingAnchor=thinkingActive()?clock.getAsLong():-1;}
+    private void clearThinking(Session s){s.thinkingRemainingMs=0;s.thinkingTotalMs=0;}
     public boolean mathsEnabled() { return mathsEnabled; }
     public void setMathsEnabled(boolean enabled) { mathsEnabled=enabled; }
     /** Live foreground countdown; callers do not need to wait for a save checkpoint. */
@@ -87,7 +118,7 @@ public final class SessionController implements AutoCloseable {
     public boolean corruptSave() { return corrupt; }
     public void setListener(Runnable listener) {
         this.listener=listener;
-        if(listener==null){cancelPresentation();main.execute(this::scheduleComputer);}
+        if(listener==null){detachPresentation();main.execute(this::scheduleComputer);}
     }
     private void changed() { if(listener!=null)listener.run(); }
 
@@ -113,11 +144,12 @@ public final class SessionController implements AutoCloseable {
     public void pause() {
         if(closed)return;
         successAnchor=-1;successShownMs=0;
+        Session next=settled();
         cancelPresentation();
         epoch++; workerRunning=false;
-        if(busy) { pendingPause=true; anchor=-1; return; }
-        if(state.paused) { anchor=-1; return; }
-        Session next=settled(); next.paused=true; commit(next);
+        if(busy) { pendingPause=true; anchor=-1; thinkingAnchor=-1; return; }
+        if(state.paused) { anchor=-1; thinkingAnchor=-1; return; }
+        next.paused=true; commit(next);
     }
 
     public void tick() {
@@ -178,14 +210,16 @@ public final class SessionController implements AutoCloseable {
         if(game.legalMoves().contains(move)) action(s->prepareMove(s,move),false);
     }
     public void playIntendedMove() {
-        if(!canAct()||state.intendedMove==null)return;
+        if(!canAct()||state.intendedMove==null||!foreground||state.paused||presentation!=null
+                ||state.phase!=Session.Phase.CHESS||!state.result.isEmpty()||!game.whiteToMove()
+                ||thinkingRemainingMs()>0)return;
         String move=state.intendedMove;
         if(game.legalMoves().contains(move))action(s->applyMove(s,move),false);
     }
     public void claimDraw() {
         if(!canAct()||state.phase!=Session.Phase.CHESS||!state.result.isEmpty())return;
         boolean valid=state.intendedMove==null?game.claimableDraw():game.claimableAfter(state.intendedMove);
-        if(valid)action(s->{s.result="Remise geclaimd"; s.intendedMove=null; s.selected=-1; s.promotionTo=-1;},true);
+        if(valid)action(s->{s.result="Remise geclaimd"; s.intendedMove=null; s.selected=-1; s.promotionTo=-1;clearThinking(s);},true);
     }
 
     public void digit(int digit) {
@@ -266,7 +300,7 @@ public final class SessionController implements AutoCloseable {
     private boolean canAct() { return !busy && !closed && error==null && !corrupt; }
     private boolean canPlay() {
         return canAct()&&presentation==null&&!state.paused&&foreground&&state.phase==Session.Phase.CHESS
-                && state.result.isEmpty()&&game.whiteToMove()&&state.intendedMove==null;
+                && state.result.isEmpty()&&game.whiteToMove()&&state.intendedMove==null&&thinkingRemainingMs()==0;
     }
     private boolean canMath() {
         return canAct()&&!state.paused&&foreground&&state.phase==Session.Phase.MATH&&state.exercise!=null;
@@ -279,6 +313,8 @@ public final class SessionController implements AutoCloseable {
     private Session settled() {
         Session next=state.copy();
         if(active()&&anchor>=0)next.elapsedMs+=Math.max(0,clock.getAsLong()-anchor);
+        next.thinkingRemainingMs=thinkingRemainingMs();
+        if(thinkingSeconds==0)clearThinking(next);
         return next;
     }
     private void action(Consumer<Session> mutation,boolean whilePaused) {
@@ -315,7 +351,12 @@ public final class SessionController implements AutoCloseable {
         else applyMove(s,move);
     }
     private void applyMove(Session s,String move) {
-        ChessGame board=ChessGame.fromHistory(s.moves); board.play(move);
+        ChessGame board=ChessGame.fromHistory(s.moves);
+        boolean computerMove=!board.whiteToMove();board.play(move);
+        clearThinking(s);
+        if(computerMove&&board.result().isEmpty()){
+            s.thinkingRemainingMs=thinkingSeconds*1000L;s.thinkingTotalMs=s.thinkingRemainingMs;
+        }
         s.moves=board.history();s.result=board.result();s.selected=-1;s.promotionTo=-1;
         s.intendedMove=null;s.feedback="";
         s.opponentSeed=Long.rotateLeft(s.opponentSeed ^ 0x9e3779b97f4a7c15L,17);
@@ -332,7 +373,7 @@ public final class SessionController implements AutoCloseable {
     }
     private void clearBoard(Session s) {
         s.moves=new ArrayList<>();s.result="";s.selected=-1;s.focus=52;s.promotionTo=-1;
-        s.intendedMove=null;s.feedback="";
+        s.intendedMove=null;s.feedback="";clearThinking(s);
     }
 
     private void commit(Session next) {
@@ -340,6 +381,9 @@ public final class SessionController implements AutoCloseable {
         final boolean liveMove=foreground&&!state.paused&&next.moves.size()==state.moves.size()+1;
         if(next.focus!=state.focus)latestFocus=next.focus;
         next.revision=state.revision+1;
+        state.thinkingRemainingMs=thinkingRemainingMs();
+        thinkingAnchor=-1;
+        if(thinkingSeconds==0)clearThinking(next);
         busy=true;anchor=-1;saveStarted=clock.getAsLong();
         if(successAnchor>=0)successShownMs+=Math.max(0,clock.getAsLong()-successAnchor);
         successAnchor=-1;
@@ -369,12 +413,17 @@ public final class SessionController implements AutoCloseable {
                         }
                         try{presenter.accept(event);}catch(RuntimeException ignored){cancelPresentation();}
                     }
+                    // A presenter can finish synchronously. Keep the anchor it started.
+                    if(thinkingAnchor<0)startThinkingClock();
+                    if(thinkingSeconds==0&&(state.thinkingRemainingMs!=0||state.thinkingTotalMs!=0)){
+                        Session cleared=state.copy();clearThinking(cleared);commit(cleared);return;
+                    }
                     changed();scheduleComputer();
                 });
             } catch(Exception failure) {
                 main.execute(()->{
                     if(closed)return;
-                    busy=false;pendingPause=false;state.paused=true;anchor=-1;
+                    busy=false;pendingPause=false;state.paused=true;anchor=-1;thinkingAnchor=-1;
                     successAnchor=-1;successShownMs=0;
                     failedSave=next.copy();failedSave.paused=true;
                     error="Opslaan is niet gelukt. De voortgang blijft staan. Probeer opnieuw.";
@@ -405,14 +454,14 @@ public final class SessionController implements AutoCloseable {
                 workerRunning=false;
                 if(!canAct()||state.paused||!foreground||state.phase!=Session.Phase.CHESS
                         ||revision!=state.revision||game.whiteToMove()) { scheduleComputer();return; }
-                if("CLAIM".equals(chosen)) action(s->{s.result="Remise geclaimd";s.selected=-1;},false);
+                if("CLAIM".equals(chosen)) action(s->{s.result="Remise geclaimd";s.selected=-1;clearThinking(s);},false);
                 else if(chosen!=null&&game.legalMoves().contains(chosen))action(s->applyMove(s,chosen),false);
                 else { error="De computer kon geen zet kiezen. Pauzeer en probeer opnieuw.";state.paused=true;changed(); }
             });
         });
     }
     @Override public void close() {
-        closed=true;epoch++;anchor=-1;cancelPresentation();presenter=null;
+        closed=true;epoch++;anchor=-1;thinkingAnchor=-1;cancelPresentation();presenter=null;
         if(ownExecutors) {
             ((ExecutorService)io).shutdown();((ExecutorService)computer).shutdownNow();
         }
