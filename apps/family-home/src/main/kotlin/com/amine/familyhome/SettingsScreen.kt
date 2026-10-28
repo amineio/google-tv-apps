@@ -174,6 +174,11 @@ private fun SettingsList(rows: List<SettingsRow>, list: LazyListState, focused: 
                 } },
                 trailingContent = {
                     if (row.checked != null) Switch(checked = row.checked, onCheckedChange = null,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Gold, checkedTrackColor = Panel,
+                            checkedBorderColor = Muted, checkedIconColor = Background,
+                            uncheckedThumbColor = Muted, uncheckedTrackColor = Panel,
+                            uncheckedBorderColor = Muted, uncheckedIconColor = Background),
                         modifier = Modifier.focusProperties { canFocus = false }.clearAndSetSemantics { })
                     else Text("›", fontSize = 27.sp)
                 },

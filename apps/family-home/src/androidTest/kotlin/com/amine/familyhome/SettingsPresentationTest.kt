@@ -176,11 +176,18 @@ class SettingsPresentationTest {
         runBlocking { assertEquals(4, repository.load().profiles.size) }
         key(Key.DirectionCenter)
         screen.onNodeWithTag("setting:app:example.app0").assertIsFocused().assertIsOff()
+        capture("settings-generic-child-focused-off")
         key(Key.DirectionCenter)
         screen.waitUntil { "example.app0" in controller.ui.value.state.allowed[child.viewer].orEmpty() }
         screen.onNodeWithTag("setting:app:example.app0").assertIsOn()
         screen.onNodeWithTag("setting:app:example.app1").assertIsOff()
         capture("settings-generic-child-apps")
+        key(Key.DirectionDown)
+        screen.onNodeWithTag("setting:app:example.app1").assertIsFocused().assertIsOff()
+        screen.onNodeWithTag("setting:app:example.app0").assertIsOn()
+        capture("settings-generic-child-unfocused-on")
+        key(Key.DirectionUp)
+        screen.onNodeWithTag("setting:app:example.app0").assertIsFocused()
         back()
         key(Key.DirectionDown); key(Key.DirectionCenter)
         screen.onNodeWithTag("child-name").performTextInput("child one")
