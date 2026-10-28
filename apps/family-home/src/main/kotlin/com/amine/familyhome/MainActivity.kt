@@ -20,8 +20,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -143,7 +146,7 @@ fun FamilyScreen(activity: MainActivity) {
                 onSetup = { activity.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
                 onHome = { activity.startActivity(activity.getSystemService(RoleManager::class.java).createRequestRoleIntent(RoleManager.ROLE_HOME)) })
         } else if (selected.isChild && (durationFor == selected || !ui.state.sessions.containsKey(selected))) {
-            DurationScreen(selected, onCancel = {
+            DurationScreen(selected, modifier = Modifier.weight(1f), onCancel = {
                 durationFor = null
                 if (!ui.state.sessions.containsKey(selected)) scope.launch { controller.chooseProfiles() }
             }, onStart = { minutes ->
@@ -186,21 +189,44 @@ private fun ActionButton(text: String, initial: Boolean = false, primary: Boolea
 }
 
 @Composable
-private fun DurationScreen(viewer: Viewer, onCancel: () -> Unit, onStart: (Int) -> Unit) {
+internal fun DurationScreen(viewer: Viewer, onCancel: () -> Unit, onStart: (Int) -> Unit,
+    modifier: Modifier = Modifier) {
     var minutes by remember(viewer) { mutableIntStateOf(20) }
-    Text("Time for ${viewer.label}", fontSize = 38.sp)
-    Text("Choose up to one hour.", color = Muted, fontSize = 22.sp)
-    Spacer(Modifier.height(30.dp))
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-        ActionButton("− 5", initial = true) { minutes = (minutes - 5).coerceAtLeast(5) }
-        Text("$minutes minutes", color = Gold, fontSize = 36.sp, modifier = Modifier.width(225.dp).testTag("duration-value"))
-        ActionButton("+ 5") { minutes = (minutes + 5).coerceAtMost(60) }
+    val decrease = remember { FocusRequester() }
+    val increase = remember { FocusRequester() }
+    val start = remember { FocusRequester() }
+    val cancel = remember { FocusRequester() }
+    Column(modifier.fillMaxSize().padding(bottom = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        ProfilePortrait(viewer, 76.dp)
+        Spacer(Modifier.height(8.dp))
+        Text("Time for ${viewer.label}", fontSize = 34.sp, fontWeight = FontWeight.SemiBold)
+        Spacer(Modifier.height(20.dp))
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+            TvAction("− 5", Modifier.width(84.dp).focusRequester(decrease).focusProperties {
+                left = FocusRequester.Cancel; right = increase
+                up = FocusRequester.Cancel; down = start
+            }) { minutes = (minutes - 5).coerceAtLeast(5) }
+            Text("$minutes minutes", color = Ink, fontSize = 36.sp, textAlign = TextAlign.Center,
+                modifier = Modifier.width(200.dp).testTag("duration-value"))
+            TvAction("+ 5", Modifier.width(84.dp).focusRequester(increase).focusProperties {
+                left = decrease; right = FocusRequester.Cancel
+                up = FocusRequester.Cancel; down = start
+            }) { minutes = (minutes + 5).coerceAtMost(60) }
+        }
+        Spacer(Modifier.height(24.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            TvAction("Start session", Modifier.focusRequester(start).focusProperties {
+                up = increase; down = FocusRequester.Cancel
+                left = FocusRequester.Cancel; right = cancel
+            }) { onStart(minutes) }
+            TvAction("Cancel", Modifier.focusRequester(cancel).focusProperties {
+                up = increase; down = FocusRequester.Cancel
+                left = start; right = FocusRequester.Cancel
+            }, onClick = onCancel)
+        }
     }
-    Spacer(Modifier.height(32.dp))
-    Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-        ActionButton("Start session", primary = true) { onStart(minutes) }
-        ActionButton("Cancel") { onCancel() }
-    }
+    LaunchedEffect(viewer) { start.requestFocus() }
 }
 
 @Composable

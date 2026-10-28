@@ -1,0 +1,42 @@
+{
+  "tool": "Built-in ImageGen",
+  "references": "User written Battleship specification. No prior image impressions were attached. No external source image was used.",
+  "concept": {
+    "path": "naval-concept.webp",
+    "role": "Design reference only. Native UI implements dynamic elements.",
+    "dimensions": [
+      1440,
+      810
+    ],
+    "prompt": "Create a polished 16:9 1920x1080 television UI design concept for a native offline BATTLESHIP naval strategy game. Two stacked widescreen panels within this one concept sheet: upper panel a cinematic MAIN MENU with realistic steel-gray destroyer on a dark navy ocean at dusk, subtle sun shafts and fog, left clear bold BATTLESHIP title and Play Game / How to Play / Settings / Exit list, bright cyan focus on Play Game. Lower panel MAIN GAME with a dominant large square 10x10 enemy targeting grid on LEFT occupying roughly 55% width, precisely A-J and 1-10 labels, bright cyan selected-cell outline, restrained red X hit markers, white ring misses, NO intact enemy ships. RIGHT smaller 10x10 friendly fleet grid showing steel ship silhouettes and damage plus compact five-ship status. Bold typography readable from sofa, dark inky blue, off-white labels, restrained cyan, minimal clutter, generous 5% safe margins. Native Compose controls, flat readable ocean-toned boards over very subtle photographic naval backdrop, no neon, no excessive decorative gauges, no gold, no people. Use a professional premium naval game aesthetic without copying an existing game's trademarks. This is a design reference only."
+  },
+  "background": {
+    "path": "../../../apps/battleship/src/main/res/drawable-nodpi/naval_background.webp",
+    "dimensions": [
+      1920,
+      1080
+    ],
+    "encoding": "WebP quality 80",
+    "prompt": "A premium cinematic naval game background, 16:9 widescreen 1920x1080. Realistic unmarked mid-century steel-gray battleship at sea at blue hour, occupying the RIGHT half of frame in three-quarter bow view, ship heading toward the right. Low ocean horizon, subtle mist, dark navy-blue waves, restrained cool cyan reflections, soft pale golden light behind distant clouds only near far right horizon. LEFT half is deep dark navy atmospheric ocean and fog with low detail and ample negative space for large native UI text and menu. No text, no letters, no logos, no watermarks, no UI, no grid, no explosions, no people. Family-friendly photorealistic naval atmosphere. Crisp restrained lighting, cinematic texture, no neon, no saturated purple. This artwork is a background, all interactive elements will be native controls."
+  },
+  "rights": "AI-generated artwork created for this repository. No external stock asset or third-party artwork license is claimed.",
+  "font": "Outfit copied from the existing repository with FONT-LICENSE-OFL.txt preserved.",
+  "audio": {
+    "origin": "Local procedural synthesis in Python. No external recordings.",
+    "rights": "Project-created synthesis, distributed under repository MIT license.",
+    "format": "22,050 Hz mono 16-bit PCM WAV",
+    "gain": "Synthesized amplitude 0.28 maximum, SoundPool playback gain 0.32",
+    "envelope": "8 ms attack, 50 ms fade, exponential decay",
+    "cues": {
+      "ui_select": "0.065s 660/880Hz",
+      "fire": "0.16s 150/90Hz plus seeded noise",
+      "splash": "0.24s 420/210Hz plus seeded noise",
+      "impact": "0.22s 95/57Hz plus seeded noise",
+      "sunk": "0.42s 196/147/98Hz",
+      "victory": "0.60s 392/494/587/784Hz",
+      "defeat": "0.54s 330/294/247Hz"
+    },
+    "status": "Bundled and optional. Physical TV volume review remains separate."
+  },
+  "nativeAssets": "Launcher icon, ship silhouettes, selection outlines, labels, and shot markers use vector or Compose code."
+}
