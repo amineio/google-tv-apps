@@ -22,6 +22,17 @@ import org.junit.runner.RunWith
 class FamilyRemoteTest {
     @get:Rule val screen = createAndroidComposeRule<MainActivity>()
 
+    // Each key uses the current window, including a dialog opened by the preceding key.
+    private fun pressRemote(keys: List<Key>) {
+        keys.forEach { key ->
+            screen.waitForIdle()
+            val target = if (screen.onAllNodes(isDialog()).fetchSemanticsNodes().isNotEmpty()) {
+                screen.onNode(isDialog())
+            } else screen.onRoot()
+            target.performKeyInput { pressKey(key) }
+        }
+    }
+
     private fun capture(name: String) {
         val directory = requireNotNull(InstrumentationRegistry.getInstrumentation().targetContext.getExternalFilesDir(null))
         directory.resolve("$name.png").outputStream().use {
@@ -69,9 +80,9 @@ class FamilyRemoteTest {
             screen.onNodeWithContentDescription("$name profile portrait", useUnmergedTree = true).assertIsDisplayed()
         }
         screen.onNodeWithText("Amine").assertIsFocused()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
+        pressRemote(listOf(Key.DirectionRight))
         screen.onNodeWithText("Elias").assertIsFocused()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
+        pressRemote(listOf(Key.DirectionRight))
         screen.onNodeWithText("Sofia").assertIsFocused()
     }
 
@@ -89,35 +100,35 @@ class FamilyRemoteTest {
         screen.onNodeWithText("Device setup").assertIsDisplayed()
         screen.onNodeWithText("Back").assertDoesNotExist()
         screen.onNodeWithText("Enable helper").assertDoesNotExist()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        pressRemote(listOf(Key.DirectionDown))
         screen.onNodeWithText("Daily usage").assertIsFocused()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
+        pressRemote(listOf(Key.DirectionRight))
         screen.onNodeWithText("Daily usage").assertIsFocused()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        pressRemote(listOf(Key.DirectionDown))
         screen.onNodeWithText("Parent PIN").assertIsFocused()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        pressRemote(listOf(Key.DirectionDown))
         screen.onNodeWithText("Device setup").assertIsFocused()
         pressBack()
-        screen.onNodeWithText("Family configuration").assertIsFocused()
+        screen.onNodeWithTag("home-profile").assertIsFocused()
         screen.onNodeWithTag("home-apps").assertExists()
     }
 
     private fun openParentConfiguration() {
         screen.waitUntil(10_000) { screen.onAllNodesWithText("Amine").fetchSemanticsNodes().isNotEmpty() }
         screen.onNodeWithText("Amine").assertIsFocused()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionCenter) }
-        screen.waitUntil(10_000) { screen.onAllNodesWithText("Family configuration").fetchSemanticsNodes().isNotEmpty() }
+        pressRemote(listOf(Key.DirectionCenter))
+        screen.waitUntil(10_000) { screen.onAllNodesWithTag("home-profile").fetchSemanticsNodes().isNotEmpty() }
         screen.onNodeWithTag("home-apps").assertExists()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        pressRemote(listOf(Key.DirectionUp, Key.DirectionCenter))
         screen.onNodeWithText("Switch profile").assertIsFocused()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
+        pressRemote(listOf(Key.DirectionDown))
         screen.onNodeWithText("Family configuration").assertIsFocused()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionCenter) }
+        pressRemote(listOf(Key.DirectionCenter))
     }
 
     @Test fun parentPinKeypadSupportsRemoteApprovalAndFocusReturn() {
         openParentConfiguration()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown); pressKey(Key.DirectionDown); pressKey(Key.DirectionCenter) }
+        pressRemote(listOf(Key.DirectionDown, Key.DirectionDown, Key.DirectionCenter))
         screen.onNodeWithText("1").assertIsFocused()
         screen.onNodeWithText("Continue").assertIsNotEnabled()
         repeat(4) { screen.onNodeWithText("1").performKeyInput { pressKey(Key.DirectionCenter) } }
@@ -134,21 +145,21 @@ class FamilyRemoteTest {
 
     @Test fun settingsRecreationKeepsDeviceDestinationAndOriginatingRows() {
         openParentConfiguration()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown); pressKey(Key.DirectionDown); pressKey(Key.DirectionDown); pressKey(Key.DirectionCenter) }
+        pressRemote(listOf(Key.DirectionDown, Key.DirectionDown, Key.DirectionDown, Key.DirectionCenter))
         screen.onNodeWithTag("setting:helper").assertIsFocused()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        pressRemote(listOf(Key.DirectionDown))
         screen.onNodeWithTag("setting:home").assertIsFocused()
         screen.activityRule.scenario.recreate()
         screen.onNodeWithTag("setting:home").assertIsFocused()
         pressBack()
         screen.onNodeWithTag("setting:device").assertIsFocused()
         pressBack()
-        screen.onNodeWithText("Family configuration").assertIsFocused()
+        screen.onNodeWithTag("home-profile").assertIsFocused()
     }
 
     @Test fun backFromPinDialogKeepsSwitchOffAndRestoresItsRow() {
         openParentConfiguration()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown); pressKey(Key.DirectionDown); pressKey(Key.DirectionCenter) }
+        pressRemote(listOf(Key.DirectionDown, Key.DirectionDown, Key.DirectionCenter))
         screen.onNodeWithText("1").assertIsFocused()
         org.junit.Assert.assertFalse(screen.activity.family.ui.value.state.pinEnabled)
         pressBack()
@@ -156,11 +167,11 @@ class FamilyRemoteTest {
     }
 
     @Test fun durationKeepsHelperRecoveryNoticeVisibleAfterStartFails() {
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionRight); pressKey(Key.DirectionCenter) }
+        pressRemote(listOf(Key.DirectionRight, Key.DirectionCenter))
         screen.waitUntil(10_000) { screen.onAllNodesWithText("Time for Elias").fetchSemanticsNodes().isNotEmpty() }
         screen.onNodeWithText("Start session").assertIsFocused()
         screen.activity.family.helperConnected(false)
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionCenter) }
+        pressRemote(listOf(Key.DirectionCenter))
         screen.onNodeWithText("Enable the Family Home accessibility helper before starting a child session.")
             .assertIsDisplayed()
         screen.onNodeWithText("Start session").assertIsDisplayed().assertIsFocused()
@@ -169,7 +180,7 @@ class FamilyRemoteTest {
     }
 
     @Test fun childDurationStartsAtTwentyAndStaysWithinFiveAndSixty() {
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionRight); pressKey(Key.DirectionCenter) }
+        pressRemote(listOf(Key.DirectionRight, Key.DirectionCenter))
         screen.waitUntil(10_000) { screen.onAllNodesWithText("Time for Elias").fetchSemanticsNodes().isNotEmpty() }
         screen.onNodeWithTag("duration-value").assertTextEquals("20 minutes")
         screen.onNodeWithText("Start session").assertIsFocused()
@@ -189,17 +200,17 @@ class FamilyRemoteTest {
             org.junit.Assert.assertEquals("$label label is not aligned with the duration", valueCenter, textCenter, alignmentTolerance)
         }
         capture("duration-default")
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionUp) }
+        pressRemote(listOf(Key.DirectionUp))
         screen.onNodeWithText("+ 5").assertIsFocused()
-        repeat(14) { screen.onRoot().performKeyInput { pressKey(Key.DirectionCenter) } }
+        repeat(14) { pressRemote(listOf(Key.DirectionCenter)) }
         screen.onNodeWithTag("duration-value").assertTextEquals("60 minutes")
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionLeft) }
+        pressRemote(listOf(Key.DirectionLeft))
         screen.onNodeWithText("− 5").assertIsFocused()
-        repeat(14) { screen.onRoot().performKeyInput { pressKey(Key.DirectionCenter) } }
+        repeat(14) { pressRemote(listOf(Key.DirectionCenter)) }
         screen.onNodeWithTag("duration-value").assertTextEquals("5 minutes")
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        pressRemote(listOf(Key.DirectionDown))
         screen.onNodeWithText("Start session").assertIsFocused()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
+        pressRemote(listOf(Key.DirectionRight))
         screen.onNodeWithText("Start session").assertIsFocused()
         pressBack()
         screen.waitUntil(10_000) { screen.onAllNodesWithText("Who is watching?").fetchSemanticsNodes().isNotEmpty() }
@@ -230,15 +241,15 @@ class FamilyRemoteTest {
             }
             org.junit.Assert.assertTrue(screen.activity.family.start(Viewer.ELIAS, 20, "1111"))
         }
-        screen.waitUntil(10_000) { screen.onAllNodesWithText("End session").fetchSemanticsNodes().isNotEmpty() }
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        screen.waitUntil(10_000) { screen.onAllNodesWithTag("home-profile").fetchSemanticsNodes().isNotEmpty() }
+        pressRemote(listOf(Key.DirectionUp, Key.DirectionCenter))
         screen.onNodeWithText("Switch profile").assertIsFocused()
     }
 
     @Test fun switchQuestionNeedsOneContinueAndBackKeepsTheRunningSessionWithPinOn() {
         startChildHome(pinEnabled = true)
         val session = screen.activity.family.ui.value.state.sessions[Viewer.ELIAS]
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionCenter) }
+        pressRemote(listOf(Key.DirectionCenter))
         screen.onNodeWithText("Switch profile?").assertIsDisplayed()
         assertContinueIsCentered()
         screen.onNodeWithText("Continue").assertIsFocused().assertIsEnabled()
@@ -247,8 +258,8 @@ class FamilyRemoteTest {
         screen.onNodeWithText("Switch profile?").assertDoesNotExist()
         org.junit.Assert.assertEquals(Viewer.ELIAS, screen.activity.family.ui.value.state.selected)
         org.junit.Assert.assertEquals(session, screen.activity.family.ui.value.state.sessions[Viewer.ELIAS])
-        screen.onNodeWithText("Switch profile").assertIsFocused()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionCenter) }
+        screen.onNodeWithTag("home-profile").assertIsFocused()
+        pressRemote(listOf(Key.DirectionCenter, Key.DirectionCenter))
         screen.onNodeWithText("Continue").assertIsFocused()
         screen.onNode(isDialog()).performKeyInput { pressKey(Key.DirectionCenter) }
         screen.waitUntil(10_000) { screen.onAllNodesWithText("Who is watching?").fetchSemanticsNodes().isNotEmpty() }
@@ -260,7 +271,7 @@ class FamilyRemoteTest {
 
     @Test fun endQuestionNeedsOneContinueAndBackKeepsTheRunningSession() {
         startChildHome()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionRight); pressKey(Key.DirectionCenter) }
+        pressRemote(listOf(Key.DirectionDown, Key.DirectionCenter))
         screen.onNodeWithText("End Elias's session?").assertIsDisplayed()
         assertContinueIsCentered()
         screen.onNodeWithText("Continue").assertIsFocused()
@@ -268,8 +279,8 @@ class FamilyRemoteTest {
         pressBack()
         org.junit.Assert.assertEquals(Viewer.ELIAS, screen.activity.family.ui.value.state.selected)
         org.junit.Assert.assertEquals(session, screen.activity.family.ui.value.state.sessions[Viewer.ELIAS])
-        screen.onNodeWithText("End session").assertIsFocused()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionCenter) }
+        screen.onNodeWithTag("home-profile").assertIsFocused()
+        pressRemote(listOf(Key.DirectionCenter, Key.DirectionDown, Key.DirectionCenter))
         screen.onNodeWithText("Continue").assertIsFocused()
         screen.onNode(isDialog()).performKeyInput { pressKey(Key.DirectionCenter) }
         screen.waitUntil(10_000) { screen.onAllNodesWithText("Who is watching?").fetchSemanticsNodes().isNotEmpty() }
@@ -279,7 +290,7 @@ class FamilyRemoteTest {
 
     @Test fun endPinRejectsWrongDigitsThenAcceptsCorrectDigitsWithOneContinue() {
         startChildHome(pinEnabled = true)
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionRight); pressKey(Key.DirectionCenter) }
+        pressRemote(listOf(Key.DirectionDown, Key.DirectionCenter))
         screen.onNode(hasText("1") and hasAnyAncestor(isDialog())).assertIsFocused()
         screen.onNodeWithText("Continue").assertIsNotEnabled()
         screen.onNodeWithText("Cancel").assertDoesNotExist()
@@ -315,9 +326,9 @@ class FamilyRemoteTest {
             org.junit.Assert.assertTrue(screen.activity.family.setPin("1111"))
             org.junit.Assert.assertTrue(screen.activity.family.chooseProfiles())
         }
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionRight); pressKey(Key.DirectionCenter) }
+        pressRemote(listOf(Key.DirectionRight, Key.DirectionCenter))
         screen.waitUntil(10_000) { screen.onAllNodesWithText("Time for Elias").fetchSemanticsNodes().isNotEmpty() }
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionUp); pressKey(Key.DirectionCenter); pressKey(Key.DirectionDown); pressKey(Key.DirectionCenter) }
+        pressRemote(listOf(Key.DirectionUp, Key.DirectionCenter, Key.DirectionDown, Key.DirectionCenter))
         screen.onNodeWithText("Approve 25 minutes for Elias.").assertIsDisplayed()
         screen.onNode(hasText("1") and hasAnyAncestor(isDialog())).assertIsFocused()
         screen.onNodeWithText("Continue").assertIsNotEnabled()

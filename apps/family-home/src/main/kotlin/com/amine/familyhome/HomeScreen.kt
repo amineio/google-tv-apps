@@ -33,6 +33,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.tv.material3.*
 
 @Composable
@@ -55,7 +57,7 @@ internal fun HomeScreen(
     val keys = apps.map { it.pkg }
     val targets = remember(keys) { keys.associateWith { FocusRequester() } }
     val profiles = remember { FocusRequester() }
-    val manage = remember { FocusRequester() }
+    var profileMenuOpen by remember(viewer) { mutableStateOf(false) }
     val row = rememberLazyListState()
     val activeTarget = targets[featured?.pkg]
     val chess = featured?.pkg == "com.amine.chessmath"
@@ -80,10 +82,25 @@ internal fun HomeScreen(
                     TimerChip(remainingMs)
                     Spacer(Modifier.width(20.dp))
                 }
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.testTag("home-profile")) {
-                    ProfilePortrait(viewer, 30.dp, displayName = displayName, portrait = portrait)
-                    Spacer(Modifier.width(10.dp))
-                    Text(displayName, fontSize = 18.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                val profileShape = RoundedCornerShape(12.dp)
+                Surface(onClick = { profileMenuOpen = true },
+                    modifier = Modifier.testTag("home-profile").focusRequester(profiles).focusProperties {
+                        up = FocusRequester.Cancel
+                        left = FocusRequester.Cancel
+                        right = FocusRequester.Cancel
+                        down = activeTarget ?: FocusRequester.Cancel
+                    },
+                    shape = ClickableSurfaceDefaults.shape(profileShape),
+                    colors = ClickableSurfaceDefaults.colors(containerColor = Color.Transparent, contentColor = Ink,
+                        focusedContainerColor = Panel, focusedContentColor = Ink),
+                    scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
+                    border = ClickableSurfaceDefaults.border(
+                        focusedBorder = Border(BorderStroke(2.dp, Gold), shape = profileShape))) {
+                    Row(Modifier.padding(horizontal = 10.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
+                        ProfilePortrait(viewer, 30.dp, displayName = displayName, portrait = portrait)
+                        Spacer(Modifier.width(10.dp))
+                        Text(displayName, fontSize = 18.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
                 }
             }
             Spacer(Modifier.height(20.dp))
@@ -106,31 +123,65 @@ internal fun HomeScreen(
                 modifier = Modifier.fillMaxWidth().height(112.dp).testTag("home-apps")) {
                 items(apps, key = { it.pkg }) { app ->
                     AppTile(app, Modifier.focusRequester(targets.getValue(app.pkg)).focusProperties {
-                        up = FocusRequester.Cancel; down = profiles
+                        up = profiles; down = FocusRequester.Cancel
+                        if (app == apps.first()) left = FocusRequester.Cancel
+                        if (app == apps.last()) right = FocusRequester.Cancel
                     }.onFocusChanged { if (it.isFocused) onFocused(app.pkg) }) { onLaunch(app) }
                 }
             }
             Spacer(Modifier.weight(1f))
             notice?.let { Text(it, color = Gold, fontSize = 15.sp, maxLines = 2); Spacer(Modifier.height(8.dp)) }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                TvAction("Switch profile", Modifier.focusRequester(profiles).focusProperties {
-                    up = activeTarget ?: FocusRequester.Default; right = manage
-                }, onClick = onSwitchProfile)
-                TvAction(if (viewer.isChild) "End session" else "Family configuration",
-                    Modifier.focusRequester(manage).focusProperties {
-                        up = activeTarget ?: FocusRequester.Default; left = profiles
-                    }, onClick = onManage)
-            }
+
         }
     }
+    if (profileMenuOpen) {
+        ProfileMenu(viewer,
+            onDismiss = { profileMenuOpen = false },
+            onSwitchProfile = { profileMenuOpen = false; onSwitchProfile() },
+            onManage = { profileMenuOpen = false; onManage() })
+    }
+
     LaunchedEffect(viewer, keys, resume) {
         if (focusManageOnEntry) {
-            manage.requestFocus()
+            profiles.requestFocus()
         } else if (featured != null) {
             row.scrollToItem(apps.indexOfFirst { it.pkg == featured.pkg }.coerceAtLeast(0))
             withFrameNanos { }
             targets.getValue(featured.pkg).requestFocus()
         } else profiles.requestFocus()
+    }
+}
+
+@Composable
+private fun ProfileMenu(viewer: Viewer, onDismiss: () -> Unit,
+    onSwitchProfile: () -> Unit, onManage: () -> Unit) {
+    val switchProfile = remember { FocusRequester() }
+    val manage = remember { FocusRequester() }
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Box(Modifier.fillMaxSize().padding(top = 82.dp, end = 36.dp, bottom = 120.dp),
+            contentAlignment = Alignment.TopEnd) {
+            Column(Modifier.width(304.dp).background(Panel, RoundedCornerShape(16.dp))
+                .border(1.dp, Color.White.copy(alpha = .12f), RoundedCornerShape(16.dp))
+                .padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                ListItem(selected = false, onClick = onSwitchProfile,
+                    modifier = Modifier.fillMaxWidth().focusRequester(switchProfile).focusProperties {
+                        up = FocusRequester.Cancel; down = manage
+                        left = FocusRequester.Cancel; right = FocusRequester.Cancel
+                    },
+                    headlineContent = { Text("Switch profile", fontSize = 20.sp) },
+                    colors = ListItemDefaults.colors(focusedContainerColor = Gold, focusedContentColor = Background),
+                    scale = ListItemDefaults.scale(focusedScale = 1f))
+                ListItem(selected = false, onClick = onManage,
+                    modifier = Modifier.fillMaxWidth().focusRequester(manage).focusProperties {
+                        up = switchProfile; down = FocusRequester.Cancel
+                        left = FocusRequester.Cancel; right = FocusRequester.Cancel
+                    },
+                    headlineContent = { Text(if (viewer.isChild) "End session" else "Family configuration", fontSize = 20.sp) },
+                    colors = ListItemDefaults.colors(focusedContainerColor = Gold, focusedContentColor = Background),
+                    scale = ListItemDefaults.scale(focusedScale = 1f))
+            }
+        }
+        LaunchedEffect(Unit) { switchProfile.requestFocus() }
     }
 }
 

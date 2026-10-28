@@ -8,7 +8,7 @@ Build and test locally. GitHub APK builds are paused until the user requests the
 
 ## Interface
 
-Version 1.5 adds local daily usage totals for each profile.
+Version 1.7 adds weekly usage charts and a profile action menu.
 Version 1.6 adds backgrounds supplied by the selected app, including Battleship.
 Read the [artwork validation record](../../docs/battleship/launcher-art/validation.md) for its tests and device observations.
 The profile screen uses circular illustrated portraits, Outfit text, and a gold focus outline.
@@ -22,7 +22,10 @@ Children see installed permitted apps in the approved order. Amine keeps all ins
 
 The launcher restores the selected app after returning from it.
 It refreshes the catalog after resume or a package change.
-Profile and session controls stay below the app row, clear of the independent Clock overlay.
+The upper-right profile control opens Switch profile and Family configuration, or End session for a child.
+Press Up from an app to reach the profile control. Press Down to return to the selected app.
+Remote Back closes the menu and returns focus to the profile control.
+Profile controls and history reports stay clear of the independent Clock overlay.
 The artwork is bundled locally. The launcher does not fetch recommendations or viewing history.
 
 ## Family use
@@ -164,7 +167,15 @@ Keep Google TV Home and setupwraith enabled so that Cast credentials remain avai
 ## Daily usage
 
 Open Daily usage in parent settings to see today's total for each profile.
-Select a profile to see up to 30 recorded dates. Up and Down scroll through the dates.
+Select a profile to see seven daily bars and the recorded week total.
+Left and Right select a day. The report shows its exact date and duration below the chart.
+Press Up to reach Earlier week or Later week. Press Down to return to the selected day.
+The current week opens first, with today focused. Each week starts on Monday.
+The chart uses one linear scale per week. The maximum daily total labels the scale.
+Missing records say No recorded use. A future date without a record says Future date.
+Recorded zero says 0 min. Missing records do not establish zero usage.
+Earlier week and Later week navigate the retained history. Controls stop at the available week boundaries.
+The report keeps the selected week and weekday after Back or recreation.
 Remote Back returns to the same row on the previous page.
 Totals count selected-profile screen-on time, including menus and paused videos.
 Standby, profile exit, helper loss, and recovery stop measurement.
@@ -177,6 +188,6 @@ Storage retains up to 30 recorded dates. It removes the oldest records first if 
 The report does not add a daily quota, per-app history, program titles, or network access.
 It does not identify who watches without selecting their profile.
 
-The previous Java TV Home package can be removed independently of Family Home.
-Keep its APK and app data for recovery. Keep Google TV Home, setupwraith, and TV Clock installed.
-The Java source remains in this repository.
+The previous Java TV Home package is removed from the TV for all Android users, without retained data.
+The temporary retirement backup is deleted. Keep Google TV Home, setupwraith, and TV Clock installed.
+The Java source remains in this repository for a future rebuild if needed.
