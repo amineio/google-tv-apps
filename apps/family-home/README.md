@@ -8,17 +8,21 @@ Build and test locally. GitHub APK builds are paused until the user requests the
 
 ## Interface
 
+Version 1.8 adds direct profile switching, resume badges, and a saved app order for each profile.
 Version 1.7 adds weekly usage charts and a profile action menu.
 Version 1.6 adds backgrounds supplied by the selected app, including Battleship.
 Read the [artwork validation record](../../docs/battleship/launcher-art/validation.md) for its tests and device observations.
 The profile screen uses circular illustrated portraits, Outfit text, and a gold focus outline.
 The home screen keeps the profile at the upper right and gives the countdown fixed bounds and equal-width digit cells.
 Select an app tile with the remote center key to open it.
+Hold the center key on an app to enter move mode. Left and Right move that app one position.
+Press OK to save the order. Remote Back cancels the draft. Up and Down stay within move mode.
+Each profile keeps its own order after restart. New apps appear after the saved order.
 Chess keeps its illustrated background. Apps can supply their own text-free background through application metadata.
 Family Home loads only the selected background and limits its decoded dimensions to 1920 by 1080 pixels.
 Apps without usable artwork use a subdued gradient based on their icon color.
 Landscape banners fill landscape tiles. Square icons fill square tiles.
-Children see installed permitted apps in the approved order. Amine keeps all installed TV apps.
+Children see installed permitted apps in their saved order. Amine keeps all installed TV apps.
 
 The launcher restores the selected app after returning from it.
 It refreshes the catalog after resume or a package change.
@@ -35,8 +39,12 @@ Amine has all installed TV apps. Each new child session starts with a duration c
 The centered duration screen shows the child's portrait and name above equal-size step buttons.
 Start session is centered and has initial focus. Buttons turn gold only when focused.
 Use the remote Back key to leave the duration screen without starting a session.
-End session and Switch profile show one centered Continue button. Back dismisses the question without applying it.
-Switch profile does not require a PIN. End session keeps the parent PIN check when the PIN is enabled.
+Switch profile opens the chooser immediately for parents and children. It pauses the outgoing child's remaining balance.
+A clock badge above a child portrait shows the remaining time of a resumable session.
+Expired sessions and profiles without a session have no badge.
+Selecting the parent still uses its PIN when enabled.
+End session shows one centered Continue button. Back dismisses the question without applying it.
+End session keeps the parent PIN check when the PIN is enabled.
 PIN dialogs start on the first digit. Continue stays disabled until all four digits are entered.
 The default is 20 minutes, with five-minute steps from 5 through 60 minutes.
 The maximum applies to each session. There is no daily quota.

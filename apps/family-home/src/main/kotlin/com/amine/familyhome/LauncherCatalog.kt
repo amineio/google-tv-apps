@@ -65,9 +65,13 @@ private fun Bitmap.darkBackdrop(): Int {
     return Color.rgb(dark(red), dark(green), dark(blue))
 }
 
-internal fun orderedApps(apps: List<LauncherApp>, viewer: Viewer, allowed: Set<String>): List<LauncherApp> {
+internal fun orderedApps(apps: List<LauncherApp>, viewer: Viewer, allowed: Set<String>,
+    savedOrder: List<String> = emptyList()): List<LauncherApp> {
     val order = if (viewer.isChild) DefaultApps.labels.keys.toList()
         else listOf("com.google.android.youtube.tv") + DefaultApps.labels.keys
-    return apps.filter { !viewer.isChild || it.pkg in allowed }.distinctBy { it.pkg }
+    val fallback = apps.filter { !viewer.isChild || it.pkg in allowed }.distinctBy { it.pkg }
         .sortedBy { order.indexOf(it.pkg).let { index -> if (index < 0) Int.MAX_VALUE else index } }
+    val available = fallback.associateBy { it.pkg }
+    val saved = savedOrder.distinct().mapNotNull(available::get)
+    return saved + fallback.filter { it.pkg !in savedOrder }
 }

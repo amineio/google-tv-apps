@@ -1,5 +1,6 @@
 package com.amine.familyhome
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -23,6 +24,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.key.*
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -52,14 +58,43 @@ internal fun HomeScreen(
     displayName: String = viewer.label,
     portrait: Portrait = viewer.defaultPortrait,
     focusManageOnEntry: Boolean = false,
+    onSaveOrder: suspend (List<String>) -> Boolean = { false },
 ) {
-    val featured = apps.firstOrNull { it.pkg == focusedPackage } ?: apps.firstOrNull()
+    var draft by remember(viewer, apps) { mutableStateOf<List<LauncherApp>?>(null) }
+    var movingPackage by remember(viewer, apps) { mutableStateOf<String?>(null) }
+    var saving by remember(viewer, apps) { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val displayedApps = draft ?: apps
+    val featured = displayedApps.firstOrNull { it.pkg == focusedPackage } ?: displayedApps.firstOrNull()
     val keys = apps.map { it.pkg }
     val targets = remember(keys) { keys.associateWith { FocusRequester() } }
     val profiles = remember { FocusRequester() }
     var profileMenuOpen by remember(viewer) { mutableStateOf(false) }
     val row = rememberLazyListState()
     val activeTarget = targets[featured?.pkg]
+    suspend fun focusMovedApp(pkg: String?, ordered: List<LauncherApp>) {
+        val index = ordered.indexOfFirst { it.pkg == pkg }
+        if (index < 0) return
+        withFrameNanos { }
+        val layout = row.layoutInfo
+        val item = layout.visibleItemsInfo.firstOrNull { it.key == pkg }
+        if (item == null || item.offset < layout.viewportStartOffset ||
+            item.offset + item.size > layout.viewportEndOffset) {
+            row.scrollToItem(index)
+            withFrameNanos { }
+        }
+        targets[pkg]?.requestFocus()
+    }
+    fun cancelMove() {
+        val pkg = movingPackage
+        draft = null
+        movingPackage = null
+        scope.launch { focusMovedApp(pkg, apps) }
+    }
+    BackHandler(enabled = movingPackage != null) { if (!saving) cancelMove() }
+    LaunchedEffect(movingPackage, draft?.map { it.pkg }) {
+        if (movingPackage != null) focusMovedApp(movingPackage, displayedApps)
+    }
     val chess = featured?.pkg == "com.amine.chessmath"
     val hero = selectedAppHeroArtwork(featured?.pkg, if (chess) null else featured?.heroArtwork, resume)
     Box(Modifier.fillMaxSize()) {
@@ -121,14 +156,60 @@ internal fun HomeScreen(
             } else LazyRow(state = row, horizontalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 11.dp),
                 modifier = Modifier.fillMaxWidth().height(112.dp).testTag("home-apps")) {
-                items(apps, key = { it.pkg }) { app ->
+                items(displayedApps, key = { it.pkg }) { app ->
                     AppTile(app, Modifier.focusRequester(targets.getValue(app.pkg)).focusProperties {
-                        up = profiles; down = FocusRequester.Cancel
-                        if (app == apps.first()) left = FocusRequester.Cancel
-                        if (app == apps.last()) right = FocusRequester.Cancel
-                    }.onFocusChanged { if (it.isFocused) onFocused(app.pkg) }) { onLaunch(app) }
+                        up = if (movingPackage == null) profiles else FocusRequester.Cancel
+                        down = FocusRequester.Cancel
+                        if (app == displayedApps.first()) left = FocusRequester.Cancel
+                        if (app == displayedApps.last()) right = FocusRequester.Cancel
+                    }.onPreviewKeyEvent { event ->
+                        if (movingPackage == null) false
+                        else when (event.key) {
+                            Key.DirectionUp, Key.DirectionDown -> true
+                            Key.DirectionLeft, Key.DirectionRight -> {
+                                if (event.type == KeyEventType.KeyDown && !saving) {
+                                    val current = draft.orEmpty()
+                                    val index = current.indexOfFirst { it.pkg == movingPackage }
+                                    val next = index + if (event.key == Key.DirectionLeft) -1 else 1
+                                    if (index >= 0 && next in current.indices) {
+                                        draft = current.toMutableList().apply {
+                                            val moved = removeAt(index)
+                                            add(next, moved)
+                                        }
+                                    }
+                                }
+                                true
+                            }
+                            else -> false
+                        }
+                    }.onFocusChanged { if (it.isFocused) onFocused(app.pkg) },
+                        moving = movingPackage == app.pkg,
+                        onLongClick = {
+                            if (movingPackage == null) {
+                                draft = apps
+                                movingPackage = app.pkg
+                            }
+                        },
+                        onClick = {
+                            if (movingPackage == null) onLaunch(app)
+                            else if (!saving) {
+                                saving = true
+                                val packages = displayedApps.map { it.pkg }
+                                scope.launch {
+                                    try {
+                                        val saved = withContext(NonCancellable) { onSaveOrder(packages) }
+                                        if (isActive && saved) {
+                                            draft = null
+                                            movingPackage = null
+                                        }
+                                    } finally { if (isActive) saving = false }
+                                }
+                            }
+                        })
                 }
             }
+            if (movingPackage != null) Text("Left/Right move · OK save · Back cancel",
+                Modifier.testTag("app-move-hint"), color = Gold, fontSize = 15.sp)
             Spacer(Modifier.weight(1f))
             notice?.let { Text(it, color = Gold, fontSize = 15.sp, maxLines = 2); Spacer(Modifier.height(8.dp)) }
 
@@ -213,9 +294,11 @@ private fun TimerChip(milliseconds: Long) {
 }
 
 @Composable
-private fun AppTile(app: LauncherApp, modifier: Modifier, onClick: () -> Unit) {
+private fun AppTile(app: LauncherApp, modifier: Modifier, moving: Boolean,
+    onLongClick: () -> Unit, onClick: () -> Unit) {
     val shape = RoundedCornerShape(11.dp)
-    Surface(onClick, modifier.width(if (app.banner != null) 144.dp else 81.dp).height(81.dp).testTag("app:${app.pkg}"),
+    Surface(onClick = onClick, onLongClick = onLongClick,
+        modifier = modifier.width(if (app.banner != null) 144.dp else 81.dp).height(81.dp).testTag("app:${app.pkg}"),
         shape = ClickableSurfaceDefaults.shape(shape),
         colors = ClickableSurfaceDefaults.colors(containerColor = Panel, contentColor = Ink,
             focusedContainerColor = Panel, focusedContentColor = Ink),
@@ -224,10 +307,15 @@ private fun AppTile(app: LauncherApp, modifier: Modifier, onClick: () -> Unit) {
             border = Border(BorderStroke(1.dp, Color.White.copy(alpha = .12f)), shape = shape),
             focusedBorder = Border(BorderStroke(2.dp, Gold), shape = shape)),
     ) {
-        if (app.banner != null) {
-            Image(app.banner.asImageBitmap(), app.label, Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
-        } else {
-            Image(app.icon.asImageBitmap(), app.label, Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+        Box(Modifier.fillMaxSize()) {
+            if (app.banner != null) {
+                Image(app.banner.asImageBitmap(), app.label, Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+            } else {
+                Image(app.icon.asImageBitmap(), app.label, Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+            }
+            if (moving) Text("‹  ›", Modifier.align(Alignment.BottomCenter)
+                .background(Background.copy(alpha = .9f), RoundedCornerShape(4.dp)).padding(horizontal = 6.dp),
+                color = Gold, fontSize = 18.sp)
         }
     }
 }

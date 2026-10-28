@@ -14,21 +14,22 @@ object FamilyStateCodec {
             require(!it.jsonPrimitive.isString) { "Invalid family state schema" }
             requireNotNull(it.jsonPrimitive.intOrNull) { "Invalid family state schema" }
         } ?: 1
+        if (schema < 4) require("appOrder" !in saved) { "Invalid legacy family app order" }
         val current = when (schema) {
             1 -> {
                 require("profiles" !in saved) { "Invalid legacy family profiles" }
                 require("usage" !in saved) { "Invalid legacy family usage" }
-                JsonObject(saved + mapOf("schema" to JsonPrimitive(3),
+                JsonObject(saved + mapOf("schema" to JsonPrimitive(4),
                     "profiles" to json.encodeToJsonElement(defaultProfiles())))
             }
             2 -> {
                 require("profiles" in saved) { "Missing family profiles" }
                 require("usage" !in saved) { "Invalid legacy family usage" }
-                JsonObject(saved + ("schema" to JsonPrimitive(3)))
+                JsonObject(saved + ("schema" to JsonPrimitive(4)))
             }
-            3 -> {
+            3, 4 -> {
                 require("profiles" in saved) { "Missing family profiles" }
-                saved
+                JsonObject(saved + ("schema" to JsonPrimitive(4)))
             }
             else -> throw IllegalArgumentException("Unsupported saved family state")
         }
@@ -51,6 +52,7 @@ object FamilyStateCodec {
     private fun wire(state: FamilyState): String {
         val saved = json.encodeToJsonElement(state).jsonObject
         // An empty optional field must not increase the size of an existing near-limit core state.
-        return (if (state.usage.isEmpty()) JsonObject(saved - "usage") else saved).toString()
+        val withoutUsage = if (state.usage.isEmpty()) saved - "usage" else saved
+        return JsonObject(if (state.appOrder.isEmpty()) withoutUsage - "appOrder" else withoutUsage).toString()
     }
 }

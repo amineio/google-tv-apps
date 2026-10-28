@@ -213,6 +213,15 @@ class FamilyController(
         commit(state.copy(allowed = state.allowed + (viewer to packages), revision = state.revision + 1))
     }
 
+    suspend fun setAppOrder(viewer: Viewer, packages: List<String>): Boolean = mutex.withLock {
+        if (!known(viewer) || !available() || mutable.value.state.selected != viewer) return@withLock false
+        if (packages.distinct().size != packages.size || packages.any { !validAppPackage(it) })
+            return@withLock reject("This app order is invalid.")
+        val state = mutable.value.state
+        val order = if (packages.isEmpty()) state.appOrder - viewer else state.appOrder + (viewer to packages.toList())
+        commit(state.copy(appOrder = order, revision = state.revision + 1))
+    }
+
     suspend fun addChild(name: String): Viewer? = mutex.withLock {
         if (!available()) return@withLock null
         val state = mutable.value.state

@@ -101,10 +101,8 @@ fun FamilyScreen(activity: MainActivity) {
     fun protect(title: String, message: String, action: suspend (String) -> Boolean) {
         parentAction = ParentAction(title, message, ui.state.pinEnabled, action)
     }
-    fun confirmSwitchProfile() {
-        parentAction = ParentAction("Switch profile?", "Return to the profile chooser?", false) {
-            controller.chooseProfiles()
-        }
+    fun switchProfile() {
+        scope.launch { controller.chooseProfiles() }
     }
     BackHandler(enabled = !configuration || parentAction != null) {
         when {
@@ -125,13 +123,14 @@ fun FamilyScreen(activity: MainActivity) {
         (!selected.isChild || (durationFor != selected && ui.state.sessions.containsKey(selected) &&
             SessionEngine.remaining(ui.state, selected, ui.now) > 0))) {
         HomeScreen(selected, if (selected.isChild) SessionEngine.remaining(ui.state, selected, ui.now) else null,
-            orderedApps(apps, selected, ui.state.allowed[selected].orEmpty()), focusedPackage, resume,
-            { focusedPackage = it; restoreManageFocus = false }, activity::launch, ::confirmSwitchProfile, {
+            orderedApps(apps, selected, ui.state.allowed[selected].orEmpty(), ui.state.appOrder[selected].orEmpty()), focusedPackage, resume,
+            { focusedPackage = it; restoreManageFocus = false }, activity::launch, ::switchProfile, {
                 if (!selected.isChild) configuration = true
                 else protect("End ${ui.state.label(selected)}'s session?", "The remaining time will be discarded.") { controller.end(selected, it) }
             }, ui.notice, displayName = ui.state.label(selected),
             portrait = requireNotNull(ui.state.profile(selected)).portrait,
-            focusManageOnEntry = restoreManageFocus)
+            focusManageOnEntry = restoreManageFocus,
+            onSaveOrder = { controller.setAppOrder(selected, it) })
     } else if (ui.ready && !ui.storageFailed && selected == Viewer.AMINE && configuration) {
         SettingsScreen(ui, apps, FamilyAccessService.active,
             activity.getSystemService(RoleManager::class.java).isRoleHeld(RoleManager.ROLE_HOME), resume,
@@ -171,7 +170,7 @@ fun FamilyScreen(activity: MainActivity) {
             Text("Your session has ended.", color = Muted, fontSize = 23.sp)
             Spacer(Modifier.height(32.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                ActionButton("Switch profile", initial = true, onClick = ::confirmSwitchProfile)
+                ActionButton("Switch profile", initial = true, onClick = ::switchProfile)
                 ActionButton("Start a new session") { durationFor = selected }
             }
         }
