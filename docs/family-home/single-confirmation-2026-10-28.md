@@ -29,5 +29,17 @@ Release, debug, and Android test APK builds pass.
 A fresh independent source review reports no material findings.
 
 The coordinator inspected the centered Start session control in an emulator capture.
-Physical installation remains pending while the TV shows an active game.
-These results do not establish playback, wake, or Cast behavior.
+
+## Physical TV installation
+
+Family Home 1.3, code 4, installed on the Chromecast without clearing app data.
+The installed APK hash matches the tested release:
+`e36486c7797dc65397d350a73de0e22b7e6bf2ce91379e56bc5688562557ca4f`.
+The launcher opens and the Switch profile question shows one centered Continue button.
+The remote Back key dismisses the question and returns focus to Switch profile.
+
+Android temporarily reported accessibility as disabled during installation.
+It returned to the prior enabled state. The Family Home service is enabled and bound.
+The Home role and enabled helper list match the values before installation.
+Private device captures and routing records remain in the ignored backup directory.
+These checks do not establish playback, wake, or Cast behavior.
