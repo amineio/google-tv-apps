@@ -31,20 +31,22 @@ The carrier has a flight deck. The submarine has a slim capsule. Surface ships h
 Use Compose Canvas. Both orientations must fit their cell footprint. Sunk hulls retain coral damage and visible hit crosses.
 Do not edit GameBoard.kt. The coordinator integrates the function.
 
-- [ ] Implement the reversible drawing change. Review it in native captures instead of writing tests that mirror paths.
-- [ ] Obtain source and rendered review before delivery.
+- [x] Implement the reversible drawing change. Review it in native captures instead of writing tests that mirror paths.
+- [x] Obtain source and rendered review before delivery.
 
 ## Task 2: Composition and three iterations
 
 Modify: BattleshipApp.kt and GameBoard.kt. Create: GameplayScreen.kt, command_battleship.webp, and an asset record.
 Tests: BattleshipRemoteTest.kt.
 
-- [ ] Add a failing UI regression for separate target and actual last-shot feedback after directional input.
-- [ ] Operate the regression on emulator-5580 and record the expected failure.
-- [ ] Implement iteration 1 and integrate task 1. Capture and score the actual app.
-- [ ] Implement iteration 2 from designer findings. Capture and score a normal and dense match.
-- [ ] Implement iteration 3 from remaining findings. Capture and score the final app.
-- [ ] Operate unit tests, release lint, both APK builds, full emulator tests, and applicable repository tests.
-- [ ] Obtain fresh independent source and rendered review. Fix material findings.
-- [ ] Record all scores, asset prompts, paths, sizes, rights, test results, and evidence limits.
-- [ ] Install version 1.2, code 3 when TV use permits. Commit, push, and merge the scoped PR.
+- [x] Add a failing UI regression for separate target and actual last-shot feedback after directional input.
+- [x] Operate the regression on emulator-5580 and record the expected failure.
+- [x] Implement iteration 1 and integrate task 1. Capture and score the actual app.
+- [x] Implement iteration 2 from designer findings. Capture and score a normal and dense match.
+- [x] Implement iteration 3 from remaining findings. Capture and score the final app.
+- [x] Operate unit tests, release lint, both APK builds, full emulator tests, and applicable repository tests.
+- [x] Obtain fresh independent source and rendered review. Fix material findings.
+- [x] Record all scores, asset prompts, paths, sizes, rights, test results, and evidence limits.
+- [x] Install version 1.2, code 3 in the background. Family Home remains in front.
+
+Delivery follows the repository policy: commit installed changes, push the feature branch, and merge PR #10 into origin/main.

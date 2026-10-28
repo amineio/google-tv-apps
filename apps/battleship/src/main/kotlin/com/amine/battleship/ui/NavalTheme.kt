@@ -35,6 +35,7 @@ internal val Ink = Color(0xFFF2F7FA)
 internal val Muted = Color(0xFFB0C5D0)
 internal val Impact = Color(0xFFFF7569)
 internal val Steel = Color(0xFF91A8B6)
+internal val Brass = Color(0xFFE9C78E)
 
 @OptIn(ExperimentalTextApi::class)
 internal val Outfit = FontFamily(

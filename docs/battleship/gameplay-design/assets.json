@@ -10,7 +10,11 @@
     "compression": "cwebp -q 82 -resize 1400 0",
     "excluded": "Invented specifications, fake controls, incorrect fleet content, and tiny typography are excluded from implementation.",
     "bytes": 85184,
-    "sha256": "6b497d9b0cb5dc37584c893db0d8b7428df92c7e6f7154c46036d9a55397e3dc"
+    "sha256": "6b497d9b0cb5dc37584c893db0d8b7428df92c7e6f7154c46036d9a55397e3dc",
+    "dimensions": [
+      1400,
+      788
+    ]
   },
   "commandIllustration": {
     "path": "apps/battleship/src/main/res/drawable-nodpi/command_battleship.webp",
@@ -19,7 +23,15 @@
     "compression": "cwebp -q 90 -alpha_q 100 -resize 840 0",
     "transparentBackground": true,
     "bytes": 64824,
-    "sha256": "5b96f21aa205f7eb9c3db7a92223964d55b564b193f6e4ce7ee688b79e9a15b6"
+    "sha256": "5b96f21aa205f7eb9c3db7a92223964d55b564b193f6e4ce7ee688b79e9a15b6",
+    "sourceDimensions": [
+      1983,
+      793
+    ],
+    "dimensions": [
+      840,
+      336
+    ]
   },
   "nativeGraphics": "Five class-specific top-down hulls, deck details, board surfaces, axes, focus, shot markers, and labels use Compose Canvas or native text."
 }

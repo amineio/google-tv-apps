@@ -43,8 +43,10 @@ fun BattleshipApp(state: SessionState, onAction: (GameAction) -> Unit, onExit: (
             if (state.screen == Screen.HOME) onExit() else onAction(GameAction.Back)
         }
         Box(Modifier.fillMaxSize().background(Ocean)) {
-            Image(painterResource(R.drawable.naval_background), null, Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop)
+            if (state.screen != Screen.GAME) {
+                Image(painterResource(R.drawable.naval_background), null, Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop)
+            }
             val home = state.screen == Screen.HOME
             Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(
                 if (home) listOf(Ocean.copy(alpha = .96f), Ocean.copy(alpha = .69f), Ocean.copy(alpha = .12f))
@@ -108,122 +110,12 @@ private fun HomeScreen(state: SessionState, onAction: (GameAction) -> Unit, onEx
     }
 }
 
-@Composable
-private fun GameScreen(state: SessionState, onAction: (GameAction) -> Unit) {
-    val game = state.game ?: return
-    val view = GameEngine.playerView(game)
-    val boardFocus = remember { FocusRequester() }
-    LaunchedEffect(state.paused, state.confirmation) {
-        if (!state.paused && state.confirmation == null) { withFrameNanos { }; boardFocus.requestFocus() }
-    }
-    val playerTurn = game.phase == GamePhase.PLAYER_TURN && !state.resolving
-    val playerShots = view.opponentBoard.shots
-    val enemyLast = playerShots.lastOrNull()
-    val friendlyLast = view.ownBoard.shots.lastOrNull()
-    Column(Modifier.fillMaxSize()) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text("BATTLESHIP", fontWeight = FontWeight.Bold, fontSize = 24.sp, letterSpacing = 2.sp)
-            Spacer(Modifier.weight(1f))
-            Box(Modifier.background(if (playerTurn) Cyan.copy(alpha = .12f) else Ink.copy(alpha = .07f),
-                RoundedCornerShape(20.dp)).padding(horizontal = 15.dp, vertical = 6.dp)) {
-                Text(when {
-                    game.phase == GamePhase.GAME_OVER -> if (game.winner == Player.HUMAN) "VICTORY" else "DEFEAT"
-                    state.resolving && game.phase == GamePhase.PLAYER_TURN -> "SHOT RESOLVING"
-                    playerTurn -> "YOUR TURN"
-                    else -> "COMPUTER TURN"
-                }, fontSize = 14.sp,
-                    color = if (playerTurn) Cyan else Muted, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
-            }
-            Spacer(Modifier.width(18.dp))
-            Text("BACK  Pause", fontSize = 14.sp, color = Muted)
-        }
-        Spacer(Modifier.height(13.dp))
-        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
-            val boardSize = minOf(maxHeight - 31.dp, maxWidth * .56f)
-            Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(30.dp),
-                verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.width(boardSize)) {
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Eyebrow("ENEMY WATERS")
-                        Spacer(Modifier.weight(1f))
-                        Text("${view.opponentBoard.ships.size} / 5 SUNK", fontSize = 12.sp, color = Muted)
-                    }
-                    Spacer(Modifier.height(6.dp))
-                    GameBoard(ships = view.opponentBoard.ships, shots = playerShots,
-                        modifier = Modifier.size(boardSize), selected = state.selected, lastShot = enemyLast,
-                        canFire = playerTurn && !state.paused && state.confirmation == null,
-                        focusRequester = boardFocus, onAction = onAction)
-                }
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(13.dp)) {
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Column {
-                            Eyebrow("TARGET")
-                            Text(state.selected.label, color = Cyan, fontSize = 36.sp,
-                                lineHeight = 38.sp, fontWeight = FontWeight.SemiBold)
-                        }
-                        Spacer(Modifier.width(23.dp))
-                        if (state.message.isNotEmpty()) {
-                            Text(state.message, fontSize = 20.sp, fontWeight = FontWeight.Medium,
-                                color = feedbackColor(game.lastAttack?.shot?.outcome), maxLines = 2,
-                                overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                        }
-                    }
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Eyebrow("YOUR FLEET")
-                            Spacer(Modifier.height(5.dp))
-                            GameBoard(ships = view.ownBoard.ships, shots = view.ownBoard.shots,
-                                modifier = Modifier.fillMaxWidth(), lastShot = friendlyLast)
-                        }
-                        Column(Modifier.weight(.88f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            view.ownBoard.ships.forEach { ship ->
-                                val damage = view.ownBoard.shots.count { it.coordinate in ship.cells }
-                                FleetShip(ship.type, damage)
-                            }
-                        }
-                    }
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(17.dp)) {
-                        Text("×  HIT", color = Impact, fontSize = 12.sp, letterSpacing = .6.sp)
-                        Text("○  MISS", color = Ink, fontSize = 12.sp, letterSpacing = .6.sp)
-                        Text("◎  LAST SHOT", color = Muted, fontSize = 12.sp, letterSpacing = .6.sp)
-                    }
-                    state.saveWarning?.let { Text(it, color = Impact, fontSize = 12.sp, maxLines = 2) }
-                }
-            }
-        }
-        Spacer(Modifier.height(9.dp))
-        Text(if (state.showHint) "Use arrows to aim. Press OK to fire. Press Back to pause."
-            else "ARROWS  Aim     OK  Fire     BACK  Pause", color = Muted, fontSize = if (state.showHint) 15.sp else 13.sp)
-    }
-}
-
-@Composable
-private fun FleetShip(type: ShipType, damage: Int) {
-    Column {
-        Text(if (damage == type.length) "${shortName(type)} · SUNK" else shortName(type),
-            color = if (damage == type.length) Impact else Muted, fontSize = 12.sp, maxLines = 1)
-        Spacer(Modifier.height(4.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-            repeat(type.length) { segment ->
-                Box(Modifier.width(13.dp).height(5.dp).background(
-                    if (segment < damage) Impact else Steel.copy(alpha = .65f), RoundedCornerShape(1.dp)))
-            }
-        }
-    }
-}
-
-private fun shortName(type: ShipType): String = when (type) {
+internal fun shortName(type: ShipType): String = when (type) {
     ShipType.AIRCRAFT_CARRIER -> "Carrier"
     ShipType.BATTLESHIP -> "Battleship"
     ShipType.CRUISER -> "Cruiser"
     ShipType.SUBMARINE -> "Submarine"
     ShipType.DESTROYER -> "Destroyer"
-}
-
-private fun feedbackColor(outcome: ShotOutcome?): Color = when (outcome) {
-    ShotOutcome.HIT, ShotOutcome.SUNK -> Impact
-    else -> Ink
 }
 
 @Composable

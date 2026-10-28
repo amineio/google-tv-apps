@@ -29,12 +29,30 @@ import org.junit.runner.RunWith
 class BattleshipRemoteTest {
     @get:Rule val screen = createComposeRule()
 
+    @Test fun aimingKeepsLastShotFeedbackSeparateFromTheSelectedTarget() {
+        val game = GameEngine.newGame(42)
+        val hit = game.computerBoard.ships.first().cells.first()
+        val attacked = GameEngine.attack(game, Player.HUMAN, hit).state
+        var state by mutableStateOf(activeGame().copy(game = attacked, selected = hit, message = "Hit"))
+        screen.setContent { BattleshipApp(state, { action ->
+            if (action is GameAction.Move) state = state.copy(selected = Coordinate(
+                (state.selected.row + action.rowDelta).coerceIn(0, 9),
+                (state.selected.column + action.columnDelta).coerceIn(0, 9)))
+        }, {}) }
+        val direction = if (hit.column == 9) Key.DirectionLeft else Key.DirectionRight
+        key(direction)
+        val target = Coordinate(hit.row, hit.column + if (hit.column == 9) -1 else 1)
+        screen.onNodeWithTag("selected_target").assertContentDescriptionContains("Target ${target.label}.", substring = true)
+        screen.onNodeWithTag("last_shot_feedback").assertContentDescriptionEquals("Your shot: Hit at ${hit.label}.")
+        screen.onNodeWithTag("targeting_board").assertIsFocused()
+    }
+
     @Test fun shotFeedbackStaysCompactWithoutNarrationOrRepeatedTurnInstructions() {
         val game = GameEngine.newGame(42)
         val hit = game.computerBoard.ships.first().cells.first()
         val attacked = GameEngine.attack(game, Player.HUMAN, hit).state
         screen.setContent { BattleshipApp(activeGame().copy(game = attacked, selected = hit, message = "Hit"), {}, {}) }
-        screen.onNodeWithText("Hit").assertIsDisplayed()
+        screen.onNode(hasText("Hit") and hasAnyAncestor(hasTestTag("last_shot_feedback"))).assertIsDisplayed()
         screen.onNodeWithText("TARGET").assertIsDisplayed()
         screen.onNodeWithText(hit.label).assertIsDisplayed()
         screen.onNodeWithText("Stand by, captain").assertDoesNotExist()
