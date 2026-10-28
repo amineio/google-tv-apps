@@ -31,3 +31,4 @@ The initial installer installs release 1.6, code 7, on the physical TV. Family H
 History contains up to 30 recorded dates. Missing records do not establish zero use. This change adds no hourly or per-app records. Emulator evidence does not establish Cast or physical streaming behavior.
 
 Main also receives a Family Home artwork update during this task. The branch merges that update, preserves its resources and tests, and increases the combined release to 1.7, code 8.
+The combined release passes 66 unit tests in each variant, release lint, and all APK builds. Its explicit emulator run reports `OK (40 tests)`, including the five retained artwork tests. The artwork navigation test now uses the profile control. Independent review reports zero integration findings.

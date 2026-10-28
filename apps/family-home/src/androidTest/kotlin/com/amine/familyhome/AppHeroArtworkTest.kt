@@ -82,9 +82,9 @@ class AppHeroArtworkTest {
         screen.runOnIdle { resume++ }
         screen.waitUntil(10_000) { heroIsCyan() }
         screen.onNodeWithTag("app:example.artwork").assertIsFocused()
-        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
-        screen.onNodeWithText("Switch profile").assertIsFocused()
         screen.onRoot().performKeyInput { pressKey(Key.DirectionUp) }
+        screen.onNodeWithTag("home-profile").assertIsFocused()
+        screen.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
         screen.onNodeWithTag("app:example.artwork").assertIsFocused()
         if (InstrumentationRegistry.getArguments().getString("captureHero") == "true") {
             val directory = requireNotNull(instrumentation.targetContext.getExternalFilesDir(null))
