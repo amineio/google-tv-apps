@@ -2,11 +2,17 @@
 <resources>
     <style name="ClockTheme" parent="android:style/Theme.Material.NoActionBar.Fullscreen">
         <item name="android:windowBackground">#111318</item>
-        <item name="android:colorAccent">#FFFFFF</item>
+        <item name="android:colorAccent">#B7D4FF</item>
+        <item name="android:colorControlHighlight">#324155</item>
         <item name="android:fontFamily">sans</item>
         <item name="android:windowLightStatusBar">false</item>
     </style>
     <item name="clock_switch" type="id" />
+    <item name="position_control" type="id" />
+    <item name="size_control" type="id" />
+    <item name="time_limits" type="id" />
+    <item name="timer_duration" type="id" />
+    <item name="limit_action" type="id" />
     <item name="position_up" type="id" />
     <item name="position_down" type="id" />
     <item name="position_value" type="id" />

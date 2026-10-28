@@ -5,13 +5,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.view.Gravity;
-import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,8 +15,7 @@ import android.widget.Toast;
 public final class ClockSettingsActivity extends Activity {
     private Switch clockSwitch;
     private TextView status;
-    private TextView positionValue;
-    private TextView sizeValue;
+    private SettingRow positionRow, sizeRow;
     private boolean updating;
     private boolean awaitingPermission;
     private final BroadcastReceiver stateReceiver = new BroadcastReceiver() {
@@ -30,47 +25,31 @@ public final class ClockSettingsActivity extends Activity {
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         awaitingPermission = state != null && state.getBoolean("awaitingPermission");
-        LinearLayout page = new LinearLayout(this);
-        page.setBackgroundColor(TvUi.BACKGROUND);
-        page.setOrientation(LinearLayout.VERTICAL);
-        page.setGravity(Gravity.CENTER_VERTICAL);
-        page.setPadding(dp(64), dp(40), dp(64), dp(40));
-        page.addView(text("Clock appearance", 30));
-        clockSwitch = new Switch(this);
-        clockSwitch.setId(R.id.clock_switch);
-        clockSwitch.setText(R.string.show_clock);
-        clockSwitch.setTextSize(22);
-        clockSwitch.setTextColor(Color.WHITE);
-        clockSwitch.setShowText(false);
-        clockSwitch.setPadding(dp(16), 0, dp(16), 0);
-        clockSwitch.setBackgroundResource(android.R.drawable.list_selector_background);
-        LinearLayout.LayoutParams row = new LinearLayout.LayoutParams(dp(530), dp(64));
-        row.topMargin = dp(12);
-        page.addView(clockSwitch, row);
-        status = text("", 18);
-        page.addView(status);
-        positionValue = adjustmentRow(page, R.string.position, R.id.position_value,
-                R.string.higher, R.id.position_up, () -> {
-                    ClockPreferences.setPosition(this, ClockPreferences.position(this) - 1);
+        TvUi.SettingsPage page = new TvUi.SettingsPage(this, "Clock appearance",
+                "Keep the time in view.\nChanges stay saved.");
+        status = page.summary;
+        clockSwitch = TvUi.switchRow(this, getString(R.string.show_clock),
+                "24-hour time · Transparent background", R.drawable.ic_clock, R.id.clock_switch);
+        page.list.addView(clockSwitch, new android.widget.LinearLayout.LayoutParams(-1, -2));
+        positionRow = new SettingRow(this, getString(R.string.position), "Along the right edge", R.drawable.ic_position,
+                R.id.position_control, null);
+        positionRow.setTag("clock-position");
+        positionRow.setValueId(R.id.position_value);
+        positionRow.setAdjustment(() -> changePosition(-1), () -> changePosition(1));
+        page.list.addView(positionRow);
+        sizeRow = new SettingRow(this, getString(R.string.size), "Use Left or Right to adjust", R.drawable.ic_text_size,
+                R.id.size_control, null);
+        sizeRow.setValueId(R.id.size_value);
+        sizeRow.setAdjustment(() -> changeSize(-2), () -> changeSize(2));
+        page.list.addView(sizeRow);
+        page.list.addView(new SettingRow(this, getString(R.string.reset_layout), "Restore the original layout",
+                R.drawable.ic_reset, R.id.reset_layout, () -> {
+                    ClockPreferences.resetLayout(this);
                     applyLayout();
-                }, R.string.lower, R.id.position_down, () -> {
-                    ClockPreferences.setPosition(this, ClockPreferences.position(this) + 1);
-                    applyLayout();
-                });
-        sizeValue = adjustmentRow(page, R.string.size, R.id.size_value,
-                R.string.smaller, R.id.size_down, () -> {
-                    ClockPreferences.setSize(this, ClockPreferences.size(this) - 2);
-                    applyLayout();
-                }, R.string.larger, R.id.size_up, () -> {
-                    ClockPreferences.setSize(this, ClockPreferences.size(this) + 2);
-                    applyLayout();
-                });
-        Button reset = button(R.string.reset_layout, R.id.reset_layout, () -> {
-            ClockPreferences.resetLayout(this);
-            applyLayout();
-        });
-        page.addView(reset, new LinearLayout.LayoutParams(dp(530), dp(48)));
-        page.addView(text("Changes appear immediately and stay saved.", 16));
+                }));
+        SettingRow limits = new SettingRow(this, "Time limits", "Timer and daily bedtime", R.drawable.ic_timer,
+                R.id.time_limits, this::finish);
+        limits.setValue("›"); page.list.addView(limits);
         setContentView(page);
         clockSwitch.requestFocus();
         clockSwitch.setOnCheckedChangeListener((button, enabled) -> {
@@ -112,11 +91,12 @@ public final class ClockSettingsActivity extends Activity {
         updating = true;
         boolean enabled = ClockPreferences.isEnabled(this) && Settings.canDrawOverlays(this);
         clockSwitch.setChecked(enabled);
-        status.setText(enabled ? "On · 24-hour time · Transparent background" : "Off");
+        status.setText(enabled ? "The clock is on.\nChanges appear immediately and stay saved."
+                : "The clock is off.\nChoose its position and size before you turn it on.");
         int position = ClockPreferences.position(this);
-        positionValue.setText(position == 0 ? getString(R.string.top)
+        positionRow.setValue(position == 0 ? getString(R.string.top)
                 : position == 20 ? getString(R.string.bottom) : getString(R.string.position_percent, position * 5));
-        sizeValue.setText(getString(R.string.size_number, ClockPreferences.size(this)));
+        sizeRow.setValue(getString(R.string.size_number, ClockPreferences.size(this)));
         updating = false;
     }
 
@@ -125,23 +105,14 @@ public final class ClockSettingsActivity extends Activity {
         else refresh();
     }
 
-    private TextView adjustmentRow(LinearLayout page, int label, int valueId,
-            int lessLabel, int lessId, Runnable less, int moreLabel, int moreId, Runnable more) {
-        LinearLayout row = new LinearLayout(this);
-        row.setGravity(Gravity.CENTER_VERTICAL);
-        row.addView(text(getString(label), 20), new LinearLayout.LayoutParams(dp(180), dp(56)));
-        row.addView(button(lessLabel, lessId, less), new LinearLayout.LayoutParams(dp(120), dp(48)));
-        TextView value = text("", 18);
-        value.setId(valueId);
-        value.setGravity(Gravity.CENTER);
-        row.addView(value, new LinearLayout.LayoutParams(dp(110), dp(56)));
-        row.addView(button(moreLabel, moreId, more), new LinearLayout.LayoutParams(dp(120), dp(48)));
-        page.addView(row, new LinearLayout.LayoutParams(dp(530), dp(64)));
-        return value;
+    private void changePosition(int step) {
+        ClockPreferences.setPosition(this, ClockPreferences.position(this) + step);
+        applyLayout();
     }
 
-    private Button button(int label, int id, Runnable action) {
-        return TvUi.button(this, getString(label), id, action);
+    private void changeSize(int step) {
+        ClockPreferences.setSize(this, ClockPreferences.size(this) + step);
+        applyLayout();
     }
 
     @Override protected void onStart() {
@@ -172,14 +143,4 @@ public final class ClockSettingsActivity extends Activity {
         super.onSaveInstanceState(state);
     }
 
-    private TextView text(String value, int size) {
-        TextView view = new TextView(this);
-        view.setText(value);
-        view.setTextSize(size);
-        view.setTextColor(Color.WHITE);
-        view.setPadding(0, dp(8), 0, dp(8));
-        return view;
-    }
-
-    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }

@@ -27,7 +27,7 @@ import static org.junit.Assert.*;
 @RunWith(AndroidJUnit4.class)
 public class LimitsDeviceTest {
     private Context context;
-    private Map<String, ?> limits, clock;
+    private Map<String, ?> limits, clock, mainPreferences;
 
     private void main(Runnable action) { InstrumentationRegistry.getInstrumentation().runOnMainSync(action); }
     private void waitUntil(BooleanSupplier condition) {
@@ -87,6 +87,7 @@ public class LimitsDeviceTest {
         context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         limits = new HashMap<>(context.getSharedPreferences("limits", Context.MODE_PRIVATE).getAll());
         clock = new HashMap<>(context.getSharedPreferences("clock", Context.MODE_PRIVATE).getAll());
+        mainPreferences = new HashMap<>(context.getSharedPreferences("MainActivity", Context.MODE_PRIVATE).getAll());
         assertTrue("Overlay and exact alarm access are required", LimitsController.access(context));
         main(() -> {
             context.stopService(new Intent(context, ClockService.class));
@@ -100,6 +101,7 @@ public class LimitsDeviceTest {
         main(() -> {
             for (Activity a : ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)) a.finish();
             restorePreferences("limits", limits); restorePreferences("clock", clock);
+            restorePreferences("MainActivity", mainPreferences);
             LimitsController.check(context);
         });
         home();
@@ -115,6 +117,84 @@ public class LimitsDeviceTest {
             else if (value instanceof String) edit.putString(key, (String) value);
         }
         assertTrue(edit.commit());
+    }
+
+    private Activity openMain() {
+        main(() -> context.startActivity(new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)));
+        waitUntil(() -> activity() instanceof MainActivity);
+        return activity();
+    }
+
+    @Test public void flatAppearanceRowsAdjustWithTheRemoteWithoutEnablingAHiddenClock() {
+        main(() -> {
+            ClockPreferences.setPosition(context, 20);
+            ClockPreferences.setSize(context, 28);
+        });
+        Activity page = openMain();
+        shell("input keyevent KEYCODE_DPAD_CENTER");
+        waitUntil(() -> activity() instanceof ClockSettingsActivity);
+        Activity settings = activity();
+        main(() -> {
+            View position = settings.findViewById(android.R.id.content).findViewWithTag("clock-position");
+            assertNotNull("Position needs one remote-adjustable row", position);
+            position.requestFocus();
+        });
+        shell("input keyevent KEYCODE_DPAD_LEFT");
+        waitUntil(() -> ClockPreferences.position(context) == 19);
+        shell("input keyevent KEYCODE_DPAD_RIGHT KEYCODE_DPAD_RIGHT");
+        assertEquals(20, ClockPreferences.position(context));
+        shell("input keyevent KEYCODE_DPAD_DOWN KEYCODE_DPAD_LEFT");
+        waitUntil(() -> ClockPreferences.size(context) == 26);
+        shell("input keyevent KEYCODE_DPAD_RIGHT");
+        waitUntil(() -> ClockPreferences.size(context) == 28);
+        assertFalse(ClockPreferences.isEnabled(context));
+        assertFalse(shell("dumpsys window windows").contains("TV Clock overlay"));
+        shell("input keyevent KEYCODE_BACK");
+        waitUntil(() -> activity() instanceof MainActivity);
+        main(() -> page.findViewById(R.id.clock_settings).performClick());
+        waitUntil(() -> activity() instanceof ClockSettingsActivity);
+        assertEquals(20, ClockPreferences.position(context));
+        assertEquals(28, ClockPreferences.size(context));
+        screenshot("settings-appearance");
+    }
+
+    @Test public void durationChoiceReturnsToTheRowAndDoesNotStartATimer() {
+        Activity page = openMain();
+        AtomicReference<View> duration = new AtomicReference<>();
+        main(() -> {
+            duration.set(page.findViewById(android.R.id.content).findViewWithTag("timer-duration"));
+            assertNotNull("Timer duration needs a settings row", duration.get());
+            duration.get().requestFocus();
+        });
+        shell("input keyevent KEYCODE_DPAD_CENTER");
+        clickDialog("30 minutes");
+        waitUntil(() -> context.getSharedPreferences("MainActivity", Context.MODE_PRIVATE).getInt("minutes", 60) == 30);
+        assertEquals(0, LimitsController.read(context).timerElapsed);
+        main(() -> assertTrue(duration.get().isFocused()));
+        main(() -> duration.get().performClick());
+        shell("input keyevent KEYCODE_BACK");
+        assertEquals(30, context.getSharedPreferences("MainActivity", Context.MODE_PRIVATE).getInt("minutes", 60));
+        main(() -> page.findViewById(R.id.timer_start).performClick());
+        long remaining = LimitsController.read(context).timerElapsed - SystemClock.elapsedRealtime();
+        assertTrue(remaining > 1_790_000 && remaining <= 1_800_000);
+        main(() -> page.findViewById(R.id.timer_start).performClick());
+        assertEquals(0, LimitsController.read(context).timerElapsed);
+    }
+
+    @Test public void reminderChoiceSavesAndBackKeepsTheSelectedAction() {
+        Activity page = openMain();
+        AtomicReference<View> action = new AtomicReference<>();
+        main(() -> {
+            action.set(page.findViewById(android.R.id.content).findViewWithTag("limit-action"));
+            assertNotNull("Reminder action needs a settings row", action.get());
+            action.get().performClick();
+        });
+        clickDialog("Remind me");
+        waitUntil(() -> !LimitsController.read(context).stopScreen);
+        main(() -> action.get().performClick());
+        shell("input keyevent KEYCODE_BACK");
+        assertFalse(LimitsController.read(context).stopScreen);
+        assertEquals(0, LimitsController.read(context).timerElapsed);
     }
 
     @Test public void warningUsesARealAlarmWithoutClockOrFocusCapture() {

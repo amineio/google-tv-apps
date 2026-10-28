@@ -1,4 +1,4 @@
-"""Opt-in acceptance test. Operates the connected TV and leaves the clock on."""
+"""Opt-in acceptance test. Operates the TV and restores the clock layout and state."""
 import os
 import re
 import subprocess
@@ -40,7 +40,16 @@ def control(name):
 
 def open_clock():
     adb("shell", "am", "start", "-W", "--activity-clear-top", "-n", PACKAGE + "/.MainActivity")
+    wait_for(lambda: "com.amine.tvclock/.MainActivity" in
+             next((line for line in adb("shell", "dumpsys", "activity", "activities").splitlines()
+                   if "topResumedActivity=" in line), ""))
     click("clock_settings")
+
+
+def go_home():
+    adb("shell", "input", "keyevent", "KEYCODE_HOME")
+    wait_for(lambda: re.search(r"topResumedActivity=.*com\.gathin\.tvhome/\.MainActivity",
+                              adb("shell", "dumpsys", "activity", "activities")))
 
 
 def switch():
@@ -51,6 +60,15 @@ def click(name):
     node = control(name)
     x1, y1, x2, y2 = map(int, re.findall(r"\d+", node.get("bounds")))
     adb("shell", "input", "tap", str((x1 + x2) // 2), str((y1 + y2) // 2))
+
+
+def adjust(name, direction, count=1):
+    adb("shell", "input", "keyevent", *(["KEYCODE_DPAD_UP"] * 5))
+    wait_for(lambda: switch().get("focused") == "true")
+    steps = 1 if name == "position_control" else 2
+    adb("shell", "input", "keyevent", *(["KEYCODE_DPAD_DOWN"] * steps))
+    wait_for(lambda: control(name).get("focused") == "true")
+    adb("shell", "input", "keyevent", *(["KEYCODE_DPAD_" + direction] * count))
 
 
 def frame():
@@ -71,38 +89,56 @@ def set_clock(enabled):
 
 
 class ClockDeviceTest(unittest.TestCase):
+    def setUp(self):
+        open_clock()
+        self.original_enabled = switch().get("checked") == "true"
+        position = control("position_value").get("text")
+        self.original_position = 20 if "Bottom" in position else 0 if "Top" in position else int(re.search(r"\d+", position)[0]) // 5
+        self.original_size = int(re.search(r"\d+", control("size_value").get("text"))[0])
+
+    def tearDown(self):
+        open_clock()
+        set_clock(False)
+        click("reset_layout")
+        if self.original_position:
+            adjust("position_control", "RIGHT", self.original_position)
+        size_steps = (self.original_size - 22) // 2
+        if size_steps:
+            adjust("size_control", "RIGHT" if size_steps > 0 else "LEFT", abs(size_steps))
+        set_clock(self.original_enabled)
+        go_home()
+
     def test_layout_controls_apply_immediately_and_stay_saved(self):
         open_clock()
-        self.assertEqual("Lower", control("position_down").get("text"))
         set_clock(True)
         click("reset_layout")
         original = frame()
-        click("position_down")
+        adjust("position_control", "RIGHT")
         wait_for(lambda: frame()[1] > original[1])
-        click("position_up")
+        adjust("position_control", "LEFT")
         wait_for(lambda: frame()[1] == original[1])
-        click("size_up")
+        adjust("size_control", "RIGHT")
         wait_for(lambda: frame()[3] - frame()[1] > original[3] - original[1])
-        click("position_down")
+        adjust("position_control", "RIGHT")
         wait_for(lambda: frame()[1] > original[1])
         saved = frame()
-        adb("shell", "input", "keyevent", "KEYCODE_HOME")
+        go_home()
         open_clock()
         self.assertEqual(saved, frame())
         self.assertIn("24", control("size_value").get("text"))
-        click("size_down")
+        adjust("size_control", "LEFT")
         wait_for(lambda: frame()[3] - frame()[1] == original[3] - original[1])
         click("reset_layout")
         wait_for(lambda: frame() == original)
         set_clock(False)
-        click("position_down")
-        click("size_up")
+        adjust("position_control", "RIGHT")
+        adjust("size_control", "RIGHT")
         self.assertFalse(has_overlay(), "Changing layout must not turn on a disabled clock")
         set_clock(True)
         self.assertGreater(frame()[1], original[1])
         self.assertGreater(frame()[3] - frame()[1], original[3] - original[1])
         click("reset_layout")
-        adb("shell", "input", "keyevent", "KEYCODE_HOME")
+        go_home()
 
     def test_clock_can_stop_and_cover_other_apps_without_replacing_home(self):
         self.assertIn("package:" + PACKAGE, adb("shell", "pm", "list", "packages", PACKAGE),
@@ -119,7 +155,7 @@ class ClockDeviceTest(unittest.TestCase):
         self.assertEqual("true", switch().get("focused"))
         adb("shell", "input", "keyevent", "KEYCODE_DPAD_CENTER")
         wait_for(has_overlay)
-        adb("shell", "input", "keyevent", "KEYCODE_HOME")
+        go_home()
         wait_for(lambda: re.search(r"topResumedActivity=.*com\.gathin\.tvhome/\.MainActivity",
                                   adb("shell", "dumpsys", "activity", "activities")))
         self.assertTrue(has_overlay())
@@ -129,13 +165,13 @@ class ClockDeviceTest(unittest.TestCase):
         set_clock(False)
         self.assertFalse(has_overlay())
         set_clock(True)
-        adb("shell", "input", "keyevent", "KEYCODE_HOME")
+        go_home()
         open_clock()
         self.assertEqual("true", switch().get("checked"))
         self.assertEqual(home, adb(*home_args))
         self.assertEqual(accessibility, adb("shell", "settings", "get", "secure",
                                             "enabled_accessibility_services"))
-        adb("shell", "input", "keyevent", "KEYCODE_HOME")
+        go_home()
 
 
 if __name__ == "__main__":

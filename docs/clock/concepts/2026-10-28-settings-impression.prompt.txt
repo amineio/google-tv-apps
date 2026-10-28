@@ -1,0 +1,24 @@
+Use case: ui-mockup
+Asset type: one realistic design reference for a native Android Google TV application, television settings screen.
+Primary request: Create ONE polished 1920x1080 landscape full-screen interface impression for "TV Clock". This is a reference for a developer, not a screenshot or proof of implementation. Design a calm, flat Google TV inspired settings screen for viewing from a sofa. Native Android Java implementation with simple text, vector icons, and drawables is feasible.
+Composition: Full-screen straight-on interface only, with no television frame, no room, no device photograph, no browser chrome, no presentation annotations. Use one continuous dark charcoal background (#20242B). Generous safe margins, about 120 pixels. Left 40 percent: a simple off-white circular clock face symbol, clear "TV Clock" title, and two short muted lines of help. Right 53 percent: a coherent vertical settings list. Keep both areas on the SAME flat shared surface with no divider panel and no sidebar box. Do not add a contrasting right-side surface.
+Brand symbol: An elegant clean circular clock ring, two sturdy clock hands at about 10:10, no numerals, no shadow. Place it beside the title, large enough to be legible on a television. This same clock symbol and "TV Clock" wordmark should be suitable as a simple launcher banner on a charcoal background.
+Typography: Native modern sans-serif like Google Sans or Roboto, clean large text, realistic couch-distance readability. Title about 66 px. Row labels about 36 px. Help and secondary text about 27 px. Off-white primary text (#E8EAED), muted cool gray secondary text (#A8AFBA). Use dark ink on the focused row. No ultra-thin type.
+Left text, verbatim:
+"TV Clock"
+"Keep the time in view."
+"Set a timer or bedtime in Time limits."
+Bottom left remote-help text, verbatim:
+"↑ ↓  Choose     ← →  Adjust"
+"Back  Return"
+Right list: One small top section heading "Clock appearance" in muted text. Five generous rows vertically arranged with wide spacing, consistent label alignment and distinct leading monochrome outline icons. Ordinary rows blend directly into the background and have NO boxes, NO card backgrounds, NO button containers. Only ONE whole row is focused. The focused row is a pale cool off-white rounded rectangle with restrained 16 px corners and no visible shadow. Use "Position" as the focused row so its adjustment affordance is clear.
+Rows in this exact order:
+1. Leading circular clock icon. Label "Show clock". Small secondary line "24-hour time · Transparent background". At far right a simple on toggle with pale track and charcoal thumb, unmistakably ON.
+2. FOCUSED ROW: Leading vertical-position icon (a small rectangle with a line near its lower edge). Label "Position". At far right show "‹   Bottom   ›" in dark text. These chevrons indicate remote left/right changes; no individual pill or button borders.
+3. Leading text-size icon (uppercase T with a small vertical size arrow). Label "Text size". At far right show "‹   28   ›" in off-white. No individual pill or button borders.
+4. Leading counterclockwise reset arrow icon. Label "Reset position and size". No extra control.
+5. Leading hourglass icon. Label "Time limits". Small secondary line "Timer and bedtime". A single right chevron at far right means navigation.
+Use consistent 2-3 px icon strokes with clear shapes and different meanings. Avoid arbitrary circles as icons.
+At the lower right screen edge, show a small but readable clock preview "12:40" with a subtle dark outline; it is not inside a card.
+Interaction shown by visual design: Up/down moves between rows; left/right adjusts Position and Text size; center selects toggle/actions/navigation; Back returns. Do not add touch controls or mouse cursor.
+Constraints: Flat design; exactly one focused row; practical 5-row remote-only list; a single consistent focus treatment; readable spacing; no stacked cards; no shadows; no gradients; no glass; no decorative panels; no orange focus; no blue fill; no background artwork; no colorful illustrations; no fake operating system logo; no invented controls; no duplicated rows; no extra screen or logo sheet; no watermark. Keep the title, five setting rows, and all specified text accurate.
