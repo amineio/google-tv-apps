@@ -11,7 +11,9 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlin.random.Random
 
-enum class SoundCue { SELECT, FIRE, MISS, HIT, SUNK, VICTORY, DEFEAT }
+enum class SoundCue { SELECT, FIRE, MISS, HIT, DAMAGE, SUNK, VICTORY, DEFEAT }
+
+private const val REPEATED_SHOT_MESSAGE = "Already targeted"
 
 class GameSession(
     private val scope: CoroutineScope,
@@ -61,12 +63,16 @@ class GameSession(
         when (action) {
             GameAction.Play -> if (unfinished()) confirm(Confirmation.NEW_GAME) else start()
             GameAction.Continue -> if (unfinished()) {
-                update { copy(screen = Screen.GAME, paused = false, confirmation = null, resolving = false, message = "Your fleet is ready.") }
+                update { copy(screen = Screen.GAME, paused = false, confirmation = null, resolving = false, message = "") }
                 scheduleComputer()
             }
             is GameAction.Move -> if (state.value.screen == Screen.GAME && !state.value.paused) {
-                update { copy(selected = Coordinate((selected.row + action.rowDelta).coerceIn(0, 9),
-                    (selected.column + action.columnDelta).coerceIn(0, 9))) }
+                update {
+                    val destination = Coordinate((selected.row + action.rowDelta).coerceIn(0, 9),
+                        (selected.column + action.columnDelta).coerceIn(0, 9))
+                    copy(selected = destination,
+                        message = if (destination != selected && message == REPEATED_SHOT_MESSAGE) "" else message)
+                }
             }
             GameAction.Fire -> fire()
             GameAction.Pause -> pause()
@@ -103,7 +109,7 @@ class GameSession(
     private fun start() {
         cancelTurn()
         update { copy(game = GameEngine.newGame(seedSource()), screen = Screen.GAME, selected = Coordinate(0, 0),
-            paused = false, resolving = false, confirmation = null, message = "Your turn. Choose a coordinate.") }
+            paused = false, resolving = false, confirmation = null, message = "") }
         returnScreen = Screen.HOME
         persist()
     }
@@ -114,13 +120,13 @@ class GameSession(
         if (current.screen != Screen.GAME || current.paused || current.resolving || game.phase != GamePhase.PLAYER_TURN) return
         val result = GameEngine.attack(game, Player.HUMAN, current.selected)
         if (!result.accepted) {
-            update { copy(message = "Already targeted. Choose another coordinate.") }
+            update { copy(message = REPEATED_SHOT_MESSAGE) }
             return
         }
         cue(SoundCue.FIRE)
         update { copy(game = result.state, resolving = true, showHint = false, message = describe(Player.HUMAN, result.shot!!)) }
         persist()
-        resolveSound(result.shot!!, result.state)
+        resolveSound(Player.HUMAN, result.shot!!, result.state)
         if (result.state.phase == GamePhase.GAME_OVER) finishAfterFeedback() else scheduleComputer()
     }
 
@@ -140,7 +146,7 @@ class GameSession(
             if (!result.accepted) return@launch
             update { copy(game = result.state, resolving = true, message = describe(Player.COMPUTER, result.shot!!)) }
             persist()
-            resolveSound(result.shot!!, result.state)
+            resolveSound(Player.COMPUTER, result.shot!!, result.state)
             delay(500)
             if (generation != expectedGeneration) return@launch
             update { copy(resolving = false, screen = if (result.state.phase == GamePhase.GAME_OVER) Screen.RESULTS else Screen.GAME) }
@@ -201,21 +207,20 @@ class GameSession(
             soundEnabled = value.soundEnabled, showHint = value.showHint))
     }
     private fun cue(sound: SoundCue) { if (state.value.soundEnabled) cues.trySend(sound) }
-    private fun resolveSound(shot: Shot, match: GameState) {
+    private fun resolveSound(attacker: Player, shot: Shot, match: GameState) {
         cue(when {
             match.winner == Player.HUMAN -> SoundCue.VICTORY
             match.winner == Player.COMPUTER -> SoundCue.DEFEAT
             shot.outcome == ShotOutcome.SUNK -> SoundCue.SUNK
-            shot.outcome == ShotOutcome.HIT -> SoundCue.HIT
+            shot.outcome == ShotOutcome.HIT -> if (attacker == Player.HUMAN) SoundCue.HIT else SoundCue.DAMAGE
             else -> SoundCue.MISS
         })
     }
     private fun describe(player: Player, shot: Shot): String {
-        val actor = if (player == Player.HUMAN) "You" else "Computer"
         return when (shot.outcome) {
-            ShotOutcome.MISS -> "$actor fired at ${shot.coordinate.label}: Miss."
-            ShotOutcome.HIT -> "$actor fired at ${shot.coordinate.label}: Hit!"
-            ShotOutcome.SUNK -> "$actor sank the ${shot.shipType?.label} at ${shot.coordinate.label}!"
+            ShotOutcome.MISS -> "Miss"
+            ShotOutcome.HIT -> if (player == Player.HUMAN) "Hit" else "Fleet hit"
+            ShotOutcome.SUNK -> "${if (player == Player.COMPUTER) "Your " else ""}${shot.shipType?.label} sunk"
         }
     }
 }

@@ -22,21 +22,26 @@
   "rights": "AI-generated artwork created for this repository. No external stock asset or third-party artwork license is claimed.",
   "font": "Outfit copied from the existing repository with FONT-LICENSE-OFL.txt preserved.",
   "audio": {
-    "origin": "Local procedural synthesis in Python. No external recordings.",
-    "rights": "Project-created synthesis, distributed under repository MIT license.",
+    "origin": "Original local procedural synthesis in Python. No external recordings or services.",
+    "rights": "Project-created synthesis, distributed under the repository MIT license.",
     "format": "22,050 Hz mono 16-bit PCM WAV",
-    "gain": "Synthesized amplitude 0.28 maximum, SoundPool playback gain 0.32",
-    "envelope": "8 ms attack, 50 ms fade, exponential decay",
-    "cues": {
+    "revisedCues": "../audio-polish-assets.json",
+    "runtimeGain": {
+      "ui_select": 0.32,
+      "fire": 0.32,
+      "splash": 0.32,
+      "impact": 0.6,
+      "damage": 0.6,
+      "sunk": 0.55,
+      "victory": 0.6,
+      "defeat": 0.38
+    },
+    "unchangedCues": {
       "ui_select": "0.065s 660/880Hz",
       "fire": "0.16s 150/90Hz plus seeded noise",
-      "splash": "0.24s 420/210Hz plus seeded noise",
-      "impact": "0.22s 95/57Hz plus seeded noise",
-      "sunk": "0.42s 196/147/98Hz",
-      "victory": "0.60s 392/494/587/784Hz",
-      "defeat": "0.54s 330/294/247Hz"
+      "splash": "0.24s 420/210Hz plus seeded noise"
     },
-    "status": "Bundled and optional. Physical TV volume review remains separate."
+    "status": "Version 1.1 uses layered impacts and brief brass/percussion result phrases. Subjective quality and TV volume require listening."
   },
   "nativeAssets": "Launcher icon, ship silhouettes, selection outlines, labels, and shot markers use vector or Compose code."
 }
