@@ -16,6 +16,8 @@ After instrumentation, Android leaves the emulator helper unbound. Rebinding the
 
 ## Delivery boundaries
 
+The canonical installer installs release version 1.5, code 6, on the physical TV. Family Home retains the Home role and its helper is bound with no crashed services. Directional navigation opens Settings and Daily usage. The page shows new parent usage and empty child histories. The actual Clock overlay remains visible without overlap. The old Java Home package is absent, while Family Home, Clock, stock Home, and setupwraith remain installed.
+
 Emulator evidence does not establish physical streaming, Cast, or Clock overlay behavior. The existing timer semantics remain unchanged. Usage collection begins with this update. There is no reconstructed history.
 
 The previously installed Java Home package is removed from the TV with `pm uninstall -k --user 0`. Its APK and package state are backed up privately. Its app data and repository source remain. Family Home, TV Clock, stock Google TV Home, setupwraith, the Home role, and the helper configuration remain present after removal. No device identifiers or backups enter Git.
