@@ -27,6 +27,12 @@ Use ImageGen for suitable raster assets such as portraits, backgrounds, and illu
 Use vector or code assets for simple icons, labels, and focus outlines.
 Record asset prompts, source references, dimensions, and license information.
 Compress bundled assets and preserve font licenses.
+For every new app or game, plan matching launcher artwork with the app design.
+Deliver a square app icon, a 16:9 TV banner, and a separate text-free 16:9 launcher background before release.
+Keep all three resources inside the app. The launcher owns presentation, contrast, focus, and fallback.
+Declare the background through application metadata named `com.amine.familyhome.HERO_IMAGE`, with an `android:resource` drawable reference.
+Do not enlarge the icon or banner into a background or add a launcher special case for each new app.
+Follow the [launcher artwork requirements](docs/kotlin-tv-development.md#launcher-artwork-for-new-apps) for ImageGen, composition, resource declarations, and rendered review.
 ImageGen creates images. Use an audio tool or local synthesis for music and sound effects.
 Keep optional audio short, quiet, locally bundled, and easy to mute.
 Do not add music or sounds unless the app design calls for them.
