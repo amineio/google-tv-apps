@@ -32,3 +32,4 @@ History contains up to 30 recorded dates. Missing records do not establish zero 
 
 Main also receives a Family Home artwork update during this task. The branch merges that update, preserves its resources and tests, and increases the combined release to 1.7, code 8.
 The combined release passes 66 unit tests in each variant, release lint, and all APK builds. Its explicit emulator run reports `OK (40 tests)`, including the five retained artwork tests. The artwork navigation test now uses the profile control. Independent review reports zero integration findings.
+The canonical installer then installs 1.7, code 8, on the physical TV. Actual Battleship artwork, the profile menu, and the weekly chart render correctly with the Clock overlay visible. Existing usage remains present after this upgrade.
