@@ -107,4 +107,26 @@ class FamilyControllerTest {
         assertNull(controller.ui.value.state.selected)
         assertTrue(effects.contains(FamilyEffect.PauseMedia))
     }
+
+    @Test fun wakePausesMediaBeforeOpeningChooserEvenAfterStandbyClearedProfile() = runTest {
+        val controller = FamilyController(MemoryStore()) { 0L }
+        controller.load(); controller.helperConnected(true); controller.start(Viewer.ELIAS, 20)
+        controller.screenOff()
+        val effects = mutableListOf<FamilyEffect>()
+        controller.effect = { effects.add(it) }
+        controller.wake()
+        assertEquals(listOf(FamilyEffect.PauseMedia, FamilyEffect.OpenHome), effects)
+        assertNull(controller.ui.value.state.selected)
+    }
+
+    @Test fun reconnectPausesPlaybackSurvivingProcessRecovery() = runTest {
+        val saved = SessionEngine.checkpoint(SessionEngine.start(FamilyState(), Viewer.ELIAS, 20, 0), 60_000)
+        val controller = FamilyController(MemoryStore(saved)) { 2_000_000 }
+        controller.load(); controller.helperConnected(true)
+        val effects = mutableListOf<FamilyEffect>()
+        controller.effect = { effects.add(it) }
+        controller.wake()
+        assertEquals(listOf(FamilyEffect.PauseMedia, FamilyEffect.OpenHome), effects)
+        assertEquals(1_140_000L, controller.ui.value.state.sessions.getValue(Viewer.ELIAS).remainingMs)
+    }
 }

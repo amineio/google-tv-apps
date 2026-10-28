@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class FamilyHomeInstallerTest(unittest.TestCase):
-    def install(self, fail_install=False, helpers="other.helper/.Service:com.gathin.tvhome/.HomeKeyService"):
+    def install(self, fail_install=False, helpers="other.helper/.Service:com.gathin.tvhome/.HomeKeyService", fail_launch=False):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder) / "repo with spaces"
             (root / "tools").mkdir(parents=True)
@@ -47,14 +47,14 @@ elif args and args[0]=='install':
         print('Failure [INSTALL_FAILED]'); sys.exit(1)
     print('Success')
 elif 'pm list packages -e' in cmd: print('package:'+args[-1])
-elif 'am start' in cmd: print('Status: ok')
+elif 'am start' in cmd: print('Error type 3: Activity class does not exist' if os.environ['FAIL_LAUNCH']=='1' else 'Status: ok')
 ''')
             adb.chmod(0o755)
             capture = root / "commands.jsonl"
             env = dict(os.environ, PATH=str(binary) + os.pathsep + os.environ["PATH"],
                        TV_SERIAL="fake-tv", JAVA_HOME=str(root / "jdk"), ANDROID_HOME=str(root / "sdk"),
                        APP=str(app), CAPTURE=str(capture), ROLE_SET=str(root / "role"), HELPERS=helpers,
-                       FAIL_INSTALL="1" if fail_install else "0")
+                       FAIL_INSTALL="1" if fail_install else "0", FAIL_LAUNCH="1" if fail_launch else "0")
             result = subprocess.run(["bash", str(script)], cwd=folder, env=env, text=True, capture_output=True)
             calls = [json.loads(line) for line in capture.read_text().splitlines()] if capture.exists() else []
             return result, calls
@@ -87,6 +87,11 @@ elif 'am start' in cmd: print('Status: ok')
         result, calls = self.install(helpers="unsafe helper; command")
         self.assertNotEqual(0, result.returncode)
         self.assertFalse(any(call[0] == "install" for call in calls))
+
+    def test_zero_exit_launch_error_is_not_reported_as_success(self):
+        result, _ = self.install(fail_launch=True)
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("could not open", result.stderr)
 
 
 if __name__ == "__main__":

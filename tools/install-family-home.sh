@@ -64,6 +64,11 @@ SERVICES=$(cat "$BACKUP/helpers-after.txt")
 # Rebind this helper after role assignment. Retain all unrelated accessibility services.
 tv settings --user "$USER_ID" put secure enabled_accessibility_services "$SERVICES"
 tv settings --user "$USER_ID" put secure accessibility_enabled 1
-tv am start -W -n "$PKG/.MainActivity" -c android.intent.category.HOME
+START=$(tv am start -W -n "$PKG/.MainActivity" -c android.intent.category.HOME 2>&1)
+printf '%s\n' "$START"
+if ! printf '%s\n' "$START" | grep -q '^Status: ok'; then
+  echo "Family Home could not open. Device configuration backup: $BACKUP" >&2
+  exit 1
+fi
 echo "Family Home is installed. Device configuration backup: $BACKUP"
 echo 'Test Home, standby, child expiry, and casting from the phone.'

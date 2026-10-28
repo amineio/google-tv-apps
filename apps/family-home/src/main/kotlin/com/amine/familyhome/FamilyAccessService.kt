@@ -29,7 +29,13 @@ import kotlinx.coroutines.launch
 class FamilyAccessService : AccessibilityService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var stockWindows = emptySet<String>()
-    private var lastRedirect = -1_000L
+    private var foregroundPackage: String? = null
+    private var foregroundWindow: String? = null
+    private var forcedRevision: Long? = null
+    private val redirects by lazy {
+        RedirectDispatcher(SystemClock::elapsedRealtime,
+            { wait, task -> scope.launch { delay(wait); task() } }, ::needsRedirect, ::performOpenHome)
+    }
     private var warning: TextView? = null
     private var registered = false
 
@@ -37,10 +43,7 @@ class FamilyAccessService : AccessibilityService() {
         override fun onReceive(context: Context, intent: Intent) {
             scope.launch {
                 if (intent.action == Intent.ACTION_SCREEN_OFF) family.screenOff()
-                else {
-                    family.chooseProfiles()
-                    if (ownsHome()) openHome()
-                }
+                else if (ownsHome()) family.wake()
             }
         }
     }
@@ -54,7 +57,7 @@ class FamilyAccessService : AccessibilityService() {
         family.effect = { effect ->
             when (effect) {
                 FamilyEffect.PauseMedia -> pauseMedia()
-                FamilyEffect.OpenHome -> if (interactive()) openHome()
+                FamilyEffect.OpenHome -> if (interactive() && ownsHome()) openHome()
                 is FamilyEffect.Warning -> if (interactive()) showWarning(effect.text)
             }
         }
@@ -63,8 +66,7 @@ class FamilyAccessService : AccessibilityService() {
         }, RECEIVER_NOT_EXPORTED)
         registered = true
         scope.launch {
-            family.chooseProfiles()
-            if (interactive() && ownsHome()) openHome()
+            if (ownsHome()) family.wake()
             while (isActive) { family.pulse(); delay(1_000) }
         }
     }
@@ -76,13 +78,16 @@ class FamilyAccessService : AccessibilityService() {
         if (event == null || event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED || !interactive() || !ownsHome()) return
         val pkg = event.packageName?.toString()
         val window = event.className?.toString()
-        if (HomeRouting.isStockHome(pkg, window, stockWindows)) { openHome(); return }
+        foregroundPackage = pkg
+        foregroundWindow = window
+        if (HomeRouting.isStockHome(pkg, window, stockWindows)) { openHome(force = false); return }
         val current = family.ui.value
         val decision = if (current.storageFailed && pkg != packageName) AccessDecision.CHOOSER
             else AccessPolicy.decide(current.state, pkg, window, SystemClock.elapsedRealtime())
         if (decision != AccessDecision.ALLOW) {
             pauseMedia()
-            openHome()
+            android.util.Log.i("FamilyHome.Access", "Redirect package=$pkg window=$window decision=$decision")
+            openHome(force = false)
         }
     }
 
@@ -108,10 +113,22 @@ class FamilyAccessService : AccessibilityService() {
         return false
     }
 
-    private fun openHome() {
-        val now = SystemClock.elapsedRealtime()
-        if (now - lastRedirect < 350) return
-        lastRedirect = now
+    private fun openHome(force: Boolean = true) {
+        if (force) forcedRevision = family.ui.value.state.revision
+        redirects.request()
+    }
+
+    private fun needsRedirect(): Boolean {
+        if (!interactive() || !ownsHome()) return false
+        val current = family.ui.value
+        if (forcedRevision == current.state.revision) return true
+        if (foregroundPackage == packageName) return false
+        return HomeRouting.isStockHome(foregroundPackage, foregroundWindow, stockWindows) || current.storageFailed ||
+            AccessPolicy.decide(current.state, foregroundPackage, foregroundWindow, SystemClock.elapsedRealtime()) != AccessDecision.ALLOW
+    }
+
+    private fun performOpenHome() {
+        forcedRevision = null
         startActivity(Intent(this, MainActivity::class.java)
             .addCategory(Intent.CATEGORY_HOME)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NO_ANIMATION))

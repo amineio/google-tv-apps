@@ -115,6 +115,14 @@ class FamilyController(private val repository: FamilyRepository, private val ela
     suspend fun chooseProfiles(): Boolean = mutex.withLock { pauseLocked() }
     suspend fun screenOff(): Boolean = mutex.withLock { pauseLocked() }
 
+    suspend fun wake(): Boolean = mutex.withLock {
+        adminAuthorized = false
+        val result = available() && commit(SessionEngine.suspend(mutable.value.state, elapsed()))
+        effect(FamilyEffect.PauseMedia)
+        effect(FamilyEffect.OpenHome)
+        result
+    }
+
     private suspend fun pauseLocked(): Boolean {
         adminAuthorized = false
         if (!available()) return false
