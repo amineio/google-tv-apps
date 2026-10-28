@@ -34,12 +34,12 @@ Restoration, pause, and screen changes must not replay score feedback.
 Expose `thinkingTotalMs(): long` for the progress line. Save the starting duration with remaining time so preference changes and restore cannot change its scale.
 The default is 20 seconds. Valid presets are 0, 5, 10, 20, 30, and 60.
 
-- [ ] Write failing tests for 19,999/20,000 ms expiry and rejected selection before expiry.
-- [ ] Extend failures to presentation completion, duplicate callbacks, pause/restore, slow/failed saves, Off, next-reply preference changes, parent skips, reset, intended moves, draw claims, and old saves.
-- [ ] Run the tests before implementation and record the expected failure.
-- [ ] Implement remaining foreground time, guarded move input, compatible saved state, and durable preferences.
-- [ ] Run the full Chess unit suite and make sure that all tests pass.
-- [ ] Review the scoped diff before the coordinator commits it.
+- [x] Write failing tests for 19,999/20,000 ms expiry and rejected selection before expiry.
+- [x] Extend failures to presentation completion, duplicate callbacks, pause/restore, slow/failed saves, Off, next-reply preference changes, parent skips, reset, intended moves, draw claims, and old saves.
+- [x] Run the tests before implementation and record the expected failure.
+- [x] Implement remaining foreground time, guarded move input, compatible saved state, and durable preferences.
+- [x] Run the full Chess unit suite and make sure that all tests pass.
+- [x] Review the scoped diff before the coordinator commits it.
 
 Command: `JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home ANDROID_HOME=/opt/homebrew/share/android-commandlinetools ./gradlew :chessMath:testReleaseUnitTest --console=plain`.
 Expected: build success and zero test failures.
@@ -51,15 +51,15 @@ Expected: build success and zero test failures.
 **Interfaces:** Consume Task 1 preference and controller methods. Produce `MaterialPoints.total(ChessGame, boolean): int`, `before(PresentationEvent, boolean): int`, and `after(PresentationEvent, boolean): int`.
 `ChessScoreView` owns only score labels, signed feedback, and thinking status. `MainActivity` owns layout, presentation landing callbacks, lifecycle cancellation, and the Settings choice dialog.
 
-- [ ] Write failing material tests with literal expected totals for initial pieces, ordinary captures, en passant, castling, all promotions, and capture promotion.
-- [ ] Run the tests and make sure that they fail before adding the material implementation.
-- [ ] Implement board-derived totals with 1/3/3/5/9 piece values and zero for kings.
-- [ ] Add equal score gutters around the unchanged centered board. Keep the timer under the player's score.
-- [ ] Apply score changes at landing. Positive green values rise and negative coral values fall. Disabled motion shows static feedback.
-- [ ] Cancel feedback on pause, focus loss, and recreation. Keep countdown updates within existing views.
-- [ ] Add a Settings row with a timer icon and native Off/5/10/20/30/60 choice dialog.
-- [ ] Add actual D-pad tests for blocked OK, expiry, focus, settings, app return, languages, larger fonts, and no feedback replay.
-- [ ] Run local unit tests, lint, release/debug builds, and instrumented test build.
+- [x] Write failing material tests with literal expected totals for initial pieces, ordinary captures, en passant, castling, all promotions, and capture promotion.
+- [x] Run the tests and make sure that they fail before adding the material implementation.
+- [x] Implement board-derived totals with 1/3/3/5/9 piece values and zero for kings.
+- [x] Add equal score gutters around the unchanged centered board. Keep the timer under the player's score.
+- [x] Apply score changes at landing. Positive green values rise and negative coral values fall. Disabled motion shows static feedback.
+- [x] Cancel feedback on pause, focus loss, and recreation. Keep countdown updates within existing views.
+- [x] Add a Settings row with a timer icon and native Off/5/10/20/30/60 choice dialog.
+- [x] Add actual D-pad tests for blocked OK, expiry, focus, settings, app return, languages, larger fonts, and no feedback replay.
+- [x] Run local unit tests, lint, release/debug builds, and instrumented test build.
 
 Command: `JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home ANDROID_HOME=/opt/homebrew/share/android-commandlinetools ./gradlew :chessMath:testReleaseUnitTest :chessMath:lintRelease :chessMath:assembleRelease :chessMath:assembleDebug :chessMath:assembleDebugAndroidTest --console=plain`.
 Expected: success, zero unit failures, and zero lint errors.
@@ -70,11 +70,11 @@ Expected: success, zero unit failures, and zero lint errors.
 
 **Interfaces:** Consume Tasks 1 and 2 as a complete app.
 
-- [ ] Run relevant tests on a Google TV emulator with one explicit serial.
-- [ ] Inspect app captures for score placement, thinking status, Settings, motion feedback, and larger fonts.
-- [ ] Request a fresh independent review of the complete branch. Fix material findings and rerun affected tests.
-- [ ] Install the verified release build on the emulator. Use the physical TV only when available and idle.
-- [ ] Record separate build, test, install, visual, and deferred physical evidence.
+- [x] Run relevant tests on a Google TV emulator with one explicit serial.
+- [x] Inspect app captures for score placement, thinking status, Settings, motion feedback, and larger fonts.
+- [x] Request a fresh independent review of the complete branch. Fix material findings and rerun affected tests.
+- [x] Install the verified release build on the emulator. Use the physical TV only when available and idle.
+- [x] Record separate build, test, install, visual, and deferred physical evidence.
 - [ ] Commit only scoped app and documentation changes. Push the feature branch and merge into `origin/main`.
 - [ ] Make sure that the merged commit reaches `origin/main`. Preserve this worktree and unrelated local work.
 
