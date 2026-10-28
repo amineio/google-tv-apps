@@ -30,17 +30,19 @@ internal fun loadLauncherCatalog(manager: PackageManager, ownPackage: String): L
     }.distinctBy { it.pkg }.sortedBy { it.label.lowercase() }
 }
 
-private fun Drawable.render(width: Int, height: Int): Bitmap {
+internal fun Drawable.render(width: Int, height: Int): Bitmap {
     val image = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
     val sourceWidth = intrinsicWidth.takeIf { it > 0 } ?: width
     val sourceHeight = intrinsicHeight.takeIf { it > 0 } ?: height
     val scale = min(width.toFloat() / sourceWidth, height.toFloat() / sourceHeight)
-    val fittedWidth = (sourceWidth * scale).roundToInt().coerceAtLeast(1)
-    val fittedHeight = (sourceHeight * scale).roundToInt().coerceAtLeast(1)
-    val left = (width - fittedWidth) / 2
-    val top = (height - fittedHeight) / 2
-    setBounds(left, top, left + fittedWidth, top + fittedHeight)
-    draw(Canvas(image))
+    val left = (width - sourceWidth * scale) / 2f
+    val top = (height - sourceHeight * scale) / 2f
+    // Fixed-size layer children follow the Canvas transform, not enlarged drawable bounds.
+    setBounds(0, 0, sourceWidth, sourceHeight)
+    draw(Canvas(image).apply {
+        translate(left, top)
+        scale(scale, scale)
+    })
     return image
 }
 

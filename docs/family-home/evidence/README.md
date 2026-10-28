@@ -73,3 +73,13 @@ Independent code and rendered UI reviews report zero actionable findings.
 New screenshots remain outside Git because the repository is public.
 The generic home fixtures use solid-color artwork. Installed TV apps retain their native artwork.
 Physical playback, timer expiry, wake, and Cast tests remain separate from this presentation evidence.
+
+
+The first TV capture exposed a fixed-size child layer inside the Chess banner drawable.
+Changing the outer bounds left empty space. Family Home now scales the canvas from the intrinsic drawable bounds.
+Two Android regressions failed before that correction. Both pass afterward, including the case with a different aspect ratio.
+The final build passes 64 unit tests, release lint, and all APK builds.
+All 13 emulator UI tests and 14 repository tests pass on the updated main baseline.
+The real installed Chess banner also fills its card in the emulator capture.
+Independent code and rendered artwork reviews report zero actionable findings.
+The correction stays inside Family Home. No Chess source or other app source changes belong to this fix.
