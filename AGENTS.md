@@ -4,6 +4,7 @@
 
 Read the root README and the affected app guide.
 For new Kotlin apps, also read [the Kotlin development guide](docs/kotlin-tv-development.md).
+For Chromecast-specific work, read the [Chromecast device profile](docs/devices/google-chromecast-gtv-4k.md).
 Make sure that the absolute checkout, branch, HEAD, worktrees, and status match the task.
 
 At each new task or thread, fetch `origin`, not the inherited `upstream` remote.

@@ -14,6 +14,8 @@ Each app has its own package, version, permissions, tests, and APK.
 TV Clock works independently of TV Home. Its stop screen supports voluntary viewing limits.
 It remains dismissible and does not guarantee that another app pauses playback.
 
+The [Chromecast device profile](docs/devices/google-chromecast-gtv-4k.md) records published specifications, observed firmware, and development limits for the current physical target.
+
 ## Build
 
 Install JDK 17, Android SDK platform 34, and build tools 34.0.0.
