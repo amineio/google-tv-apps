@@ -2,11 +2,23 @@ package com.amine.battleship.viewmodel
 
 import com.amine.battleship.game.model.Coordinate
 import com.amine.battleship.game.model.GameState
+import com.amine.battleship.game.model.ShotOutcome
+
+enum class ImpactBoard { ENEMY, FRIENDLY }
+
+data class ImpactPresentation(
+    val id: Long,
+    val board: ImpactBoard,
+    val coordinate: Coordinate,
+    val outcome: ShotOutcome,
+    val startedAtNanos: Long,
+)
 
 enum class Screen { HOME, GAME, HELP, SETTINGS, RESULTS }
 enum class Confirmation { RESTART, MAIN_MENU, NEW_GAME }
 
 data class SessionState(
+    val activeImpact: ImpactPresentation? = null,
     val loaded: Boolean = false,
     val screen: Screen = Screen.HOME,
     val game: GameState? = null,
@@ -24,6 +36,7 @@ sealed interface GameAction {
     data object Play : GameAction
     data object Continue : GameAction
     data object Fire : GameAction
+    data class CompleteImpact(val id: Long) : GameAction
     data class Move(val rowDelta: Int, val columnDelta: Int) : GameAction
     data object Pause : GameAction
     data object Resume : GameAction

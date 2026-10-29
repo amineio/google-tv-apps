@@ -29,6 +29,10 @@ Separate target and last-shot regions keep feedback clear during aiming. Damage 
 The [three-round design review](../../docs/battleship/gameplay-design/review.md) records the native captures and expert scores.
 Version 1.3 adds a generated ship icon, a TV banner, and a text-free launcher background.
 Battleship owns these resources. Family Home reads the optional background through application metadata.
+Version 1.4 adds calm moving water, miss splashes, and compact hit and sinking explosions on both boards.
+Android 13 and later use native water shaders. Older devices and shader failures use a Canvas fallback.
+Effects stop during pause or background activity. Continue shows saved markers without replaying old impacts.
+The existing controls, ship visibility, audio, and turn timing remain unchanged.
 
 ## Build
 
@@ -92,6 +96,9 @@ The [audio record](../../docs/battleship/audio-polish-assets.json) contains the 
 The [gameplay art record](../../docs/battleship/gameplay-design/assets.json) contains the ImageGen prompts, dimensions, compressed paths, and rights for version 1.2.
 The [launcher art record](../../docs/battleship/launcher-art/assets.json) records the same information for version 1.3.
 The [launcher validation record](../../docs/battleship/launcher-art/validation.md) records its tests, review, and installation results.
+The [water design](../../docs/superpowers/specs/2026-10-29-battleship-water-design.md) defines the animation and lifecycle behavior.
+The [water concept record](../../docs/battleship/water-effects/assets.json) contains the ImageGen prompts, references, dimensions, and rights.
+The [water validation record](../../docs/battleship/water-effects/validation.md) contains native captures, test results, installation evidence, and device limits.
 To reproduce its bundled effects, use Python 3 from the repository root:
 
 ```sh

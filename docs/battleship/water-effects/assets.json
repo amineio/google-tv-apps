@@ -1,0 +1,93 @@
+{
+  "date": "2026-10-29",
+  "generator": "Built-in ImageGen tool",
+  "referenceImage": "docs/battleship/gameplay-design/release-gameplay.webp",
+  "visualReference": "https://github.com/Humpalumps/Ultra-Water",
+  "implementation": "Original native Android graphics. No source, textures, or assets copied from Ultra-Water.",
+  "rights": "AI-generated concepts created for this repository. No external stock artwork license is claimed. Existing font and artwork licenses remain unchanged.",
+  "assets": [
+    {
+      "path": "docs/battleship/water-effects/miss-concept.webp",
+      "purpose": "Design reference only. User selected calmer water than this concept.",
+      "prompt": "Use case: ui-mockup. Edit the supplied actual Battleship Google TV screenshot into a believable native Android visual concept. Preserve the exact flat top-down square 10 by 10 enemy grid on the left, the existing right-hand navy command panel, all typography, coordinates, proportions, cyan square targeting cursor, and existing ship silhouettes. No tilted camera, no 3D perspective board, no UI redesign. Replace ONLY the flat water inside both boards with rich but restrained deep blue naval water: small-scale natural waves, slow-looking specular highlights and reflective wave ridges, no beach, no island, no underwater features. Water must remain dark enough for crisp grid lines, pale miss rings, coral hit crosses and cyan focus. The intended implementation is a lightweight Android shader and particles, so avoid large ocean surf or cinematic camera optics. Keep all text sharp and readable from a couch. Native TV app screenshot, edge-to-edge 16:9, no device frame. Preserve the app's existing dark blue, cyan, coral, and steel palette. This is a design reference, not a new bitmap UI asset. Show the peak of one missed missile at E5 in the main enemy board: a small translucent pale blue splash crown, a few distinct water droplets above it, and two widening rings that span about 1.5 cells. The effect has volume from shading but remains viewed directly overhead. The cyan cursor stays crisp on top. Only this one active impact. Keep own fleet board calm. Do not add a missile trail, camera shake, flames, or additional interface labels.",
+      "dimensions": [
+        1400,
+        788
+      ],
+      "bytes": 64186,
+      "sha256": "1243b6b044cfe6b9a3df75506bb4f54b73622dc6308638f5aff5d66b3b7c0eb9",
+      "compression": "cwebp -q 82 -resize 1400 0"
+    },
+    {
+      "path": "docs/battleship/water-effects/hit-concept.webp",
+      "purpose": "Design reference only. User selected calmer water than this concept.",
+      "prompt": "Use case: ui-mockup. Edit the supplied actual Battleship Google TV screenshot into a believable native Android visual concept. Preserve the exact flat top-down square 10 by 10 enemy grid on the left, the existing right-hand navy command panel, all typography, coordinates, proportions, cyan square targeting cursor, and existing ship silhouettes. No tilted camera, no 3D perspective board, no UI redesign. Replace ONLY the flat water inside both boards with rich but restrained deep blue naval water: small-scale natural waves, slow-looking specular highlights and reflective wave ridges, no beach, no island, no underwater features. Water must remain dark enough for crisp grid lines, pale miss rings, coral hit crosses and cyan focus. The intended implementation is a lightweight Android shader and particles, so avoid large ocean surf or cinematic camera optics. Keep all text sharp and readable from a couch. Native TV app screenshot, edge-to-edge 16:9, no device frame. Preserve the app's existing dark blue, cyan, coral, and steel palette. This is a design reference, not a new bitmap UI asset. Show the peak of one successful missile at E5 in the main enemy board: a compact bright warm orange explosion with a pale center, a few sparks and a small translucent charcoal smoke puff, spanning about 1.5 cells. It is a brief localized impact, not a huge fireball. Preserve enemy secrecy: do not reveal an enemy ship silhouette around or under the hit. A coral hit cross remains legible below the dissipating blast. The cyan cursor stays crisp on top. Only this one active impact. Keep own fleet board calm. Do not add a missile trail, camera shake, a large flash, or additional interface labels.",
+      "dimensions": [
+        1400,
+        788
+      ],
+      "bytes": 61770,
+      "sha256": "78b787e79a50e9f87b003ec0a1f6de25024a33dc6a7f1943b61d845a818656b9",
+      "compression": "cwebp -q 82 -resize 1400 0"
+    }
+  ],
+  "nativeCaptures": [
+    {
+      "path": "docs/battleship/water-effects/native-miss.webp",
+      "purpose": "Native UI evidence from generic synthetic presentation fixtures. Not generated artwork.",
+      "dimensions": [
+        1400,
+        788
+      ],
+      "bytes": 42274,
+      "sha256": "16edbd66a38053601ddcd102da36b6ddde2d5a95b67aef513548a9a027811f5b",
+      "compression": "cwebp -q 82 -resize 1400 0"
+    },
+    {
+      "path": "docs/battleship/water-effects/native-hit.webp",
+      "purpose": "Native UI evidence from generic synthetic presentation fixtures. Not generated artwork.",
+      "dimensions": [
+        1400,
+        788
+      ],
+      "bytes": 42260,
+      "sha256": "c47e47d48bff53a0579aa40f2586927f015b227ae9f8800d790e30fc2bece949",
+      "compression": "cwebp -q 82 -resize 1400 0"
+    },
+    {
+      "path": "docs/battleship/water-effects/native-sunk.webp",
+      "purpose": "Native UI evidence from generic synthetic presentation fixtures. Not generated artwork.",
+      "dimensions": [
+        1400,
+        788
+      ],
+      "bytes": 43048,
+      "sha256": "c1ff7c1dcee483c95509f8dd3ba5d0edc573ad0edb20d44d164faf8b4127016d",
+      "compression": "cwebp -q 82 -resize 1400 0"
+    },
+    {
+      "path": "docs/battleship/water-effects/native-friendly-hit.webp",
+      "purpose": "Native UI evidence from generic synthetic presentation fixtures. Not generated artwork.",
+      "dimensions": [
+        1400,
+        788
+      ],
+      "bytes": 33768,
+      "sha256": "cda0ed68124d86bf3702d166a607b6b0c6481200b6266eeb0a17074c1982aca0",
+      "compression": "cwebp -q 82 -resize 1400 0"
+    },
+    {
+      "path": "docs/battleship/water-effects/native-canvas.webp",
+      "purpose": "Native UI evidence from generic synthetic presentation fixtures. Not generated artwork.",
+      "dimensions": [
+        1400,
+        788
+      ],
+      "bytes": 44276,
+      "sha256": "1711307b92ec162c508d1a3b2e94276726d7b88c195077f855c3101788c6f5cf",
+      "compression": "cwebp -q 82 -resize 1400 0"
+    }
+  ],
+  "captureDevice": "Google TV API 34 emulator at 1920 by 1080 pixels.",
+  "runtimeTexture": "One shared procedural 256 by 256 ARGB Canvas texture, generated and cached in memory. No external texture assets."
+}

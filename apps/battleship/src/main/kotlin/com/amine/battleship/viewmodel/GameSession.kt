@@ -21,6 +21,7 @@ class GameSession(
     private val aiDelayMs: Long = 850,
     private val seedSource: () -> Long = { Random.nextLong() },
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val nanoTimeSource: () -> Long = System::nanoTime,
 ) {
     private val mutableState = MutableStateFlow(SessionState())
     val state: StateFlow<SessionState> = mutableState.asStateFlow()
@@ -29,6 +30,7 @@ class GameSession(
     private val saves = Channel<SavedSession>(Channel.CONFLATED)
     private var turnJob: Job? = null
     private var generation = 0L
+    private var nextImpactId = 0L
     private var returnScreen = Screen.HOME
 
     init {
@@ -59,11 +61,11 @@ class GameSession(
 
     fun action(action: GameAction) {
         if (!state.value.loaded) return
-        if (action !is GameAction.Move && action != GameAction.Fire && action != GameAction.ToggleSound) cue(SoundCue.SELECT)
+        if (action !is GameAction.Move && action !is GameAction.CompleteImpact && action != GameAction.Fire && action != GameAction.ToggleSound) cue(SoundCue.SELECT)
         when (action) {
             GameAction.Play -> if (unfinished()) confirm(Confirmation.NEW_GAME) else start()
             GameAction.Continue -> if (unfinished()) {
-                update { copy(screen = Screen.GAME, paused = false, confirmation = null, resolving = false, message = "") }
+                update { copy(screen = Screen.GAME, paused = false, confirmation = null, resolving = false, message = "", activeImpact = null) }
                 scheduleComputer()
             }
             is GameAction.Move -> if (state.value.screen == Screen.GAME && !state.value.paused) {
@@ -75,9 +77,12 @@ class GameSession(
                 }
             }
             GameAction.Fire -> fire()
+            is GameAction.CompleteImpact -> update {
+                if (activeImpact?.id == action.id) copy(activeImpact = null) else this
+            }
             GameAction.Pause -> pause()
             GameAction.Resume -> {
-                update { copy(paused = false, confirmation = null, screen = Screen.GAME, resolving = false) }
+                update { copy(paused = false, confirmation = null, screen = Screen.GAME, resolving = false, activeImpact = null) }
                 scheduleComputer()
             }
             GameAction.Restart -> confirm(Confirmation.RESTART)
@@ -100,6 +105,7 @@ class GameSession(
     }
 
     fun background() {
+        update { copy(activeImpact = null) }
         if (state.value.screen == Screen.GAME || returnScreen == Screen.GAME) pause()
         persist()
     }
@@ -109,7 +115,7 @@ class GameSession(
     private fun start() {
         cancelTurn()
         update { copy(game = GameEngine.newGame(seedSource()), screen = Screen.GAME, selected = Coordinate(0, 0),
-            paused = false, resolving = false, confirmation = null, message = "") }
+            paused = false, resolving = false, confirmation = null, message = "", activeImpact = null) }
         returnScreen = Screen.HOME
         persist()
     }
@@ -123,10 +129,13 @@ class GameSession(
             update { copy(message = REPEATED_SHOT_MESSAGE) }
             return
         }
+        val shot = result.shot!!
+        val impact = impact(ImpactBoard.ENEMY, shot)
         cue(SoundCue.FIRE)
-        update { copy(game = result.state, resolving = true, showHint = false, message = describe(Player.HUMAN, result.shot!!)) }
+        update { copy(game = result.state, resolving = true, showHint = false,
+            message = describe(Player.HUMAN, shot), activeImpact = impact) }
         persist()
-        resolveSound(Player.HUMAN, result.shot!!, result.state)
+        resolveSound(Player.HUMAN, shot, result.state)
         if (result.state.phase == GamePhase.GAME_OVER) finishAfterFeedback() else scheduleComputer()
     }
 
@@ -144,12 +153,18 @@ class GameSession(
             val coordinate = HuntTargetStrategy(match.seed).chooseShot(AttackKnowledge.fromShots(match.playerBoard.shots))
             val result = GameEngine.attack(match, Player.COMPUTER, coordinate)
             if (!result.accepted) return@launch
-            update { copy(game = result.state, resolving = true, message = describe(Player.COMPUTER, result.shot!!)) }
+            val shot = result.shot!!
+            val impact = impact(ImpactBoard.FRIENDLY, shot)
+            update { copy(game = result.state, resolving = true,
+                message = describe(Player.COMPUTER, shot), activeImpact = impact) }
             persist()
-            resolveSound(Player.COMPUTER, result.shot!!, result.state)
+            resolveSound(Player.COMPUTER, shot, result.state)
             delay(500)
             if (generation != expectedGeneration) return@launch
-            update { copy(resolving = false, screen = if (result.state.phase == GamePhase.GAME_OVER) Screen.RESULTS else Screen.GAME) }
+            update {
+                if (result.state.phase == GamePhase.GAME_OVER) copy(resolving = false, screen = Screen.RESULTS, activeImpact = null)
+                else copy(resolving = false, screen = Screen.GAME)
+            }
         }
     }
 
@@ -158,22 +173,22 @@ class GameSession(
         val expectedGeneration = generation
         turnJob = scope.launch {
             delay(650)
-            if (generation == expectedGeneration) update { copy(screen = Screen.RESULTS, resolving = false) }
+            if (generation == expectedGeneration) update { copy(screen = Screen.RESULTS, resolving = false, activeImpact = null) }
         }
     }
 
     private fun pause() {
         if (state.value.screen != Screen.GAME) return
         cancelTurn()
-        if (state.value.game?.phase == GamePhase.GAME_OVER) update { copy(screen = Screen.RESULTS, resolving = false) }
-        else update { copy(paused = true, resolving = false) }
+        if (state.value.game?.phase == GamePhase.GAME_OVER) update { copy(screen = Screen.RESULTS, resolving = false, activeImpact = null) }
+        else update { copy(paused = true, resolving = false, activeImpact = null) }
         persist()
     }
 
     private fun open(screen: Screen) {
         if (state.value.screen == Screen.GAME) pause()
         returnScreen = state.value.screen
-        update { copy(screen = screen) }
+        update { copy(screen = screen, activeImpact = null) }
     }
 
     private fun back() {
@@ -188,15 +203,23 @@ class GameSession(
 
     private fun confirm(value: Confirmation) {
         if (state.value.screen == Screen.GAME) pause()
-        update { copy(confirmation = value) }
+        update { copy(confirmation = value, activeImpact = null) }
     }
 
     private fun home() {
         cancelTurn()
         returnScreen = Screen.HOME
-        update { copy(screen = Screen.HOME, paused = false, resolving = false, confirmation = null) }
+        update { copy(screen = Screen.HOME, paused = false, resolving = false, confirmation = null, activeImpact = null) }
         persist()
     }
+
+    private fun impact(board: ImpactBoard, shot: Shot) = ImpactPresentation(
+        id = ++nextImpactId,
+        board = board,
+        coordinate = shot.coordinate,
+        outcome = shot.outcome,
+        startedAtNanos = nanoTimeSource(),
+    )
 
     private fun cancelTurn() { generation++; turnJob?.cancel(); turnJob = null }
     private inline fun update(block: SessionState.() -> SessionState) { mutableState.update { it.block() } }

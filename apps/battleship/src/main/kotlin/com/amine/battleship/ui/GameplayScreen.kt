@@ -26,11 +26,13 @@ import androidx.tv.material3.Text
 import com.amine.battleship.R
 import com.amine.battleship.game.engine.GameEngine
 import com.amine.battleship.game.model.*
+import com.amine.battleship.viewmodel.ImpactBoard
 import com.amine.battleship.viewmodel.GameAction
 import com.amine.battleship.viewmodel.SessionState
 
 @Composable
 internal fun GameScreen(state: SessionState, onAction: (GameAction) -> Unit) {
+    val frameTime = rememberBoardFrameTime(state, onAction)
     val game = state.game ?: return
     val view = GameEngine.playerView(game)
     val boardFocus = remember { FocusRequester() }
@@ -74,7 +76,8 @@ internal fun GameScreen(state: SessionState, onAction: (GameAction) -> Unit) {
                     GameBoard(view.opponentBoard.ships, view.opponentBoard.shots, Modifier.size(boardSize),
                         selected = state.selected, lastShot = view.opponentBoard.shots.lastOrNull(),
                         canFire = playerTurn && !state.paused && state.confirmation == null,
-                        focusRequester = boardFocus, onAction = onAction)
+                        focusRequester = boardFocus, onAction = onAction, frameTime = frameTime,
+                        impact = state.activeImpact?.takeIf { it.board == ImpactBoard.ENEMY })
                 }
                 Column(Modifier.weight(1f).fillMaxHeight()
                     .background(Brush.linearGradient(listOf(Color(0xFF102637), Color(0xFF0A1A27))), RoundedCornerShape(9.dp))
@@ -115,7 +118,8 @@ internal fun GameScreen(state: SessionState, onAction: (GameAction) -> Unit) {
                         Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                             GameBoard(view.ownBoard.ships, view.ownBoard.shots, Modifier.size(friendlySize),
-                                lastShot = view.ownBoard.shots.lastOrNull())
+                                lastShot = view.ownBoard.shots.lastOrNull(), frameTime = frameTime,
+                                impact = state.activeImpact?.takeIf { it.board == ImpactBoard.FRIENDLY })
                             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                 view.ownBoard.ships.forEach { ship ->
                                     FleetShip(ship.type, view.ownBoard.shots.count { it.coordinate in ship.cells })
