@@ -13,9 +13,11 @@
 #   the stock adb: Developer options > Wireless debugging > Pair device with pairing code, `adb pair
 #   <ip:pairport> <code>`, `adb connect <ip:connectport>` (`adb mdns services` lists both ports), then
 #   `adb tcpip 5555`. After that tools/tv.py works on 5555 (README, Troubleshooting).
-# - `cmd package set-home-activity com.gathin.tvhome` returns Success but launcherx stays the default.
-#   Keep launcherx and setupwraith enabled for Cast. setupwraith provides Cast device credentials.
-#   Use TV_SERIAL=<connected address> tools/install-home-with-cast.sh for the custom Home screen.
+# - The Home role and the resolved Home activity can differ on this firmware.
+#   `cmd package set-home-activity com.gathin.tvhome` can return Success while the resolver still selects launcherx.
+#   Keep launcherx and setupwraith enabled for Cast credentials.
+#   For TV Home, use TV_SERIAL=<connected address> tools/install-home-with-cast.sh.
+#   For Family Home, see docs/family-home/home-key-routing.md. Do not disable either package to remove a Home flash.
 # - With launcherx disabled the YouTube button on the remote does nothing. It sends BUTTON_3
 #   (keycode 190). Button Mapper only remaps added buttons in its paid Pro version; Key Mapper
 #   (open source, keymapperorg/KeyMapper) does it for free. Play Store lists Key Mapper as incompatible
@@ -58,7 +60,8 @@ com.google.android.marvin.talkback              # re-enable if you need the scre
 com.google.android.apps.tv.dreamx
 com.google.android.backdrop
 
-# Keep both packages enabled. Disabling setupwraith prevents Cast authentication.
-# Use tools/install-home-with-cast.sh instead of disabling the stock Home package.
+# Keep Google TV Home and setupwraith enabled. setupwraith supplies Cast device credentials.
+# Disabling the setup package previously broke Cast authentication on this Chromecast firmware.
+# Use tools/install-home-with-cast.sh for TV Home instead of disabling the stock Home package.
 # com.google.android.apps.tv.launcherx
 # com.google.android.tungsten.setupwraith

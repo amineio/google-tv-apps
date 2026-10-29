@@ -109,9 +109,12 @@ class FamilyAccessService : AccessibilityService() {
             return true
         }
         if (event.keyCode == KeyEvent.KEYCODE_HOME) {
-            if (event.action == KeyEvent.ACTION_UP && !event.isCanceled &&
-                HomeRouting.isShortPress(event.downTime, event.eventTime, ViewConfiguration.getLongPressTimeout().toLong())) openHome()
-            return false
+            if (event.action == KeyEvent.ACTION_UP && !event.isCanceled) {
+                if (HomeRouting.isShortPress(event.downTime, event.eventTime, ViewConfiguration.getLongPressTimeout().toLong()) ||
+                    family.ui.value.state.selected != Viewer.AMINE) openHome()
+                else startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            }
+            return true
         }
         if (event.keyCode == KeyEvent.KEYCODE_ALL_APPS) {
             if (event.action == KeyEvent.ACTION_UP && !event.isCanceled) openHome()
