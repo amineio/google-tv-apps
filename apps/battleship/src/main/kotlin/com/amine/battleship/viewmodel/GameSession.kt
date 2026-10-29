@@ -12,7 +12,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlin.random.Random
 
-enum class SoundCue { SELECT, FIRE, MISS, HIT, DAMAGE, SUNK, VICTORY, DEFEAT, STOP }
+enum class SoundCue { SELECT, FIRE, MISS, HIT, DAMAGE, SUNK, VICTORY, DEFEAT, MATCH_START, STOP }
 
 private const val REPEATED_SHOT_MESSAGE = "Already targeted"
 
@@ -119,6 +119,7 @@ class GameSession(
         update { copy(game = GameEngine.newGame(seedSource()), screen = Screen.GAME, selected = Coordinate(0, 0),
             paused = false, resolving = false, confirmation = null, message = "", activeImpact = null) }
         returnScreen = Screen.HOME
+        cue(SoundCue.MATCH_START)
         persist()
     }
 

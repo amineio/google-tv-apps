@@ -154,7 +154,7 @@ private fun SettingsScreen(state: SessionState, onAction: (GameAction) -> Unit) 
         Eyebrow("MAKE YOURSELF AT HOME")
         Text("SETTINGS", fontSize = 36.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(24.dp))
-        NavalButton("Sound effects: ${if (state.soundEnabled) "On" else "Off"}",
+        NavalButton("Sound: ${if (state.soundEnabled) "On" else "Off"}",
             Modifier.width(280.dp).focusRequester(first), primary = true) { onAction(GameAction.ToggleSound) }
         Spacer(Modifier.height(16.dp))
         Text("Difficulty: Normal", fontSize = 22.sp)

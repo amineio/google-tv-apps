@@ -1,14 +1,15 @@
 {
-  "origin": "Current victory and defeat cues use original deterministic local synthesis. Historical version 1.1 battle recipes remain below for reference.",
+  "origin": "Historical version 1.1 synthesis recipes. Version 1.6 uses recorded orchestral music for results and version 1.5 recorded battle cues.",
   "source": "apps/battleship/tools/generate_audio.py",
   "generationCommand": "python3 apps/battleship/tools/generate_audio.py",
   "comparisonCommand": "python3 apps/battleship/tools/generate_audio.py --check",
   "references": "User feedback: stronger impact on the friendly fleet, an enthusiastic military victory sound, and a somber military defeat sound.",
-  "rights": "The current victory and defeat cues and historical synthesis recipes use the repository MIT license. Current recorded battle cues use separate CC0 sources documented in sprite-polish/audio-assets.json.",
+  "rights": "These historical synthesis recipes use the repository MIT license. Current recorded battle cues and orchestral music use separate CC0 sources in the linked current manifests.",
   "licensePath": "LICENSE",
-  "sourceNotes": "Only assets.victory and assets.defeat describe current bundled files. Historical battle entries describe version 1.1 bytes, not the current files at those paths. Version 1.5 replaces fire, splash, impact, damage, and sunk; sprite-polish/audio-assets.json is authoritative for those cues.",
+  "sourceNotes": "No assets in this record describe current bundled files. Historical paths and hashes identify the earlier synthesis recipes. Current battle cues and music use the linked manifests. The generator emits only current battle WAVs through prepare_scene_audio.py, plus this historical recipe record.",
   "currentBattleManifest": "docs/battleship/sprite-polish/audio-assets.json",
-  "historicalBattleAssetsVersion1_1": {
+  "currentMusicManifest": "docs/battleship/music-polish/assets.json",
+  "historicalSynthesisAssetsVersion1_1": {
     "impact": {
       "description": "Enemy hit: short cannon impact, steel resonances, and filtered debris.",
       "durationSeconds": 0.44,
@@ -25,7 +26,7 @@
       "firstSample": 0,
       "lastSample": 0,
       "historicalPath": "apps/battleship/src/main/res/raw/impact.wav",
-      "status": "Historical version 1.1 recipe; superseded by sprite-polish/audio-assets.json."
+      "status": "Historical version 1.1 recipe; superseded by the current battle or music manifest."
     },
     "damage": {
       "description": "Friendly hit: lower hull thud, metallic decay, and a brief lower brass creak.",
@@ -43,7 +44,7 @@
       "firstSample": 0,
       "lastSample": 0,
       "historicalPath": "apps/battleship/src/main/res/raw/damage.wav",
-      "status": "Historical version 1.1 recipe; superseded by sprite-polish/audio-assets.json."
+      "status": "Historical version 1.1 recipe; superseded by the current battle or music manifest."
     },
     "sunk": {
       "description": "Ship sunk: deeper impact with a second drum accent and a longer debris decay.",
@@ -61,7 +62,43 @@
       "firstSample": 0,
       "lastSample": 0,
       "historicalPath": "apps/battleship/src/main/res/raw/sunk.wav",
-      "status": "Historical version 1.1 recipe; superseded by sprite-polish/audio-assets.json."
+      "status": "Historical version 1.1 recipe; superseded by the current battle or music manifest."
+    },
+    "victory": {
+      "description": "Original bright major naval brass fanfare with snare pickup and low drum accents.",
+      "durationSeconds": 2.3,
+      "sampleRateHz": 22050,
+      "channels": 1,
+      "bitsPerSample": 16,
+      "encoding": "PCM signed little-endian WAV",
+      "peak": 0.819977,
+      "rms": 0.139268,
+      "rmsDbfs": -17.12,
+      "decodedBytes": 101430,
+      "fileBytes": 101474,
+      "sha256": "963ee9c8c67510d07410d2d8057ea68bd853e615c77c5b108ee3a7b4a6f2578c",
+      "firstSample": 0,
+      "lastSample": 0,
+      "historicalPath": "apps/battleship/src/main/res/raw/victory.wav",
+      "status": "Historical version 1.1 recipe; superseded by the current battle or music manifest."
+    },
+    "defeat": {
+      "description": "Original restrained descending minor bugle phrase with muted low drum, without speech or sirens.",
+      "durationSeconds": 2.049977,
+      "sampleRateHz": 22050,
+      "channels": 1,
+      "bitsPerSample": 16,
+      "encoding": "PCM signed little-endian WAV",
+      "peak": 0.819977,
+      "rms": 0.219418,
+      "rmsDbfs": -13.17,
+      "decodedBytes": 90404,
+      "fileBytes": 90448,
+      "sha256": "7cbbf867806598fca8ba1906d51e86940533de780bf8db218d2011b06a24e1a4",
+      "firstSample": 0,
+      "lastSample": 0,
+      "historicalPath": "apps/battleship/src/main/res/raw/defeat.wav",
+      "status": "Historical version 1.1 recipe; superseded by the current battle or music manifest."
     }
   },
   "commonParameters": {
@@ -444,41 +481,6 @@
       "decayPerSecond": 12.0
     }
   },
-  "assets": {
-    "victory": {
-      "path": "apps/battleship/src/main/res/raw/victory.wav",
-      "description": "Original bright major naval brass fanfare with snare pickup and low drum accents.",
-      "durationSeconds": 2.3,
-      "sampleRateHz": 22050,
-      "channels": 1,
-      "bitsPerSample": 16,
-      "encoding": "PCM signed little-endian WAV",
-      "peak": 0.819977,
-      "rms": 0.139268,
-      "rmsDbfs": -17.12,
-      "decodedBytes": 101430,
-      "fileBytes": 101474,
-      "sha256": "963ee9c8c67510d07410d2d8057ea68bd853e615c77c5b108ee3a7b4a6f2578c",
-      "firstSample": 0,
-      "lastSample": 0
-    },
-    "defeat": {
-      "path": "apps/battleship/src/main/res/raw/defeat.wav",
-      "description": "Original restrained descending minor bugle phrase with muted low drum, without speech or sirens.",
-      "durationSeconds": 2.049977,
-      "sampleRateHz": 22050,
-      "channels": 1,
-      "bitsPerSample": 16,
-      "encoding": "PCM signed little-endian WAV",
-      "peak": 0.819977,
-      "rms": 0.219418,
-      "rmsDbfs": -13.17,
-      "decodedBytes": 90404,
-      "fileBytes": 90448,
-      "sha256": "7cbbf867806598fca8ba1906d51e86940533de780bf8db218d2011b06a24e1a4",
-      "firstSample": 0,
-      "lastSample": 0
-    }
-  },
+  "assets": {},
   "review": "PCM format, reproducibility, finite duration, peak/RMS, zero endpoints, and SoundPool decoded-size limits are measured locally. Listening through TV speakers remains separate."
 }

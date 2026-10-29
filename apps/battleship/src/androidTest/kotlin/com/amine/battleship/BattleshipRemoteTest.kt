@@ -87,9 +87,9 @@ class BattleshipRemoteTest {
         key(Key.DirectionDown)
         screen.onNodeWithText("Settings").assertIsFocused()
         key(Key.DirectionCenter)
-        screen.onNodeWithText("Sound effects: On").assertIsFocused()
+        screen.onNodeWithText("Sound: On").assertIsFocused()
         key(Key.DirectionCenter)
-        screen.onNodeWithText("Sound effects: Off").assertIsFocused()
+        screen.onNodeWithText("Sound: Off").assertIsFocused()
         key(Key.DirectionDown)
         key(Key.DirectionCenter)
         repeat(3) { key(Key.DirectionDown) }

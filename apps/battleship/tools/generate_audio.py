@@ -287,16 +287,17 @@ def generate() -> dict[Path, bytes]:
         "defeat": SCORES["defeat"]["style"],
     }
     manifest = {
-        "origin": "Current victory and defeat cues use original deterministic local synthesis. Historical version 1.1 battle recipes remain below for reference.",
+        "origin": "Historical version 1.1 synthesis recipes. Version 1.6 uses recorded orchestral music for results and version 1.5 recorded battle cues.",
         "source": "apps/battleship/tools/generate_audio.py",
         "generationCommand": "python3 apps/battleship/tools/generate_audio.py",
         "comparisonCommand": "python3 apps/battleship/tools/generate_audio.py --check",
         "references": "User feedback: stronger impact on the friendly fleet, an enthusiastic military victory sound, and a somber military defeat sound.",
-        "rights": "The current victory and defeat cues and historical synthesis recipes use the repository MIT license. Current recorded battle cues use separate CC0 sources documented in sprite-polish/audio-assets.json.",
+        "rights": "These historical synthesis recipes use the repository MIT license. Current recorded battle cues and orchestral music use separate CC0 sources in the linked current manifests.",
         "licensePath": "LICENSE",
-        "sourceNotes": "Only assets.victory and assets.defeat describe current bundled files. Historical battle entries describe version 1.1 bytes, not the current files at those paths. Version 1.5 replaces fire, splash, impact, damage, and sunk; sprite-polish/audio-assets.json is authoritative for those cues.",
+        "sourceNotes": "No assets in this record describe current bundled files. Historical paths and hashes identify the earlier synthesis recipes. Current battle cues and music use the linked manifests. The generator emits only current battle WAVs through prepare_scene_audio.py, plus this historical recipe record.",
         "currentBattleManifest": "docs/battleship/sprite-polish/audio-assets.json",
-        "historicalBattleAssetsVersion1_1": {},
+        "currentMusicManifest": "docs/battleship/music-polish/assets.json",
+        "historicalSynthesisAssetsVersion1_1": {},
         "commonParameters": {
             "sampleRateHz": RATE,
             "peakTarget": PEAK,
@@ -347,18 +348,14 @@ def generate() -> dict[Path, bytes]:
     for name, samples in sounds.items():
         encoded, measured = encode(samples)
         path = RAW / f"{name}.wav"
-        files[path] = encoded
         entry = {
             "path": str(path.relative_to(ROOT)),
             "description": descriptions[name],
             **measured,
         }
-        if name in IMPACTS:
-            entry["historicalPath"] = entry.pop("path")
-            entry["status"] = "Historical version 1.1 recipe; superseded by sprite-polish/audio-assets.json."
-            manifest["historicalBattleAssetsVersion1_1"][name] = entry
-        else:
-            manifest["assets"][name] = entry
+        entry["historicalPath"] = entry.pop("path")
+        entry["status"] = "Historical version 1.1 recipe; superseded by the current battle or music manifest."
+        manifest["historicalSynthesisAssetsVersion1_1"][name] = entry
     files[MANIFEST] = (json.dumps(manifest, indent=2) + "\n").encode("utf-8")
     return files
 

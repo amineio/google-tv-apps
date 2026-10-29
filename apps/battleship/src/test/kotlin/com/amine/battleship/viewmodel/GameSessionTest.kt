@@ -21,6 +21,37 @@ import org.junit.rules.TemporaryFolder
 class GameSessionTest {
     @get:Rule val folder = TemporaryFolder()
 
+    @Test fun openingPlaysOnlyForAcceptedNewMatches() = runTest {
+        val session = GameSession(backgroundScope, GameSaveRepository(folder.newFile()), ioDispatcher = StandardTestDispatcher(testScheduler))
+        val cues = mutableListOf<String>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { session.sounds.collect { cues += it.name } }
+        runCurrent()
+        session.action(GameAction.Play)
+        assertEquals(1, cues.count { it == "MATCH_START" })
+        session.action(GameAction.Pause)
+        session.action(GameAction.Resume)
+        session.action(GameAction.Restart)
+        session.action(GameAction.Cancel)
+        session.action(GameAction.Home)
+        session.action(GameAction.Confirm)
+        session.action(GameAction.Continue)
+        assertEquals(1, cues.count { it == "MATCH_START" })
+        session.action(GameAction.Restart)
+        session.action(GameAction.Confirm)
+        assertEquals(2, cues.count { it == "MATCH_START" })
+    }
+
+    @Test fun restoredMatchDoesNotEmitOpeningWhenContinued() = runTest {
+        val repository = GameSaveRepository(folder.newFile())
+        repository.save(SavedSession(game = GameEngine.newGame(42)))
+        val session = GameSession(backgroundScope, repository, ioDispatcher = StandardTestDispatcher(testScheduler))
+        val cues = mutableListOf<String>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { session.sounds.collect { cues += it.name } }
+        runCurrent()
+        session.action(GameAction.Continue)
+        assertFalse(cues.contains("MATCH_START"))
+    }
+
     @Test fun hitFeedbackIsConciseAndDoesNotRepeatTheCoordinate() = runTest {
         val session = GameSession(backgroundScope, GameSaveRepository(folder.newFile()), seedSource = { 42L }, ioDispatcher = StandardTestDispatcher(testScheduler))
         runCurrent()

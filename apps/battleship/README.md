@@ -21,7 +21,7 @@ Pause provides Resume, Restart Game, Settings, and Return to Main Menu.
 Restart and replacement require confirmation. Returning home retains the match for Continue Game.
 The app saves completed moves in an app-private file. Reopening the app offers Continue Game for an unfinished match.
 The app pauses delayed actions when it enters the background. Resume continues the saved turn.
-Settings provides a sound control. Short bundled recordings and synthesized effects are optional. There is no background music.
+Settings provides one Sound control for music and effects. All audio stays locally bundled and remains optional.
 Version 1.1 adds layered impacts, a distinct friendly damage sound, a victory fanfare, and a descending defeat bugle.
 The right panel shows the target coordinate and compact shot feedback. Named sunk-ship feedback remains visible during aiming.
 Version 1.2 adds a naval command panel, a generated battleship illustration, and five distinct native ship designs.
@@ -36,6 +36,10 @@ Miss splashes last 1.1 seconds, hits last 1.5 seconds, and burning and sinking l
 The next attack and results wait for the complete effect. Pause and background activity discard active effects.
 Continue shows saved markers without replaying old impacts. The game rules and hidden enemy ships remain unchanged.
 Recorded CC0 sounds replace the battle cues. A mixed sinking cue follows the full visual sequence.
+Version 1.6 adds an orchestral menu loop and a dramatic opening for new matches.
+New victory and defeat themes follow the complete final sinking sequence.
+Continue and Resume do not replay the opening. Music stops on pause, mute, and app background activity.
+Ordinary gameplay stays quiet after the opening. The app streams music separately from short battle effects.
 
 ## Build
 
@@ -95,7 +99,7 @@ Unit tests cover placement, rules, hidden information, persistence, interruption
 
 The [design record](../../docs/superpowers/specs/2026-10-28-battleship-design.md) defines the interface.
 The [asset record](../../docs/battleship/concepts/assets.json) contains prompts, dimensions, synthesis details, and rights information.
-The [score record](../../docs/battleship/audio-polish-assets.json) contains current result music and explicitly historical version 1.1 battle recipes.
+The [score record](../../docs/battleship/audio-polish-assets.json) contains the historical version 1.1 synthesis recipes.
 The [gameplay art record](../../docs/battleship/gameplay-design/assets.json) contains the ImageGen prompts, dimensions, compressed paths, and rights for version 1.2.
 The [launcher art record](../../docs/battleship/launcher-art/assets.json) records the same information for version 1.3.
 The [launcher validation record](../../docs/battleship/launcher-art/validation.md) records its tests, review, and installation results.
@@ -106,13 +110,22 @@ The [sprite design](../../docs/superpowers/specs/2026-10-29-battleship-sprites-d
 The [sprite record](../../docs/battleship/sprite-polish/assets.json) records generated ship and water assets.
 The [current audio record](../../docs/battleship/sprite-polish/audio-assets.json) records CC0 sources, edits, levels, and hashes.
 The [version 1.5 validation record](../../docs/battleship/sprite-polish/validation.md) records two scored design rounds, tests, and final TV installation.
+The [music record](../../docs/battleship/music-polish/assets.json) records current orchestral sources, edits, hashes, and measured levels.
+The [music credits](MUSIC-CREDITS.md) retain composer names and CC0 source terms.
 To compare the current bundled audio with its deterministic recipes, use Python 3 from the repository root:
 
 ```sh
 python3 apps/battleship/tools/generate_audio.py --check
 ```
 
-Remove `--check` to regenerate the current battle cues, result music, and audio records.
+Remove `--check` to regenerate current battle cues and the historical synthesis record.
+To inspect current music with FFmpeg installed, run this separate comparison:
+
+```sh
+python3 apps/battleship/tools/prepare_music.py --check
+```
+
+The music script also accepts `--source-dir` to reproduce bundled bytes from original masters without changing app assets.
 Outfit retains its [font license](FONT-LICENSE-OFL.txt).
 Manual placement, other difficulties, networking, tablet layouts, and multiplayer remain outside this release.
 
