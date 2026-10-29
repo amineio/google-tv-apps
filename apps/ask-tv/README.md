@@ -88,3 +88,5 @@ Android recognition services can vary by device. Answer speech requires an insta
 Android speech engines limit one spoken segment. Answers longer than the engine limit remain fully readable; Read aloud reads the first segment.
 
 Artwork and rights are recorded in [the asset record](../../docs/ask-tv/assets.md).
+
+The [validation record for 2026-10-30](../../docs/ask-tv/validation-2026-10-30.md) separates test results, visual review, installation, and unfinished sign-in.
