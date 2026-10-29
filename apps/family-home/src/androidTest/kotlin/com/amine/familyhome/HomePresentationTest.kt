@@ -177,7 +177,7 @@ class HomePresentationTest {
         }
         screen.onNodeWithTag("home-profile").assertIsFocused()
         pressRemote(listOf(Key.DirectionCenter, Key.DirectionDown))
-        screen.onNodeWithText("Family configuration").assertIsFocused()
+        screen.onNodeWithText("Settings").assertIsFocused()
         capture("home-parent-profile-menu")
         screen.onNodeWithText("No TV apps are installed.").assertIsDisplayed()
         pressRemote(listOf(Key.DirectionCenter))

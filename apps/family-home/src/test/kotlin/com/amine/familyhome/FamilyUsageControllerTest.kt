@@ -69,7 +69,7 @@ class FamilyUsageControllerTest {
     }
 
     @Test fun helperLossCutsUsageAtCallbackEvenWhenPauseIsQueuedLater() = runTest {
-        for (viewer in listOf(Viewer.AMINE, Viewer.ELIAS)) {
+        for (viewer in listOf(Viewer.AMINE, Viewer.HASNAA, Viewer.ELIAS)) {
             val f = Fixture(); f.open()
             if (viewer.isChild) f.controller.start(viewer, 20) else f.controller.select(viewer)
             f.now = 15_000; f.controller.helperConnected(false)

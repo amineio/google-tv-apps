@@ -5,6 +5,8 @@ import android.view.KeyEvent
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toPixelMap
+import kotlin.math.abs
+import kotlin.math.roundToInt
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -72,12 +74,12 @@ class FamilyRemoteTest {
         org.junit.Assert.assertTrue("Profile names need readable text", lightPixels > pixels.width * pixels.height * 0.02)
     }
 
-    @Test fun initialChooserShowsThreeProfiles() {
+    @Test fun initialChooserShowsFourProfiles() {
         screen.waitUntil(10_000) { screen.onAllNodesWithText("Amine").fetchSemanticsNodes().isNotEmpty() }
         screen.onNodeWithText("Amine").assertIsDisplayed()
         screen.onNodeWithText("Elias").assertIsDisplayed()
         screen.onNodeWithText("Sofia").assertIsDisplayed()
-        for (name in listOf("Amine", "Elias", "Sofia")) {
+        for (name in listOf("Amine", "Elias", "Sofia", "Hasnaa")) {
             screen.onNodeWithContentDescription("$name profile portrait", useUnmergedTree = true).assertIsDisplayed()
         }
         screen.onNodeWithText("Amine").assertIsFocused()
@@ -85,6 +87,84 @@ class FamilyRemoteTest {
         screen.onNodeWithText("Elias").assertIsFocused()
         pressRemote(listOf(Key.DirectionRight))
         screen.onNodeWithText("Sofia").assertIsFocused()
+        pressRemote(listOf(Key.DirectionRight))
+        screen.onNodeWithText("Hasnaa").assertIsFocused()
+        pressRemote(listOf(Key.DirectionCenter))
+        screen.waitUntil(10_000) { screen.onAllNodesWithTag("home-profile").fetchSemanticsNodes().isNotEmpty() }
+        pressRemote(listOf(Key.DirectionUp, Key.DirectionCenter, Key.DirectionDown))
+        screen.onNodeWithText("Settings").assertIsFocused()
+        pressRemote(listOf(Key.DirectionCenter))
+        screen.onNodeWithText("Profiles").assertIsFocused()
+        pressRemote(listOf(Key.DirectionCenter))
+        screen.onNodeWithText("Amine", useUnmergedTree = true).assertIsDisplayed()
+        screen.onNodeWithText("Hasnaa", useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test fun activityBackKeepsEachAdultOnTheirHome() {
+        for (viewer in listOf(Viewer.AMINE, Viewer("HASNAA"))) {
+            runBlocking { org.junit.Assert.assertTrue(screen.activity.family.select(viewer)) }
+            screen.waitUntil(10_000) { screen.onAllNodesWithTag("home-profile").fetchSemanticsNodes().isNotEmpty() }
+            pressBack()
+            screen.onNodeWithTag("home-apps").assertExists()
+            screen.onNodeWithTag("profile-chooser").assertDoesNotExist()
+            org.junit.Assert.assertEquals(viewer, screen.activity.family.ui.value.state.selected)
+        }
+    }
+
+    private fun assertProfileGoldBorder(expected: Boolean) {
+        val bounds = screen.onNodeWithTag("home-profile").fetchSemanticsNode().boundsInRoot
+        val root = screen.onRoot().fetchSemanticsNode().boundsInRoot
+        val image = screen.onRoot().captureToImage().toPixelMap()
+        // Inspect only the straight top edge. Portrait and name cannot satisfy this check.
+        val left = ((bounds.left - root.left) + bounds.width * .3f).roundToInt().coerceIn(0, image.width - 1)
+        val right = ((bounds.left - root.left) + bounds.width * .7f).roundToInt().coerceIn(left + 1, image.width)
+        val edge = (bounds.top - root.top).roundToInt()
+        val margin = with(screen.density) { 4.dp.toPx() }.roundToInt()
+        val top = (edge - margin).coerceAtLeast(0)
+        val bottom = (edge + margin).coerceAtMost(image.height - 1)
+        var gold = 0
+        for (y in top..bottom) for (x in left until right) {
+            val pixel = image[x, y]
+            if (abs(pixel.red - 246f / 255) < .08f && abs(pixel.green - 205f / 255) < .08f &&
+                abs(pixel.blue - 131f / 255) < .08f && pixel.alpha > .9f) gold++
+        }
+        if (expected) org.junit.Assert.assertTrue("Focused profile needs a visible gold top border; gold pixels=$gold", gold >= (right - left) / 2)
+        else org.junit.Assert.assertEquals("Unfocused profile must clear its gold top border", 0, gold)
+    }
+
+    @Test fun settingsBackRestoresEachAdultProfileControlWithRealRemoteKeys() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        fun remote(code: Int) {
+            instrumentation.sendKeyDownUpSync(code)
+            screen.waitForIdle()
+        }
+        for (viewer in listOf(Viewer.AMINE, Viewer.HASNAA)) {
+            runBlocking { org.junit.Assert.assertTrue(screen.activity.family.select(viewer)) }
+            screen.waitUntil(10_000) { screen.onAllNodesWithTag("home-profile").fetchSemanticsNodes().isNotEmpty() }
+            remote(KeyEvent.KEYCODE_DPAD_UP)
+            screen.onNodeWithTag("home-profile").assertIsFocused()
+            assertProfileGoldBorder(true)
+            remote(KeyEvent.KEYCODE_DPAD_CENTER)
+            remote(KeyEvent.KEYCODE_DPAD_DOWN)
+            screen.onNodeWithText("Settings").assertIsFocused()
+            remote(KeyEvent.KEYCODE_DPAD_CENTER)
+            screen.onNodeWithTag("setting:profiles").assertIsFocused()
+            remote(KeyEvent.KEYCODE_BACK)
+            screen.onNodeWithTag("home-profile").assertIsFocused()
+            // A restored focus target must survive the closing window's pending events.
+            android.os.SystemClock.sleep(500)
+            screen.waitForIdle()
+            screen.onNodeWithTag("home-profile").assertIsFocused()
+            assertProfileGoldBorder(true)
+            org.junit.Assert.assertEquals(viewer, screen.activity.family.ui.value.state.selected)
+            remote(KeyEvent.KEYCODE_DPAD_DOWN)
+            screen.onNode(hasTestTag("home-apps")).assertExists()
+            screen.onNode(isFocused() and hasAnyAncestor(hasTestTag("home-apps"))).assertExists()
+            assertProfileGoldBorder(false)
+            remote(KeyEvent.KEYCODE_DPAD_UP)
+            screen.onNodeWithTag("home-profile").assertIsFocused()
+            assertProfileGoldBorder(true)
+        }
     }
 
     @Test fun parentCanOpenFamilyConfigurationWithPinOff() {
@@ -129,7 +209,7 @@ class FamilyRemoteTest {
         pressRemote(listOf(Key.DirectionUp, Key.DirectionCenter))
         screen.onNodeWithText("Switch profile").assertIsFocused()
         pressRemote(listOf(Key.DirectionDown))
-        screen.onNodeWithText("Family configuration").assertIsFocused()
+        screen.onNodeWithText("Settings").assertIsFocused()
         pressRemote(listOf(Key.DirectionCenter))
     }
 

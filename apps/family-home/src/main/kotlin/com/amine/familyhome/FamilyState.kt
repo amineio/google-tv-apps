@@ -10,29 +10,33 @@ value class Viewer(val id: String) {
         val AMINE = Viewer("AMINE")
         val ELIAS = Viewer("ELIAS")
         val SOFIA = Viewer("SOFIA")
+        val HASNAA = Viewer("HASNAA")
     }
-    val isChild: Boolean get() = this != AMINE
+    val isAdult: Boolean get() = this == AMINE || this == HASNAA
+    val isChild: Boolean get() = !isAdult
     val label: String get() = when (this) {
         AMINE -> "Amine"
         ELIAS -> "Elias"
         SOFIA -> "Sofia"
+        HASNAA -> "Hasnaa"
         else -> "Child"
     }
     val defaultPortrait: Portrait get() = when (this) {
         AMINE -> Portrait.AMINE
         ELIAS -> Portrait.ELIAS
         SOFIA -> Portrait.SOFIA
+        HASNAA -> Portrait.HASNAA
         else -> Portrait.CHILD
     }
 }
 
 @Serializable
-enum class Portrait { AMINE, ELIAS, SOFIA, CHILD }
+enum class Portrait { AMINE, ELIAS, SOFIA, CHILD, HASNAA }
 
 @Serializable
 data class FamilyProfile(val viewer: Viewer, val name: String, val portrait: Portrait = Portrait.CHILD)
 
-internal fun defaultProfiles() = listOf(Viewer.AMINE, Viewer.ELIAS, Viewer.SOFIA).map {
+internal fun defaultProfiles() = listOf(Viewer.AMINE, Viewer.ELIAS, Viewer.SOFIA, Viewer.HASNAA).map {
     FamilyProfile(it, it.label, it.defaultPortrait)
 }
 
@@ -65,7 +69,7 @@ object DefaultApps {
 
 @Serializable
 data class FamilyState(
-    val schema: Int = 4,
+    val schema: Int = 5,
     val selected: Viewer? = null,
     val sessions: Map<Viewer, ChildSession> = emptyMap(),
     val allowed: Map<Viewer, Set<String>> = DefaultApps.allowed(),
@@ -84,14 +88,16 @@ data class FamilyState(
     fun label(viewer: Viewer): String = requireNotNull(profile(viewer)) { "Unknown family profile" }.name
 
     fun validated(): FamilyState {
-        require(schema == 4 && revision >= 0) { "Unsupported saved family state" }
+        require(schema == 5 && revision >= 0) { "Unsupported saved family state" }
         require(pinSalt.isEmpty() == pinHash.isEmpty()) { "Incomplete parent PIN" }
         val ids = profiles.map { it.viewer }.toSet()
-        require(ids.size == profiles.size && Viewer.AMINE in ids) { "Invalid family profiles" }
-        require(profile(Viewer.AMINE) == defaultProfiles().first()) { "Invalid parent profile" }
+        require(ids.size == profiles.size && Viewer.AMINE in ids && Viewer.HASNAA in ids) { "Invalid family profiles" }
+        for (adult in listOf(Viewer.AMINE, Viewer.HASNAA)) {
+            require(profile(adult) == FamilyProfile(adult, adult.label, adult.defaultPortrait)) { "Invalid parent profile" }
+        }
         profiles.forEach { profile ->
             val viewer = profile.viewer
-            require(viewer in listOf(Viewer.AMINE, Viewer.ELIAS, Viewer.SOFIA) ||
+            require(viewer in listOf(Viewer.AMINE, Viewer.ELIAS, Viewer.SOFIA, Viewer.HASNAA) ||
                 viewer.id.matches(Regex("child_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"))) {
                 "Invalid family profile ID"
             }
@@ -99,7 +105,10 @@ data class FamilyState(
             require(profile.portrait == viewer.defaultPortrait) { "Invalid family profile portrait" }
         }
         require(profiles.indices.all { index -> profiles.take(index).none {
-            it.name.equals(profiles[index].name, ignoreCase = true)
+            it.name.equals(profiles[index].name, ignoreCase = true) &&
+                // Preserve an existing child named Hasnaa when the fixed adult is added.
+                !(it.viewer.isChild != profiles[index].viewer.isChild &&
+                    (it.viewer == Viewer.HASNAA || profiles[index].viewer == Viewer.HASNAA))
         } }) { "Duplicate family profile name" }
         require(selected == null || selected in ids) { "Unknown selected family profile" }
         require(allowed.keys.all { it.isChild && it in ids }) { "Invalid family app lists" }

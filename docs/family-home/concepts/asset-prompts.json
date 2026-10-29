@@ -18,5 +18,32 @@
     "name": "chess_hero",
     "ref": "child-home.png",
     "prompt": "Create the production background artwork for the approved TV UI reference. Recreate only the elegant cinematic chess photograph behind its interface: warm ivory king and knight on the right half of a chessboard, a few softly out-of-focus pieces further back, warm gold side lighting, charcoal brown atmosphere. The left 45 percent is near-black empty negative space with a smooth fade, ready for real UI text. Lower edge fades to near-black. Preserve the polished photographic appearance and right-weighted composition. Wide 16:9 landscape 1920x1080-style. Remove all UI, all text, avatars, logos, app tiles, controls, outlines and clock. Artwork only. No words, no border, no watermark."
+  },
+  {
+    "name": "avatar_hasnaa",
+    "references": [
+      "apps/family-home/src/main/res/drawable-nodpi/avatar_amine.webp",
+      "apps/family-home/src/main/res/drawable-nodpi/avatar_sofia.webp"
+    ],
+    "generator": "Built-in OpenAI ImageGen",
+    "prompt": "Create one square production avatar asset for an adult woman profile in an existing family TV launcher. Reference images 1 and 2 are style references, not edit targets. Match their polished warm illustrated portrait style, smooth dimensional shading, detailed eyes and hair, and friendly expression. Depict a clearly adult woman around her 30s, warm medium skin, long dark brown hair, simple teal crew-neck top, warm friendly smile, looking slightly to her left in a gentle three-quarter view. Head and upper shoulders inside a perfect circle filled with muted dusty teal, centered and nearly filling the square with small equal margins matching the references. Distinctly adult facial proportions, not a child. Preserve the reference illustration style and portrait scale. Everything outside the circle must be fully transparent. No text, labels, name, UI, gold outline, jewelry, logo, watermark, frame, outside shadow, or other people. 1024x1024 square. This is a generic illustrated character, not a portrait of a real person.",
+    "source": {
+      "file": "exec-36281ae8-ca55-4952-ba9b-6614a3661f1a.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "sha256": "b9640dfdfda537fc500dfb8df9e533e3a7c175d5a28f991ed493f9d167eb5182",
+      "preserved": "Original generated PNG retained outside Git."
+    },
+    "output": {
+      "file": "apps/family-home/src/main/res/drawable-nodpi/avatar_hasnaa.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "bytes": 36260,
+      "sha256": "b9ffae712178f7f165bee7e806120a82c62fc5587feb58036d8ac25bbc4a57fd"
+    },
+    "compression": "cwebp -q 88 -m 6 -resize 512 512 -alpha_q 100; lossy RGB, lossless alpha.",
+    "rights": "Generated for this project using OpenAI ImageGen and existing project illustrations as style references. Generic fictional portrait; no real-person reference. No third-party stock image or separate stock license."
   }
 ]

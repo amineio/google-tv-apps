@@ -70,6 +70,7 @@ internal fun HomeScreen(
     val targets = remember(keys) { keys.associateWith { FocusRequester() } }
     val profiles = remember { FocusRequester() }
     var profileMenuOpen by remember(viewer) { mutableStateOf(false) }
+    var profileFocused by remember(viewer) { mutableStateOf(false) }
     val row = rememberLazyListState()
     val activeTarget = targets[featured?.pkg]
     suspend fun focusMovedApp(pkg: String?, ordered: List<LauncherApp>) {
@@ -118,19 +119,21 @@ internal fun HomeScreen(
                     Spacer(Modifier.width(20.dp))
                 }
                 val profileShape = RoundedCornerShape(12.dp)
+                val profileColor = if (profileFocused) Panel else Color.Transparent
                 Surface(onClick = { profileMenuOpen = true },
-                    modifier = Modifier.testTag("home-profile").focusRequester(profiles).focusProperties {
+                    modifier = Modifier.testTag("home-profile").focusRequester(profiles)
+                        .onFocusChanged { profileFocused = it.isFocused }
+                        .border(2.dp, if (profileFocused) Gold else Color.Transparent, profileShape)
+                        .focusProperties {
                         up = FocusRequester.Cancel
                         left = FocusRequester.Cancel
                         right = FocusRequester.Cancel
                         down = activeTarget ?: FocusRequester.Cancel
                     },
                     shape = ClickableSurfaceDefaults.shape(profileShape),
-                    colors = ClickableSurfaceDefaults.colors(containerColor = Color.Transparent, contentColor = Ink,
-                        focusedContainerColor = Panel, focusedContentColor = Ink),
-                    scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
-                    border = ClickableSurfaceDefaults.border(
-                        focusedBorder = Border(BorderStroke(2.dp, Gold), shape = profileShape))) {
+                    colors = ClickableSurfaceDefaults.colors(containerColor = profileColor, contentColor = Ink,
+                        focusedContainerColor = profileColor, focusedContentColor = Ink),
+                    scale = ClickableSurfaceDefaults.scale(focusedScale = 1f)) {
                     Row(Modifier.padding(horizontal = 10.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
                         ProfilePortrait(viewer, 30.dp, displayName = displayName, portrait = portrait)
                         Spacer(Modifier.width(10.dp))
@@ -250,6 +253,7 @@ private fun ProfileMenu(viewer: Viewer, onDismiss: () -> Unit,
                         left = FocusRequester.Cancel; right = FocusRequester.Cancel
                     },
                     headlineContent = { Text("Switch profile", fontSize = 20.sp) },
+                    leadingContent = { Icon(painterResource(R.drawable.ic_switch_profile), null, Modifier.size(24.dp)) },
                     colors = ListItemDefaults.colors(focusedContainerColor = Gold, focusedContentColor = Background),
                     scale = ListItemDefaults.scale(focusedScale = 1f))
                 ListItem(selected = false, onClick = onManage,
@@ -257,7 +261,10 @@ private fun ProfileMenu(viewer: Viewer, onDismiss: () -> Unit,
                         up = switchProfile; down = FocusRequester.Cancel
                         left = FocusRequester.Cancel; right = FocusRequester.Cancel
                     },
-                    headlineContent = { Text(if (viewer.isChild) "End session" else "Family configuration", fontSize = 20.sp) },
+                    headlineContent = { Text(if (viewer.isChild) "End session" else "Settings", fontSize = 20.sp) },
+                    leadingContent = if (viewer.isChild) null else ({
+                        Icon(painterResource(R.drawable.ic_settings), null, Modifier.size(24.dp))
+                    }),
                     colors = ListItemDefaults.colors(focusedContainerColor = Gold, focusedContentColor = Background),
                     scale = ListItemDefaults.scale(focusedScale = 1f))
             }

@@ -126,6 +126,18 @@ class FamilyHomeKeyTest {
         assertEquals(listOf(true, true, true), listOf(down, repeat, up))
     }
 
+    @Test fun secondAdultHasTheSameSettingsKeyAndHeldHomeActions() {
+        runBlocking { assertTrue(controller.select(Viewer("HASNAA"))) }
+        val before = controller.ui.value.state
+        pressHome(longPressMs + 1)
+        assertEquals(Settings.ACTION_SETTINGS, launches.single().action)
+        launches.clear()
+        send(key(KeyEvent.ACTION_DOWN, code = KeyEvent.KEYCODE_SETTINGS))
+        send(key(KeyEvent.ACTION_UP, 2, code = KeyEvent.KEYCODE_SETTINGS))
+        assertEquals(Settings.ACTION_SETTINGS, launches.single().action)
+        assertEquals(before, controller.ui.value.state)
+    }
+
     @Test fun childHomeHoldReturnsHomeWithoutChangingSession() {
         runBlocking { assertTrue(controller.start(Viewer.ELIAS, 20)) }
         val before = controller.ui.value.state

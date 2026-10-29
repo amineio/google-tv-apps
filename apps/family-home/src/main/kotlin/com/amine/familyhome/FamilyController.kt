@@ -79,7 +79,7 @@ class FamilyController(
         mutableVoice.value = VoiceAnnouncement(viewer, generation, purpose, remaining)
     }
     suspend fun setVoiceAnnouncementsEnabled(enabled: Boolean): Boolean = mutex.withLock {
-        if (!available() || mutable.value.state.selected != Viewer.AMINE || !adminAuthorized) return@withLock false
+        if (!available() || mutable.value.state.selected?.isAdult != true || !adminAuthorized) return@withLock false
         if (!enabled) cancelVoice()
         val state = mutable.value.state
         commit(state.copy(voiceAnnouncementsEnabled = enabled, revision = state.revision + 1))
@@ -246,7 +246,7 @@ class FamilyController(
     }
 
     suspend fun setPin(pin: String?): Boolean = mutex.withLock {
-        if (!available() || mutable.value.state.selected != Viewer.AMINE || !adminAuthorized) return@withLock false
+        if (!available() || mutable.value.state.selected?.isAdult != true || !adminAuthorized) return@withLock false
         val state = mutable.value.state
         val next = if (pin == null) state.copy(pinSalt = "", pinHash = "")
             else withContext(Dispatchers.Default) { ParentPin.enable(state, pin) }
@@ -254,7 +254,7 @@ class FamilyController(
     }
 
     suspend fun setAllowed(viewer: Viewer, pkg: String, allowed: Boolean): Boolean = mutex.withLock {
-        if (!known(viewer, childOnly = true) || !available() || mutable.value.state.selected != Viewer.AMINE || !adminAuthorized) return@withLock false
+        if (!known(viewer, childOnly = true) || !available() || mutable.value.state.selected?.isAdult != true || !adminAuthorized) return@withLock false
         if (!pkg.matches(Regex("[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)+")))
             return@withLock reject("This app package is invalid.")
         val state = mutable.value.state
@@ -274,7 +274,7 @@ class FamilyController(
     suspend fun addChild(name: String): Viewer? = mutex.withLock {
         if (!available()) return@withLock null
         val state = mutable.value.state
-        if (state.selected != Viewer.AMINE || !adminAuthorized) {
+        if (state.selected?.isAdult != true || !adminAuthorized) {
             reject("Open the parent profile before adding a child.")
             return@withLock null
         }

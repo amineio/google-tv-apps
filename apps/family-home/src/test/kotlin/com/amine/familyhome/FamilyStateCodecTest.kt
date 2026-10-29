@@ -21,16 +21,16 @@ class FamilyStateCodecTest {
         }
     """.trimIndent()
 
-    @Test fun migrationChangesOnlySchemaAndAddsTheThreeProfileRecords() {
+    @Test fun migrationPreservesStateAndAddsTheFourFixedProfiles() {
         val migrated = FamilyStateCodec.decode(legacy)
         val original = Json.parseToJsonElement(legacy).jsonObject
         val encoded = Json.parseToJsonElement(FamilyStateCodec.encode(migrated)).jsonObject
 
-        assertEquals(4, migrated.schema)
+        assertEquals(5, migrated.schema)
         assertTrue(migrated.usage.isEmpty())
-        assertEquals(listOf(Viewer.AMINE, Viewer.ELIAS, Viewer.SOFIA), migrated.profiles.map { it.viewer })
-        assertEquals(listOf("Amine", "Elias", "Sofia"), migrated.profiles.map { it.name })
-        assertEquals(listOf(Portrait.AMINE, Portrait.ELIAS, Portrait.SOFIA), migrated.profiles.map { it.portrait })
+        assertEquals(listOf(Viewer.AMINE, Viewer.ELIAS, Viewer.SOFIA, Viewer.HASNAA), migrated.profiles.map { it.viewer })
+        assertEquals(listOf("Amine", "Elias", "Sofia", "Hasnaa"), migrated.profiles.map { it.name })
+        assertEquals(listOf(Portrait.AMINE, Portrait.ELIAS, Portrait.SOFIA, Portrait.HASNAA), migrated.profiles.map { it.portrait })
         for ((field, value) in original) if (field != "schema") assertEquals(field, value, encoded[field])
         assertEquals(Viewer.ELIAS, migrated.selected)
         assertEquals(ChildSession(1_200_000, 421_000, 900_000, true, false), migrated.sessions[Viewer.ELIAS])
@@ -71,7 +71,7 @@ class FamilyStateCodecTest {
         assertThrows(IllegalArgumentException::class.java) {
             FamilyStateCodec.decode(JsonObject(saved - "profiles").toString())
         }
-        for (schema in listOf(JsonPrimitive(5), JsonPrimitive("2"))) {
+        for (schema in listOf(JsonPrimitive(6), JsonPrimitive("2"))) {
             assertThrows(IllegalArgumentException::class.java) {
                 FamilyStateCodec.decode(JsonObject(saved + ("schema" to schema)).toString())
             }
@@ -109,11 +109,14 @@ class FamilyStateCodecTest {
         val child = Viewer("child_49d15187-5685-4722-bfb0-f340176fd340")
         val saved = Json.parseToJsonElement(legacy).jsonObject + mapOf(
             "schema" to JsonPrimitive(2),
-            "profiles" to Json { encodeDefaults = true }.encodeToJsonElement(defaultProfiles() + FamilyProfile(child, "Robin")),
+            "profiles" to Json { encodeDefaults = true }.encodeToJsonElement(listOf(
+                FamilyProfile(Viewer.AMINE, "Amine", Portrait.AMINE),
+                FamilyProfile(Viewer.ELIAS, "Elias", Portrait.ELIAS),
+                FamilyProfile(Viewer.SOFIA, "Sofia", Portrait.SOFIA), FamilyProfile(child, "Robin"))),
         )
         val migrated = FamilyStateCodec.decode(JsonObject(saved).toString())
         val encoded = Json.parseToJsonElement(FamilyStateCodec.encode(migrated)).jsonObject
-        assertEquals(4, migrated.schema)
+        assertEquals(5, migrated.schema)
         assertTrue(migrated.usage.isEmpty())
         for ((field, value) in saved) if (field != "schema") assertEquals(field, value, encoded[field])
     }

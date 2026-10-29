@@ -153,14 +153,16 @@ internal fun SettingsScreen(ui: FamilyUi, apps: List<LauncherApp>, helperActive:
                     }
                     SettingsList(rows, list, focused, { focused = it }, resumeGeneration, restoreFocus,
                         header = if (destination == "profiles") ({
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                                ProfilePortrait(Viewer.AMINE, 42.dp)
-                                Column {
-                                    Text(ui.state.label(Viewer.AMINE), fontSize = 21.sp)
-                                    Text("Parent · All installed TV apps", color = Muted, fontSize = 16.sp)
+                            ui.state.profiles.filter { it.viewer.isAdult }.forEach { adult ->
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                                    ProfilePortrait(adult.viewer, 42.dp, displayName = adult.name, portrait = adult.portrait)
+                                    Column {
+                                        Text(adult.name, fontSize = 21.sp)
+                                        Text("Parent · All installed TV apps", color = Muted, fontSize = 16.sp)
+                                    }
                                 }
+                                Spacer(Modifier.height(12.dp))
                             }
-                            Spacer(Modifier.height(20.dp))
                         }) else null,
                         footer = if (child != null) ({
                             val missing = DefaultApps.labels.filterKeys { pkg -> apps.none { it.pkg == pkg } }

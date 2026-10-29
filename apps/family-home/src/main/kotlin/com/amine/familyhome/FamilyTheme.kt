@@ -120,6 +120,7 @@ internal fun ProfilePortrait(viewer: Viewer, size: Dp, modifier: Modifier = Modi
         Portrait.AMINE -> R.drawable.avatar_amine
         Portrait.ELIAS -> R.drawable.avatar_elias
         Portrait.SOFIA -> R.drawable.avatar_sofia
+        Portrait.HASNAA -> R.drawable.avatar_hasnaa
         Portrait.CHILD -> null
     }
     Box(modifier.size(size).clip(CircleShape), contentAlignment = Alignment.Center) {

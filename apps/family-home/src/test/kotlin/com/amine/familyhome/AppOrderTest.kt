@@ -21,8 +21,13 @@ class AppOrderTest {
             var legacy = wire - "appOrder" + ("schema" to JsonPrimitive(schema))
             if (schema < 3) legacy = legacy - "usage"
             if (schema == 1) legacy = legacy - "profiles"
+            else legacy = legacy + ("profiles" to Json.parseToJsonElement("""[
+                {"viewer":"AMINE","name":"Amine","portrait":"AMINE"},
+                {"viewer":"ELIAS","name":"Elias","portrait":"ELIAS"},
+                {"viewer":"SOFIA","name":"Sofia","portrait":"SOFIA"}
+            ]"""))
             val migrated = FamilyStateCodec.decode(JsonObject(legacy).toString())
-            assertEquals(4, migrated.schema)
+            assertEquals(5, migrated.schema)
             assertTrue(migrated.appOrder.isEmpty())
             val encoded = Json.parseToJsonElement(FamilyStateCodec.encode(migrated)).jsonObject
             for ((key, value) in legacy) if (key != "schema") assertEquals(key, value, encoded[key])

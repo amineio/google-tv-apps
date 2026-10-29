@@ -9,6 +9,8 @@ Follow [AGENTS.md](../../AGENTS.md) for coordinator ownership, delegated file ed
 
 ## Interface
 
+Version 1.11 adds the fixed adult Hasnaa, shared parent controls, and native profile-menu icons.
+Remote Back on adult Home keeps the selected profile. Use Switch profile to open the chooser.
 Version 1.10 adds offline spoken timer updates and retains the Home key correction from version 1.9.
 Read the [Home key routing record](../../docs/family-home/home-key-routing.md) for that correction and its checks.
 Version 1.8 adds direct profile switching, resume badges, and a saved app order for each profile.
@@ -25,11 +27,11 @@ Chess keeps its illustrated background. Apps can supply their own text-free back
 Family Home loads only the selected background and limits its decoded dimensions to 1920 by 1080 pixels.
 Apps without usable artwork use a subdued gradient based on their icon color.
 Landscape banners fill landscape tiles. Square icons fill square tiles.
-Children see installed permitted apps in their saved order. Amine keeps all installed TV apps.
+Children see installed permitted apps in their saved order. Both adults keep all installed TV apps.
 
 The launcher restores the selected app after returning from it.
 It refreshes the catalog after resume or a package change.
-The upper-right profile control opens Switch profile and Family configuration, or End session for a child.
+The upper-right profile control opens Switch profile and Settings, or End session for a child.
 Press Up from an app to reach the profile control. Press Down to return to the selected app.
 Remote Back closes the menu and returns focus to the profile control.
 Profile controls and history reports stay clear of the independent Clock overlay.
@@ -37,15 +39,15 @@ The artwork is bundled locally. The launcher does not fetch recommendations or v
 
 ## Family use
 
-Select Amine, Elias, or Sofia. Profiles belong to this app and share the existing streaming sign-ins.
-Amine has all installed TV apps. Each new child session starts with a duration choice.
+Select Amine, Elias, Sofia, or Hasnaa. Profiles belong to this app and share the existing streaming sign-ins.
+Amine and Hasnaa have all installed TV apps. Each new child session starts with a duration choice.
 The centered duration screen shows the child's portrait and name above equal-size step buttons.
 Start session is centered and has initial focus. Buttons turn gold only when focused.
 Use the remote Back key to leave the duration screen without starting a session.
 Switch profile opens the chooser immediately for parents and children. It pauses the outgoing child's remaining balance.
 A clock badge above a child portrait shows the remaining time of a resumable session.
 Expired sessions and profiles without a session have no badge.
-Selecting the parent still uses its PIN when enabled.
+Selecting either adult uses the same parent PIN when enabled.
 End session shows one centered Continue button. Back dismisses the question without applying it.
 End session keeps the parent PIN check when the PIN is enabled.
 PIN dialogs start on the first digit. Continue stays disabled until all four digits are entered.
@@ -65,14 +67,14 @@ The helper redirects excluded apps. It requires an enabled accessibility service
 Android can stop or disable the helper. These family controls do not provide managed-device security.
 
 Both children initially get Chess & Math, MasterClass, VTM GO, VRT MAX, Spotify, and Prime Video.
-Amine can change each child's app list in Family configuration.
+Either adult can change each child's app list in Settings.
 Settings has five rows: Profiles, Daily usage, Parent PIN, Device setup, and Timer voice.
 Open a child under Profiles to switch allowed apps on or off.
 Unavailable default apps appear after the installed apps and cannot receive focus.
 Each row has one focus target. Up and Down move through rows. OK opens or changes a row.
 Remote Back returns to the previous page and restores its row and scroll position.
 Device setup opens Android controls for the Home helper and default Home app.
-The parent PIN starts off. When enabled, it protects Amine, family configuration, and new or replacement sessions.
+The parent PIN starts off. When enabled, it protects both adults, Settings, and new or replacement sessions.
 Existing child balances resume without the PIN. The app saves only a salted PIN hash.
 The helper reads app and window names. It cannot retrieve screen content.
 
@@ -82,8 +84,9 @@ The Android keyboard uses the remote. Dismiss the keyboard to keep editing the s
 Only Save creates a profile. Remote Back leaves the form without creating one.
 A new child uses an initials portrait, the six default apps, and no saved session.
 Additional profiles remain reachable by scrolling right on the chooser.
-This release does not add rename, deletion, portrait selection, or additional parent roles.
-Upgrades preserve existing profiles, balances, allowed apps, and the parent PIN.
+This release does not add rename, deletion, portrait selection, or editable adult roles.
+Upgrades preserve existing profiles, selection, balances, allowed apps, PIN, usage, app order, and voice preference.
+An existing child named Hasnaa keeps its identity and child rules beside the new fixed adult.
 Enabling the helper can return to the profile chooser under the existing wake privacy rule.
 
 ## Build and install
@@ -163,7 +166,7 @@ See [Android UI automation flags](https://developer.android.com/reference/androi
 
 ## Recovery
 
-If the helper fails, select Amine and open Family configuration to enable it again.
+If the helper fails, select either adult and open Settings to enable it again.
 If the PIN is lost, clear Family Home data through ADB on the authorized computer.
 This removes all Family Home balances, app lists, and the parent PIN. Other apps retain their data.
 
@@ -216,7 +219,7 @@ Complete sentences use the child's local profile name. Start and resume round th
 Late warnings say “less than” the threshold. A five-minute session still skips its five-minute warning.
 The saved warning flags prevent repeated warnings after recovery or app return.
 
-Open Family configuration, then Timer voice to mute announcements. This setting persists and starts enabled.
+Open Settings, then Timer voice to mute announcements. This setting persists and starts enabled.
 The same page shows speech status and opens Android speech setup when available.
 Family Home uses the device language for Dutch, English, or French.
 Other device languages use an installed offline English voice. A missing supported voice leaves speech unavailable.

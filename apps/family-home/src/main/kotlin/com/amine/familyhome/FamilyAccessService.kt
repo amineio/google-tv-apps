@@ -106,7 +106,7 @@ class FamilyAccessService : AccessibilityService() {
         if (!ownsHome()) return false
         if (event.keyCode == KeyEvent.KEYCODE_SETTINGS) {
             if (event.action == KeyEvent.ACTION_UP && !event.isCanceled) {
-                if (family.ui.value.state.selected == Viewer.AMINE) {
+                if (family.ui.value.state.selected?.isAdult == true) {
                     startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                 } else openHome()
             }
@@ -115,7 +115,7 @@ class FamilyAccessService : AccessibilityService() {
         if (event.keyCode == KeyEvent.KEYCODE_HOME) {
             if (event.action == KeyEvent.ACTION_UP && !event.isCanceled) {
                 if (HomeRouting.isShortPress(event.downTime, event.eventTime, ViewConfiguration.getLongPressTimeout().toLong()) ||
-                    family.ui.value.state.selected != Viewer.AMINE) openHome()
+                    family.ui.value.state.selected?.isAdult != true) openHome()
                 else startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             }
             return true

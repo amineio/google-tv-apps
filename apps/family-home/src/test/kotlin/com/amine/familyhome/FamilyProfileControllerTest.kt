@@ -52,7 +52,7 @@ class FamilyProfileControllerTest {
         val store = Store(existing)
         val controller = FamilyController(store) { 0L }
         controller.load()
-        assertEquals(3, controller.ui.value.state.profiles.size)
+        assertEquals(4, controller.ui.value.state.profiles.size)
         controller.select(Viewer.AMINE)
         controller.setPin("1234")
         val before = controller.ui.value.state
@@ -61,7 +61,7 @@ class FamilyProfileControllerTest {
         val saved = controller.ui.value.state
 
         assertEquals(Viewer.AMINE, saved.selected)
-        assertEquals(before.profiles, saved.profiles.take(3))
+        assertEquals(before.profiles, saved.profiles.take(4))
         assertEquals(FamilyProfile(child, "Robin", Portrait.CHILD), saved.profiles.last())
         assertEquals(before.sessions, saved.sessions)
         assertFalse(saved.sessions.containsKey(child))
@@ -82,7 +82,7 @@ class FamilyProfileControllerTest {
         controller.load(); controller.select(Viewer.AMINE)
         val before = controller.ui.value.state
         val writes = store.writes
-        for (name in listOf("", "   ", "x".repeat(25), "Robin\nA", "\nRobin", "Robin\u0000", " elIAS ", "AMINE")) {
+        for (name in listOf("", "   ", "x".repeat(25), "Robin\nA", "\nRobin", "Robin\u0000", " elIAS ", "AMINE", "Hasnaa")) {
             assertNull(name, controller.addChild(name))
             assertEquals(before, controller.ui.value.state)
             assertEquals(writes, store.writes)

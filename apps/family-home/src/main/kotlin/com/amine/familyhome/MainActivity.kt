@@ -106,7 +106,7 @@ fun FamilyScreen(activity: MainActivity) {
         apps = withContext(Dispatchers.IO) { activity.installedApps() }
     }
     LaunchedEffect(selected) {
-        if (selected != Viewer.AMINE) configuration = false
+        if (selected?.isAdult != true) configuration = false
         durationFor = null
     }
     fun protect(title: String, message: String, action: suspend (String) -> Boolean) {
@@ -120,14 +120,13 @@ fun FamilyScreen(activity: MainActivity) {
             parentAction != null -> parentAction = null
             durationFor != null -> durationFor = null
             selected?.isChild == true && !ui.state.sessions.containsKey(selected) -> scope.launch { controller.chooseProfiles() }
-            selected == Viewer.AMINE -> scope.launch { controller.chooseProfiles() }
         }
     }
     FamilyBackdrop {
     if (ui.ready && !ui.storageFailed && selected == null) {
         ProfileScreen(ui) { viewer ->
             if (!viewer.isChild && ui.state.pinEnabled) {
-                protect("Parent PIN", "Enter the PIN to open Amine.") { controller.select(viewer, it) }
+                protect("Parent PIN", "Enter the PIN to open ${ui.state.label(viewer)}.") { controller.select(viewer, it) }
             } else scope.launch { controller.select(viewer) }
         }
     } else if (ui.ready && !ui.storageFailed && selected != null && !configuration &&
@@ -142,14 +141,14 @@ fun FamilyScreen(activity: MainActivity) {
             portrait = requireNotNull(ui.state.profile(selected)).portrait,
             focusManageOnEntry = restoreManageFocus,
             onSaveOrder = { controller.setAppOrder(selected, it) })
-    } else if (ui.ready && !ui.storageFailed && selected == Viewer.AMINE && configuration) {
+    } else if (ui.ready && !ui.storageFailed && selected?.isAdult == true && configuration) {
         SettingsScreen(ui, apps, FamilyAccessService.active,
             activity.getSystemService(RoleManager::class.java).isRoleHeld(RoleManager.ROLE_HOME), resume,
             restoreFocus = parentAction == null,
             onClose = { configuration = false; restoreManageFocus = true }, onPin = {
                 parentAction = if (ui.state.pinEnabled) ParentAction("Turn off the parent PIN?", "New sessions will use family trust.", false) {
                     controller.setPin(null)
-                } else ParentAction("Set a parent PIN", "Choose four digits. This protects Amine and new sessions.", true) {
+                } else ParentAction("Set a parent PIN", "Choose four digits. This protects both adults and new sessions.", true) {
                     controller.setPin(it)
                 }
             }, onAccess = { viewer, pkg, enabled -> scope.launch { controller.setAllowed(viewer, pkg, enabled) } },

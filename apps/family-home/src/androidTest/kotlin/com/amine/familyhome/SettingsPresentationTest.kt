@@ -129,7 +129,7 @@ class SettingsPresentationTest {
         screen.onNodeWithText("Save").assertIsFocused()
         back()
         screen.onNodeWithTag("setting:add").assertIsFocused()
-        assertEquals(3, controller.ui.value.state.profiles.size)
+        assertEquals(4, controller.ui.value.state.profiles.size)
         assertEquals(before, repository.text)
     }
 
@@ -143,13 +143,13 @@ class SettingsPresentationTest {
         screen.onNodeWithTag("child-name").performImeAction()
         screen.onNodeWithText("Save").assertIsFocused()
         screen.onNodeWithTag("child-name").assertTextEquals("Child Draft")
-        assertEquals(3, controller.ui.value.state.profiles.size)
+        assertEquals(4, controller.ui.value.state.profiles.size)
         restore.emulateSavedInstanceStateRestore()
         screen.onNodeWithTag("child-name").assertTextEquals("Child Draft")
         screen.onNodeWithTag("child-name").performTextReplacement("X".repeat(25))
         key(Key.DirectionDown); key(Key.DirectionCenter)
         screen.onNodeWithText("Enter a name with 1–24 characters and no control characters.").assertIsDisplayed()
-        assertEquals(3, controller.ui.value.state.profiles.size)
+        assertEquals(4, controller.ui.value.state.profiles.size)
         back()
         screen.onNodeWithTag("setting:add").assertIsFocused()
     }
@@ -164,7 +164,7 @@ class SettingsPresentationTest {
         screen.onNodeWithTag("child-name").performImeAction()
         capture("settings-add-profile")
         key(Key.DirectionCenter)
-        screen.waitUntil { controller.ui.value.state.profiles.size == 4 }
+        screen.waitUntil { controller.ui.value.state.profiles.size == 5 }
         val child = controller.ui.value.state.children.last()
         assertEquals("Child One", child.name)
         assertEquals(Viewer.AMINE, controller.ui.value.state.selected)
@@ -173,7 +173,7 @@ class SettingsPresentationTest {
         capture("settings-profiles-private")
         restore.emulateSavedInstanceStateRestore()
         screen.onNodeWithTag("setting:profile:${child.viewer.id}").assertIsFocused()
-        runBlocking { assertEquals(4, repository.load().profiles.size) }
+        runBlocking { assertEquals(5, repository.load().profiles.size) }
         key(Key.DirectionCenter)
         screen.onNodeWithTag("setting:app:example.app0").assertIsFocused().assertIsOff()
         capture("settings-generic-child-focused-off")
@@ -193,7 +193,7 @@ class SettingsPresentationTest {
         screen.onNodeWithTag("child-name").performTextInput("child one")
         key(Key.DirectionDown); key(Key.DirectionCenter)
         screen.onNodeWithText("A profile already uses this name.").assertIsDisplayed()
-        assertEquals(4, controller.ui.value.state.profiles.size)
+        assertEquals(5, controller.ui.value.state.profiles.size)
         back()
         screen.onNodeWithTag("setting:add").assertIsFocused()
     }
@@ -236,9 +236,9 @@ class SettingsPresentationTest {
         back()
         screen.onNodeWithTag("setting:add").assertIsFocused()
         repository.finishSave!!.complete(Unit)
-        screen.waitUntil { controller.ui.value.state.profiles.size == 4 || controller.ui.value.storageFailed }
+        screen.waitUntil { controller.ui.value.state.profiles.size == 5 || controller.ui.value.storageFailed }
         assertFalse("Back must not report a cancelled durable Save as storage failure", controller.ui.value.storageFailed)
-        runBlocking { assertEquals(4, repository.load().profiles.size) }
+        runBlocking { assertEquals(5, repository.load().profiles.size) }
         assertEquals("Child Save", controller.ui.value.state.children.last().name)
         screen.onNodeWithTag("setting:add").assertIsFocused()
     }
