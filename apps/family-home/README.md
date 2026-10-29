@@ -5,6 +5,7 @@ It requires Android 14 or later. It uses no cloud service or network permission.
 The existing Java apps keep their own packages, source, and build tools.
 For reusable patterns and development lessons, read [the Kotlin TV guide](../../docs/kotlin-tv-development.md).
 Build and test locally. GitHub APK builds are paused until the user requests them again.
+Follow [AGENTS.md](../../AGENTS.md) for coordinator ownership, delegated file edits, and independent review.
 
 ## Interface
 
@@ -93,7 +94,9 @@ This app uses its own Gradle wrapper. From this directory, operate:
 ```
 
 The release APK is `build/outputs/apk/release/family-home-release.apk`.
-Connect and authorize the Chromecast before installation. From the repository root, set its ADB address:
+Use the physical TV only for an explicit user request or a user-reported issue.
+For an authorized installation, connect and authorize the Chromecast.
+From the repository root, set its ADB address:
 
 ```sh
 TV_SERIAL='<connected address>' tools/install-family-home.sh
@@ -145,8 +148,12 @@ ANDROID_SERIAL=emulator-5554 ./gradlew connectedDebugAndroidTest --console=plain
 ```
 
 The emulator supports layout, text contrast, and remote navigation tests.
-Use the Chromecast for Cast, streaming playback, wake behavior, and final visual acceptance.
-The emulator does not contain the family's streaming accounts or all installed TV apps.
+Emulator coverage is sufficient for development and delivery by default.
+The user tests on the TV and reports issues.
+Do not routinely install or test changes on the physical TV.
+The emulator does not establish Cast, streaming playback, wake behavior, or final appearance on the TV.
+It does not contain the family's streaming accounts or all installed TV apps.
+State these limits in the delivery report. Missing hardware evidence does not require physical testing.
 
 For manual helper tests, use `adb input` and `screencap`.
 Android's default UI automation suppresses accessibility services, which interrupts the helper during a hierarchy dump.
