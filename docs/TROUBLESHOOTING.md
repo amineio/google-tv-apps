@@ -51,16 +51,15 @@ Things that bit us or contributors, so they don't bite you. Commands use `tools/
   cannot outrank it, and the obvious workarounds don't help: Android ignores `android:priority` on
   HOME filters for apps that aren't on the system image, `cmd package set-home-activity` prints
   `Success` without changing anything (not even after a reboot), and `pm disable-user` on one of
-  setupwraith's components is refused with a SecurityException. Disabling the whole
-  `com.google.android.tungsten.setupwraith` package is what frees the slot. It is the first-run
-  setup wizard, so everyday use is unaffected, but re-enable it before a factory reset - list it in
-  your `debloat.txt` and `tools/restore.sh` does that for you.
+  setupwraith's components is refused with a SecurityException. Disabling the whole package
+  also blocks Cast device credentials on Chromecast with Google TV. Keep both Google packages enabled.
+  Use [the Cast-compatible installer](CAST-HOME.md) to redirect Home through the existing accessibility helper.
 - **The TV drops off Wi-Fi every minute right after the install**, seen on Google TV 14 (Xiaomi
   MiTV-MZTU0): the same setupwraith `.RecoveryActivity` took Home and system_server crash-looped
   on it. The install script now starts the new launcher before disabling the stock one, sets the
   home preference last (Android drops it whenever the set of HOME apps changes), then checks where
-  Home resolves and re-enables the stock launcher if it is not the new one. Disable setupwraith as
-  above. To confirm it is this bug: `logcat -b crash` shows `FATAL EXCEPTION IN SYSTEM PROCESS:
+  Home resolves and re-enables the stock launcher if it is not the new one. Keep setupwraith and
+  launcherx enabled when using [the Cast-compatible installer](CAST-HOME.md). To confirm it is this bug: `logcat -b crash` shows `FATAL EXCEPTION IN SYSTEM PROCESS:
   android.display`, and the main log shows `setupwraith/.RecoveryActivity` being started every
   200 ms or so. If you're already in the loop:
   `tools/tv.py 'pm enable --user 0 com.google.android.apps.tv.launcherx'`.

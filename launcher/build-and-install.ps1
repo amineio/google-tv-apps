@@ -78,7 +78,7 @@ if ("$out" -match 'Error') { throw 'could not set the new launcher as home; the 
 $homeNow = (& $py -I .\tools\tv.py 'cmd package resolve-activity --brief -c android.intent.category.HOME -a android.intent.action.MAIN' | Select-Object -Last 1).Trim()
 if ($homeNow -notlike 'com.gathin.tvhome/*') {
     if ($StockLauncher -ne 'none') { & $py -I .\tools\tv.py "pm enable --user 0 $StockLauncher" | Out-Null }
-    throw "Home resolves to '$homeNow', not to the new launcher; $StockLauncher was re-enabled. On Google TV this usually means com.google.android.tungsten.setupwraith also claims Home: add it to your debloat list (see docs/TROUBLESHOOTING.md), apply it, then run this script again."
+    throw "Home resolves to '$homeNow', not to the new launcher; $StockLauncher was re-enabled. On Chromecast with Google TV, keep setupwraith and Google TV Home enabled for Cast. Use tools/install-home-with-cast.sh through Bash and ADB; see docs/CAST-HOME.md."
 }
 Write-Host "Home now resolves to $homeNow"
 # Optional accessibility services, appended to enabled_accessibility_services without dropping others.

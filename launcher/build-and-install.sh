@@ -87,8 +87,8 @@ case "$HOME_NOW" in
   *)
     [ "$STOCK_LAUNCHER" = none ] || "$PY" -I "$TOOLS/tv.py" "pm enable --user 0 $STOCK_LAUNCHER" >/dev/null || true
     echo "ERROR: Home resolves to ${HOME_NOW:-nothing}, not to the new launcher; $STOCK_LAUNCHER was re-enabled." >&2
-    echo "On Google TV this usually means com.google.android.tungsten.setupwraith also claims Home: add it to" >&2
-    echo "your debloat list (see docs/TROUBLESHOOTING.md), apply the list, then run this script again." >&2
+    echo "On Chromecast with Google TV, keep setupwraith and Google TV Home enabled for Cast." >&2
+    echo "Use TV_SERIAL=<connected address> tools/install-home-with-cast.sh; see docs/CAST-HOME.md." >&2
     exit 1 ;;
 esac
 
