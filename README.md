@@ -14,6 +14,8 @@ Each app has its own package, version, permissions, tests, and APK.
 TV Clock works independently of TV Home. Its stop screen supports voluntary viewing limits.
 It remains dismissible and does not guarantee that another app pauses playback.
 
+The [Chromecast device profile](docs/devices/google-chromecast-gtv-4k.md) records published specifications, observed firmware, and development limits for the current physical target.
+
 ## Build
 
 Install JDK 17, Android SDK platform 34, and build tools 34.0.0.
@@ -56,6 +58,9 @@ Read the [home installation guide](apps/home/README.md) before changing the defa
 The [clock guide](apps/clock/README.md) covers overlay permission, timers, and bedtime.
 Both apps install separately. Building an app does not change the TV.
 The [Family Home guide](apps/family-home/README.md) covers its separate installer and device configuration.
+
+For Chromecast with Google TV, use [the Cast-compatible Home installer](docs/CAST-HOME.md).
+It keeps the Google packages enabled so that the custom Home screen and casting can work together.
 
 ## Test
 

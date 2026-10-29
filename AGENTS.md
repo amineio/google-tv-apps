@@ -4,8 +4,24 @@
 
 Read the root README and the affected app guide.
 For new Kotlin apps, also read [the Kotlin development guide](docs/kotlin-tv-development.md).
+For Chromecast-specific work, read the [Chromecast device profile](docs/devices/google-chromecast-gtv-4k.md).
 Make sure that the absolute checkout, branch, HEAD, worktrees, and status match the task.
-Preserve unrelated edits, existing worktrees, and ignored device backups.
+
+At each new task or thread, fetch `origin`, not the inherited `upstream` remote.
+Compare local `main` and the current task branch with freshly fetched `origin/main`.
+If the task branch has a tracking branch, compare it too.
+Report whether each comparison is equal, ahead, behind, or diverged.
+Do not claim freshness for tracking references that were not fetched.
+If fetching fails, report that remote freshness is unknown.
+
+Before code, documentation, or configuration edits, create a new isolated worktree and task branch from freshly fetched `origin/main`.
+If the user explicitly requests an existing branch or another base ref, use that request instead.
+If the task already has its own isolated worktree, continue there.
+Do not create nested worktrees or use the shared `main` checkout for edits.
+Apply this default without asking for permission.
+
+Preserve unrelated edits, local commits, existing worktrees, and ignored device backups.
+Do not reset or rebase another task's work.
 Use `--repo amineio/google-tv-apps` with `gh`.
 The inherited upstream can otherwise become its target.
 
@@ -100,9 +116,12 @@ Attach review images directly in the conversation through the available file or 
 
 Emulator-only delivery does not require a physical TV installation.
 After each successful app installation, commit the installed app changes and push them to `origin/main`.
+Fetch `origin` again before integration or push.
+If remote changes exist, integrate them into the task branch and repeat the affected checks.
+Do not force-push over concurrent changes.
 If the work is on a branch, push the branch and merge it into `main`.
 Use the shortest safe delivery path. A pull request is optional.
-If `main` is clean and direct pushes are allowed, commit and push to `main` directly.
+If direct pushes are allowed, fast-forward `origin/main` from the validated task branch.
 Complete these actions in the same task without asking for further approval, unless the user explicitly requests otherwise.
 Run the relevant tests and build checks before merging.
 Include only changes for the installed app and related repository instructions. Preserve unrelated local work.

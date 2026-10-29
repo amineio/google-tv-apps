@@ -1,5 +1,12 @@
 # TV Home
 
+This guide covers the optional legacy Java TV Home app, `com.gathin.tvhome`.
+It is not the upgrade workflow for the current Family Home app, `com.amine.familyhome`.
+For Family Home updates, use [its own guide](../family-home/README.md).
+
+For legacy Java TV Home on Chromecast with Google TV, use [the Cast-compatible installer](../../docs/CAST-HOME.md).
+Keep setupwraith and Google TV Home enabled.
+
 TV Home is the native launcher inherited from CleanYourTV.
 Its app package remains `com.gathin.tvhome`.
 The source and resources live in this directory. The shared Gradle build lives at the repository root.
@@ -33,7 +40,7 @@ Connect the TV and complete ADB authorization before installation.
 Set `TV_HOST` to the TV address. Then use the home installer:
 
 ```sh
-TV_HOST=192.168.1.50 tools/install-home.sh
+TV_HOST='<connected address>' tools/install-home.sh
 ```
 
 The legacy `launcher/build-and-install.sh` entry point remains available.
