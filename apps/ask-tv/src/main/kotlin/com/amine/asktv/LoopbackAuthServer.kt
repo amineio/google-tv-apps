@@ -57,8 +57,9 @@ class LoopbackAuthServer(private val protocol: OAuthProtocol, private val onGran
                             params[key]=URLDecoder.decode(pair.getOrElse(1){""},"UTF-8")
                         }
                         val grant=protocol.callback(params)
-                        respond(s,200,"Ask TV received your authorization. Check the TV to confirm sign-in. You can close this tab.")
                         onGrant(grant)
+                        // A reset browser connection must not discard an accepted authorization.
+                        runCatching { respond(s,200,"Ask TV received your authorization. Check the TV to confirm sign-in. You can close this tab.") }
                     }
                     else -> respond(s,404,"Not found.")
                 }

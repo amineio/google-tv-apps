@@ -33,14 +33,15 @@ class AskViewModel(private val app:Application):ViewModel() {
     private val oauth=OAuthClient()
     private val client=SubscriptionClient()
     private val store=runCatching { SessionStore(EncryptedRecords(app)) }.getOrNull()
+    private val accountCompletion=AccountCompletion(operation, { action -> main.post { action() } },
+        { store?.snapshot() }, { record -> accountStatus(record) })
     private var returnPage=Page.READY
     private var returnFocus="configuration"
         private var permissionToken:Long?=null
     var ui by mutableStateOf(AskUi(speech=prefs.getBoolean("speech",true),model=prefs.getString("model",null)))
         private set
     init { accountStatus(); if(store==null) ui=ui.copy(message="Secure session storage is unavailable. Reopen Ask TV to try again.") }
-    private fun accountStatus() {
-        val record=store?.snapshot()
+    private fun accountStatus(record:CredentialRecord?=store?.snapshot()) {
         ui=ui.copy(signedIn=record?.accessToken!=null,planAllowed=record?.canInfer==true,
             account=if(record?.accessToken!=null) record.email ?: "ChatGPT account connected" else "Signed out")
     }
@@ -159,8 +160,8 @@ class AskViewModel(private val app:Application):ViewModel() {
                 cancel.check()
                 protocol.commit(grant.attempt) { cancel.check(); store.install(next) }
                 server?.close()
-                post(token) {
-                    operation.finish(token); accountStatus(); ui=ui.copy(busy=null,message=if(next.canInfer) "Connected through your ChatGPT subscription." else "Signed in. ChatGPT plan use was not granted. Choose Enable ChatGPT plan to allow subscription access.")
+                accountCompletion.committed(token) {
+                    operation.finish(token); ui=ui.copy(busy=null,message=if(next.canInfer) "Connected through your ChatGPT subscription." else "Signed in. ChatGPT plan use was not granted. Choose Enable ChatGPT plan to allow subscription access.")
                     if(next.canInfer) refreshModels()
                 }
             } catch(e:Exception) { protocol.cancel(); server?.close(); failure(token,e) }
