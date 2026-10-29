@@ -65,6 +65,10 @@ class FamilyAccessService : AccessibilityService() {
             addAction(Intent.ACTION_SCREEN_ON); addAction(Intent.ACTION_SCREEN_OFF)
         }, RECEIVER_NOT_EXPORTED)
         registered = true
+        // Always dispatch output after the controller's durable command releases its mutex.
+        scope.launch(Dispatchers.Main) {
+            family.voice.collect { announcement -> FamilySpeechService.dispatch(this@FamilyAccessService, announcement) }
+        }
         scope.launch {
             if (ownsHome()) family.wake()
             while (isActive) {
@@ -168,7 +172,9 @@ class FamilyAccessService : AccessibilityService() {
         warning = null
     }
 
-    override fun onInterrupt() = Unit
+    override fun onInterrupt() {
+        family.cancelVoice()
+    }
     override fun onDestroy() {
         active = false
         family.helperConnected(false)

@@ -64,7 +64,7 @@ Android can stop or disable the helper. These family controls do not provide man
 
 Both children initially get Chess & Math, MasterClass, VTM GO, VRT MAX, Spotify, and Prime Video.
 Amine can change each child's app list in Family configuration.
-Settings has four rows: Profiles, Daily usage, Parent PIN, and Device setup.
+Settings has five rows: Profiles, Daily usage, Parent PIN, Device setup, and Timer voice.
 Open a child under Profiles to switch allowed apps on or off.
 Unavailable default apps appear after the installed apps and cannot receive focus.
 Each row has one focus target. Up and Down move through rows. OK opens or changes a row.
@@ -206,3 +206,29 @@ It does not identify who watches without selecting their profile.
 The previous Java TV Home package is removed from the TV for all Android users, without retained data.
 The temporary retirement backup is deleted. Keep Google TV Home, setupwraith, and TV Clock installed.
 The Java source remains in this repository for a future rebuild if needed.
+
+## Spoken timer updates
+
+Version 1.9 adds offline Android text-to-speech for child session start, resume, five-minute and one-minute warnings, and expiry.
+Complete sentences use the child's local profile name. Start and resume round the remaining balance up to whole minutes.
+Late warnings say “less than” the threshold. A five-minute session still skips its five-minute warning.
+The saved warning flags prevent repeated warnings after recovery or app return.
+
+Open Family configuration, then Timer voice to mute announcements. This setting persists and starts enabled.
+The same page shows speech status and opens Android speech setup when available.
+Family Home uses the device language for Dutch, English, or French.
+Other device languages use an installed offline English voice. A missing supported voice leaves speech unavailable.
+The app selects only installed voices that do not require a network connection.
+It does not download voices, add network permission, log spoken names, or save named audio.
+Android settings can offer separate voice downloads under the parent's control.
+
+A short-lived mediaPlayback foreground service supplies the Android background audio route.
+It shows a generic timer notification during each attempt and stops after speech, cancellation, failure, or a 15-second timeout.
+A notification permission prompt is not required for this service. Android may hide its drawer notification when notifications are blocked.
+Speech requests transient audio focus. Denied service starts or focus keep the visual warnings active.
+Profile changes, standby, replacement sessions, helper loss, mute, and teardown cancel pending speech.
+Ordinary ten-second checkpoints do not cancel an otherwise valid announcement.
+The foreground service is separate from the accessibility helper; the helper alone does not grant audio focus.
+
+Emulator checks do not establish pronunciation, audible quality, streaming-app ducking, or physical-TV behavior.
+Read the [voice validation record](../../docs/family-home/voice-announcements-validation.md) for the tested revision and coverage.

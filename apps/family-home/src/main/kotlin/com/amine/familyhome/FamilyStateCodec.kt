@@ -50,7 +50,8 @@ object FamilyStateCodec {
     fun encode(state: FamilyState): String = wire(prepareForSave(state))
 
     private fun wire(state: FamilyState): String {
-        val saved = json.encodeToJsonElement(state).jsonObject
+        val encoded = json.encodeToJsonElement(state).jsonObject
+        val saved = if (state.voiceAnnouncementsEnabled) encoded - "voiceAnnouncementsEnabled" else encoded
         // An empty optional field must not increase the size of an existing near-limit core state.
         val withoutUsage = if (state.usage.isEmpty()) saved - "usage" else saved
         return JsonObject(if (state.appOrder.isEmpty()) withoutUsage - "appOrder" else withoutUsage).toString()

@@ -76,6 +76,7 @@ data class FamilyState(
     val profiles: List<FamilyProfile> = defaultProfiles(),
     val usage: Map<String, Map<Viewer, Long>> = emptyMap(),
     val appOrder: Map<Viewer, List<String>> = emptyMap(),
+    val voiceAnnouncementsEnabled: Boolean = true,
 ) {
     val pinEnabled: Boolean get() = pinHash.isNotEmpty()
     val children: List<FamilyProfile> get() = profiles.filter { it.viewer.isChild }

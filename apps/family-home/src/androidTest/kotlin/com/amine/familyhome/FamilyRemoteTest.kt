@@ -93,7 +93,7 @@ class FamilyRemoteTest {
         screen.onNodeWithTag("setting:pin").assert(SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.StateDescription, "Off"))
     }
 
-    @Test fun settingsRootUsesFourRowsAndBackRestoresTheOriginatingControl() {
+    @Test fun settingsRootReachesTimerVoiceAndBackRestoresTheOriginatingControl() {
         openParentConfiguration()
         screen.onNodeWithText("Profiles").assertIsDisplayed().assertIsFocused()
         screen.onNodeWithText("Daily usage").assertIsDisplayed()
@@ -109,6 +109,12 @@ class FamilyRemoteTest {
         screen.onNodeWithText("Parent PIN").assertIsFocused()
         pressRemote(listOf(Key.DirectionDown))
         screen.onNodeWithText("Device setup").assertIsFocused()
+        pressRemote(listOf(Key.DirectionDown))
+        screen.onNodeWithTag("setting:voice").assertIsDisplayed().assertIsFocused()
+        pressRemote(listOf(Key.DirectionCenter))
+        screen.onNodeWithTag("setting:voice-enabled").assertIsFocused()
+        pressBack()
+        screen.onNodeWithTag("setting:voice").assertIsFocused()
         pressBack()
         screen.onNodeWithTag("home-profile").assertIsFocused()
         screen.onNodeWithTag("home-apps").assertExists()

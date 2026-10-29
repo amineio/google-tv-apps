@@ -62,6 +62,17 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() { unregisterReceiver(packages); super.onDestroy() }
 
+    fun openSpeechSetup() {
+        val speech = Intent("com.android.settings.TTS_SETTINGS")
+        try {
+            startActivity(if (speech.resolveActivity(packageManager) != null) speech else Intent(Settings.ACTION_SETTINGS))
+        } catch (_: android.content.ActivityNotFoundException) {
+            android.widget.Toast.makeText(this, "Speech setup is unavailable on this TV.", android.widget.Toast.LENGTH_LONG).show()
+        } catch (_: SecurityException) {
+            android.widget.Toast.makeText(this, "Speech setup is unavailable on this TV.", android.widget.Toast.LENGTH_LONG).show()
+        }
+    }
+
     fun installedApps() = loadLauncherCatalog(packageManager, packageName)
 
     fun launch(app: LauncherApp) {
@@ -144,7 +155,9 @@ fun FamilyScreen(activity: MainActivity) {
             }, onAccess = { viewer, pkg, enabled -> scope.launch { controller.setAllowed(viewer, pkg, enabled) } },
             onAddChild = controller::addChild,
             onSetup = { activity.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
-            onHome = { activity.startActivity(activity.getSystemService(RoleManager::class.java).createRequestRoleIntent(RoleManager.ROLE_HOME)) })
+            onHome = { activity.startActivity(activity.getSystemService(RoleManager::class.java).createRequestRoleIntent(RoleManager.ROLE_HOME)) },
+            onVoiceEnabled = { enabled -> scope.launch { controller.setVoiceAnnouncementsEnabled(enabled) } },
+            onSpeechSetup = activity::openSpeechSetup)
     } else Column(Modifier.fillMaxSize().padding(horizontal = 40.dp, vertical = 26.dp)) {
         FamilyHeader()
         Spacer(Modifier.height(16.dp))

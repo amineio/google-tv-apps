@@ -10,6 +10,7 @@ import kotlinx.coroutines.withContext
 import java.util.UUID
 import java.time.ZoneId
 import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.atomic.AtomicLong
 
 interface FamilyRepository {
     suspend fun load(): FamilyState
@@ -23,6 +24,7 @@ data class FamilyUi(
     val storageFailed: Boolean = false,
     val notice: String? = null,
     val now: Long = 0,
+    val speechStatus: SpeechStatus = SpeechStatus.NOT_CHECKED,
 )
 
 sealed interface FamilyEffect {
@@ -48,6 +50,40 @@ class FamilyController(
 
     private val mutable = MutableStateFlow(FamilyUi())
     val ui = mutable.asStateFlow()
+    private val mutableVoice = MutableStateFlow<VoiceAnnouncement?>(null)
+    val voice = mutableVoice.asStateFlow()
+    private val voiceGeneration = AtomicLong()
+    fun isVoiceCurrent(request: VoiceAnnouncement): Boolean {
+        val current = mutable.value
+        val session = current.state.sessions[request.viewer] ?: return false
+        if (voice.value != request || request.generation != voiceGeneration.get() || !current.ready ||
+            current.storageFailed || !current.helper || !current.state.voiceAnnouncementsEnabled ||
+            current.state.selected != request.viewer) return false
+        val remaining = SessionEngine.remaining(current.state, request.viewer, elapsed())
+        return if (request.purpose == VoicePurpose.EXPIRY) remaining == 0L && session.deadlineElapsedMs == null
+            else session.deadlineElapsedMs != null && remaining > 0 &&
+                (request.purpose != VoicePurpose.FIVE_MINUTES || remaining > 60_000)
+    }
+    fun speechStatus(status: SpeechStatus) { mutable.update { it.copy(speechStatus = status) } }
+    internal fun cancelVoice(): Long {
+        val generation = voiceGeneration.incrementAndGet()
+        mutableVoice.value = null
+        return generation
+    }
+    private fun announce(viewer: Viewer, purpose: VoicePurpose, generation: Long) {
+        val current = mutable.value
+        if (generation != voiceGeneration.get() || !current.helper || !current.state.voiceAnnouncementsEnabled ||
+            current.storageFailed || current.state.selected != viewer) return
+        val remaining = SessionEngine.remaining(current.state, viewer, elapsed())
+        if (purpose != VoicePurpose.EXPIRY && remaining <= 0) return
+        mutableVoice.value = VoiceAnnouncement(viewer, generation, purpose, remaining)
+    }
+    suspend fun setVoiceAnnouncementsEnabled(enabled: Boolean): Boolean = mutex.withLock {
+        if (!available() || mutable.value.state.selected != Viewer.AMINE || !adminAuthorized) return@withLock false
+        if (!enabled) cancelVoice()
+        val state = mutable.value.state
+        commit(state.copy(voiceAnnouncementsEnabled = enabled, revision = state.revision + 1))
+    }
     private val mutex = Mutex()
     private var adminAuthorized = false
     private var lastCheckpoint = 0L
@@ -56,6 +92,7 @@ class FamilyController(
     var effect: (FamilyEffect) -> Unit = {}
 
     suspend fun load(): Boolean = mutex.withLock {
+        cancelVoice()
         try {
             val restored = FamilyStateCodec.prepareForSave(SessionEngine.recover(repository.load()))
             repository.save(restored)
@@ -73,6 +110,7 @@ class FamilyController(
     }
 
     fun helperConnected(connected: Boolean) {
+        if (!connected) cancelVoice()
         val stopped = if (!connected) usageSample() else null
         helperStatus.updateAndGet { current ->
             if (current.connected == connected) current else HelperStatus(connected,
@@ -131,6 +169,7 @@ class FamilyController(
             lastCheckpoint = sample.elapsedMs
             true
         } catch (_: Exception) {
+            cancelVoice()
             mutable.update { it.copy(storageFailed = true,
                 notice = "Family Home could not save this change. Child apps are paused. Retry the saved state.") }
             if (mutable.value.state.selected?.isChild == true) {
@@ -145,9 +184,12 @@ class FamilyController(
         if (!known(viewer) || !available(viewer.isChild)) return@withLock false
         if (!viewer.isChild && !authenticated(pin)) return@withLock false
         val previous = mutable.value.state.selected
+        val generation = if (previous != viewer) cancelVoice() else voiceGeneration.get()
         val result = commit(SessionEngine.select(mutable.value.state, viewer, elapsed()))
         if (result) {
             adminAuthorized = !viewer.isChild
+            if (viewer.isChild && previous != viewer && mutable.value.state.sessions[viewer]?.deadlineElapsedMs != null)
+                announce(viewer, VoicePurpose.RESUME, generation)
             if (previous?.isChild == true && previous != viewer) effect(FamilyEffect.PauseMedia)
         }
         result
@@ -158,9 +200,11 @@ class FamilyController(
         if (minutes !in 5..60 || minutes % 5 != 0)
             return@withLock reject("Choose 5 to 60 minutes in five-minute steps.")
         val previous = mutable.value.state.selected
+        val generation = cancelVoice()
         val result = commit(SessionEngine.start(mutable.value.state, viewer, minutes, elapsed()))
         if (result) {
             adminAuthorized = false
+            announce(viewer, VoicePurpose.START, generation)
             if (previous?.isChild == true && previous != viewer) effect(FamilyEffect.PauseMedia)
         }
         result
@@ -168,11 +212,14 @@ class FamilyController(
 
     suspend fun chooseProfiles(): Boolean = mutex.withLock { pauseLocked() }
     suspend fun screenOff(): Boolean {
+        // Standby must cancel output even while an earlier durable write owns the mutex.
+        cancelVoice()
         val sample = usageSample()
         return mutex.withLock { pauseLocked(sample) }
     }
 
     suspend fun wake(): Boolean = mutex.withLock {
+        cancelVoice()
         adminAuthorized = false
         val result = available() && commit(SessionEngine.suspend(mutable.value.state, elapsed()))
         effect(FamilyEffect.PauseMedia)
@@ -181,6 +228,7 @@ class FamilyController(
     }
 
     private suspend fun pauseLocked(sample: UsageSample = usageSample()): Boolean {
+        cancelVoice()
         adminAuthorized = false
         if (!available()) return false
         val child = mutable.value.state.selected?.isChild == true
@@ -191,6 +239,7 @@ class FamilyController(
 
     suspend fun end(viewer: Viewer, pin: String = ""): Boolean = mutex.withLock {
         if (!known(viewer) || !available() || !authenticated(pin)) return@withLock false
+        cancelVoice()
         val result = commit(SessionEngine.end(mutable.value.state, viewer, elapsed()))
         if (result) { adminAuthorized = false; effect(FamilyEffect.PauseMedia) }
         result
@@ -257,6 +306,7 @@ class FamilyController(
         mutable.update { it.copy(now = now) }
         if (!available()) return@withLock
         val state = mutable.value.state
+        val generation = voiceGeneration.get()
         val viewer = state.selected
         val session = state.sessions[viewer]
         if (viewer == null || !viewer.isChild || session?.deadlineElapsedMs == null) {
@@ -266,6 +316,7 @@ class FamilyController(
         val remaining = SessionEngine.remaining(state, viewer, now)
         if (remaining == 0L) {
             if (commit(SessionEngine.tick(state, now, state.revision))) {
+                announce(viewer, VoicePurpose.EXPIRY, generation)
                 effect(FamilyEffect.PauseMedia)
                 effect(FamilyEffect.OpenHome)
             }
@@ -276,7 +327,10 @@ class FamilyController(
         if (one || five) {
             val next = state.copy(sessions = state.sessions + (viewer to session.copy(
                 warnedFive = session.warnedFive || five, warnedOne = session.warnedOne || one)))
-            if (commit(next)) effect(FamilyEffect.Warning("${state.label(viewer)}: ${if (one) "1 minute" else "5 minutes"} left"))
+            if (commit(next)) {
+                announce(viewer, if (one) VoicePurpose.ONE_MINUTE else VoicePurpose.FIVE_MINUTES, generation)
+                effect(FamilyEffect.Warning("${state.label(viewer)}: ${if (one) "1 minute" else "5 minutes"} left"))
+            }
         } else if (now - lastCheckpoint >= 10_000) commit(SessionEngine.checkpoint(state, now))
     }
 }

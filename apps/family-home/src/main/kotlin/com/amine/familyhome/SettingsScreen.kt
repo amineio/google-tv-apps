@@ -50,7 +50,8 @@ private data class SettingsRow(val key: String, val title: String, val subtitle:
 internal fun SettingsScreen(ui: FamilyUi, apps: List<LauncherApp>, helperActive: Boolean,
     homeRoleHeld: Boolean, resumeGeneration: Int, restoreFocus: Boolean = true,
     onClose: () -> Unit, onPin: () -> Unit, onAccess: (Viewer, String, Boolean) -> Unit,
-    onAddChild: suspend (String) -> Viewer?, onSetup: () -> Unit, onHome: () -> Unit) {
+    onAddChild: suspend (String) -> Viewer?, onSetup: () -> Unit, onHome: () -> Unit,
+    onVoiceEnabled: (Boolean) -> Unit = {}, onSpeechSetup: () -> Unit = {}) {
     var destination by rememberSaveable { mutableStateOf("root") }
     var profileFocus by rememberSaveable { mutableStateOf<String?>(null) }
     val pages = rememberSaveableStateHolder()
@@ -71,6 +72,7 @@ internal fun SettingsScreen(ui: FamilyUi, apps: List<LauncherApp>, helperActive:
     val title = when (destination) {
         "profiles" -> "Profiles"
         "device" -> "Device setup"
+        "voice" -> "Timer voice"
         "usage" -> "Daily usage"
         "add" -> "Add child profile"
         else -> usageProfile?.name ?: child?.name ?: "Settings"
@@ -78,6 +80,7 @@ internal fun SettingsScreen(ui: FamilyUi, apps: List<LauncherApp>, helperActive:
     val description = when (destination) {
         "profiles" -> "Choose a child to manage allowed apps."
         "device" -> "Android controls the Home app and accessibility helper."
+        "voice" -> "Spoken session updates use an installed offline voice. Visual timer warnings stay active."
         "add" -> "Create a child profile with the default allowed apps."
         "usage" -> "Today"
         else -> if (usageProfile != null) "Weekly history" else if (child != null) "Allowed apps" else "Family Home"
@@ -115,7 +118,8 @@ internal fun SettingsScreen(ui: FamilyUi, apps: List<LauncherApp>, helperActive:
                             SettingsRow("profiles", "Profiles", "Allowed apps and child profiles") { destination = "profiles" },
                             SettingsRow("usage", "Daily usage", "Screen-on time by profile") { destination = "usage" },
                             SettingsRow("pin", "Parent PIN", "Protect parent controls and new sessions", ui.state.pinEnabled, action = onPin),
-                            SettingsRow("device", "Device setup", "Home helper and default Home app") { destination = "device" })
+                            SettingsRow("device", "Device setup", "Home helper and default Home app") { destination = "device" },
+                            SettingsRow("voice", "Timer voice", if (ui.state.voiceAnnouncementsEnabled) "On · Offline spoken timer updates" else "Muted") { destination = "voice" })
                         "usage" -> ui.state.profiles.map { profile ->
                             SettingsRow("usage:${profile.viewer.id}", profile.name, profile = profile,
                                 value = usageTotal(ui.state.usage[today.toString()]?.get(profile.viewer))) {
@@ -127,6 +131,10 @@ internal fun SettingsScreen(ui: FamilyUi, apps: List<LauncherApp>, helperActive:
                                 destination = "child:${profile.viewer.id}"
                             }
                         } + SettingsRow("add", "Add child profile", "Name and initials portrait") { destination = "add" }
+                        "voice" -> listOf(
+                            SettingsRow("voice-enabled", "Voice announcements", if (ui.state.voiceAnnouncementsEnabled) ui.speechStatus.label else "Muted",
+                                checked = ui.state.voiceAnnouncementsEnabled) { onVoiceEnabled(!ui.state.voiceAnnouncementsEnabled) },
+                            SettingsRow("speech-setup", "Android speech setup", "Choose or install a voice in Android settings", action = onSpeechSetup))
                         "device" -> listOf(
                             SettingsRow("helper", "Home helper", if (helperActive) "Enabled · Open Android accessibility" else "Not enabled · Open Android accessibility", action = onSetup),
                             SettingsRow("home", "Default Home app", if (homeRoleHeld) "Family Home · Open Android Home selection" else "Not Family Home · Open Android Home selection", action = onHome))
