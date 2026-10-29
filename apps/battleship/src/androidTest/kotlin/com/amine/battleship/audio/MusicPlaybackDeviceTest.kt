@@ -70,7 +70,11 @@ class MusicPlaybackDeviceTest {
                 assertReleased(players.last())
                 music.foreground(true)
                 music.update(game)
-                assertEquals("The discarded opening must not be prepared again", 2, players.size)
+                assertEquals("Return prepares battle music without another opening", 3, players.size)
+            }
+            assertNotNull(prepared.poll(10, TimeUnit.SECONDS))
+            instrumentation.runOnMainSync {
+                assertTrue(players.last().player.isPlaying)
                 music.update(home)
             }
             assertNotNull(prepared.poll(10, TimeUnit.SECONDS))

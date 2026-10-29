@@ -23,6 +23,7 @@ class NativeMusicBackend(private val context: Context) : MusicBackend {
             val resource = when (track) {
                 MusicTrack.MENU -> R.raw.music_menu
                 MusicTrack.START -> R.raw.music_start
+                MusicTrack.BATTLE -> R.raw.music_battle
                 MusicTrack.VICTORY -> R.raw.music_victory
                 MusicTrack.DEFEAT -> R.raw.music_defeat
             }

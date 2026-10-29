@@ -39,7 +39,13 @@ Recorded CC0 sounds replace the battle cues. A mixed sinking cue follows the ful
 Version 1.6 adds an orchestral menu loop and a dramatic opening for new matches.
 New victory and defeat themes follow the complete final sinking sequence.
 Continue and Resume do not replay the opening. Music stops on pause, mute, and app background activity.
-Ordinary gameplay stays quiet after the opening. The app streams music separately from short battle effects.
+The app streams music separately from short battle effects.
+Version 1.7 adds a quiet pirate-style orchestral battle loop after the opening and on Continue or Resume.
+Effects reduce the loop volume. Pause, mute, background, and audio focus loss stop it.
+A compact captain portrait and distant naval scenery frame the two equal grids.
+Repeated control instructions and target narration no longer occupy gameplay space.
+Help remains available from the main menu.
+The [battle atmosphere record](../../docs/battleship/battle-atmosphere/design.md) contains prompts, assets, and layout decisions.
 
 ## Build
 

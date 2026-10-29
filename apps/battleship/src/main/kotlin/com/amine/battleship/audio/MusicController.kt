@@ -6,7 +6,7 @@ import com.amine.battleship.viewmodel.SessionState
 import com.amine.battleship.viewmodel.SoundCue
 
 enum class MusicTrack(val gain: Float, val loop: Boolean = false) {
-    MENU(.40f, true), START(.45f), VICTORY(.50f), DEFEAT(.40f),
+    MENU(.40f, true), START(.45f), BATTLE(.28f, true), VICTORY(.50f), DEFEAT(.40f),
 }
 
 interface MusicPlayback {
@@ -46,15 +46,16 @@ class MusicController(private val backend: MusicBackend) : AutoCloseable {
     fun focusDuck(value: Boolean) { focusDucked = value; applyVolume() }
 
     fun cue(cue: SoundCue, value: SessionState) {
-        update(value)
+        // An opening replaces the loop directly, without preparing a redundant battle player.
+        if (cue == SoundCue.MATCH_START) state = value else update(value)
         when (cue) {
             SoundCue.MATCH_START -> {
                 resultConsumed = false
-                if (available() && state.screen == Screen.GAME && !state.paused) {
+                if (available() && battle()) {
                     // A confirmed restart can arrive before collectors observe its intermediate pause.
                     replace(null)
                     replace(MusicTrack.START)
-                }
+                } else reconcile()
             }
             SoundCue.VICTORY, SoundCue.DEFEAT -> {
                 val resultContext = state.screen == Screen.RESULTS ||
@@ -73,13 +74,15 @@ class MusicController(private val backend: MusicBackend) : AutoCloseable {
 
     private fun available() = !closed && foreground && focused && state.loaded && state.soundEnabled
     private fun menu() = state.screen in setOf(Screen.HOME, Screen.HELP, Screen.SETTINGS) && !state.paused
+    private fun battle() = state.screen == Screen.GAME && state.game != null &&
+        state.game?.phase != GamePhase.GAME_OVER && !state.paused
 
     private fun reconcile() {
         when {
             !available() -> replace(null)
             menu() -> replace(MusicTrack.MENU)
-            track == MusicTrack.MENU -> replace(null)
-            track == MusicTrack.START && (state.screen != Screen.GAME || state.paused) -> replace(null)
+            battle() -> if (track != MusicTrack.START) replace(MusicTrack.BATTLE)
+            track in setOf(MusicTrack.MENU, MusicTrack.START, MusicTrack.BATTLE) -> replace(null)
             track in setOf(MusicTrack.VICTORY, MusicTrack.DEFEAT) &&
                 state.screen != Screen.RESULTS &&
                 !(state.screen == Screen.GAME && state.game?.phase == GamePhase.GAME_OVER && !state.paused) -> replace(null)
@@ -101,13 +104,16 @@ class MusicController(private val backend: MusicBackend) : AutoCloseable {
                 playback?.start()
             }
         }, done = {
-            if (generation == token) replace(null)
+            if (generation == token) {
+                replace(null)
+                if (next == MusicTrack.START) reconcile()
+            }
         })
     }
 
     private fun applyVolume() {
         val current = track ?: return
-        val effectGain = if (current == MusicTrack.START && effectDucked) .25f else 1f
+        val effectGain = if (current in setOf(MusicTrack.START, MusicTrack.BATTLE) && effectDucked) .25f else 1f
         playback?.volume(current.gain * effectGain * if (focusDucked) .25f else 1f)
     }
 

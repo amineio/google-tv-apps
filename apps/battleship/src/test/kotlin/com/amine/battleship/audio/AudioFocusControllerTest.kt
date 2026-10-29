@@ -129,7 +129,7 @@ class AudioFocusControllerTest {
         backend.requests.single().changed(AudioFocusChange.LOSS)
         focus.update(true, explicit = true)
         assertEquals(2, backend.requests.size)
-        assertEquals(listOf(MusicTrack.START), tracks)
+        assertEquals(listOf(MusicTrack.BATTLE, MusicTrack.START, MusicTrack.BATTLE), tracks)
         music.close(); focus.close()
     }
 }

@@ -30,8 +30,8 @@ class GameplayPresentationTest {
         screen.onNodeWithTag("targeting_board").assertIsFocused()
         screen.onNodeWithTag("friendly_board").assertIsDisplayed()
         val targetText = mutableListOf<TextLayoutResult>()
-        screen.onNodeWithText("Unexplored").performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(targetText) }
-        assertFalse("The target status must show its complete text", targetText.single().hasVisualOverflow)
+        screen.onNodeWithTag("selected_target").performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(targetText) }
+        assertFalse("The target coordinate must show its complete text", targetText.single().hasVisualOverflow)
         val firstEnemy = screen.onNodeWithTag("targeting_board").getUnclippedBoundsInRoot()
         val firstFriendly = screen.onNodeWithTag("friendly_board").getUnclippedBoundsInRoot()
         assertEquals((firstEnemy.right - firstEnemy.left).value, (firstFriendly.right - firstFriendly.left).value, .1f)
@@ -48,7 +48,7 @@ class GameplayPresentationTest {
         val dense = denseMatch()
         screen.runOnIdle { state = state.copy(game = dense, selected = Coordinate(9, 9), showHint = false) }
         screen.onNodeWithText("Carrier sunk").assertIsDisplayed()
-        screen.onNodeWithText("INCOMING").assertIsDisplayed()
+        screen.onNodeWithText("INCOMING").assertDoesNotExist()
         screen.onNodeWithTag("last_shot_feedback").assertContentDescriptionContains("Incoming: Carrier sunk", substring = true)
         screen.onNodeWithTag("targeting_board").assertIsFocused()
         val enemy = screen.onNodeWithTag("targeting_board").getUnclippedBoundsInRoot()
@@ -73,7 +73,7 @@ class GameplayPresentationTest {
         val pending = GameEngine.attack(dense, Player.HUMAN, unused).state
         screen.runOnIdle { state = state.copy(game = pending, selected = unused, resolving = true) }
         screen.onNodeWithText("COMPUTER TURN").assertIsDisplayed()
-        screen.onNodeWithText("YOUR SHOT").assertIsDisplayed()
+        screen.onNodeWithText("YOUR SHOT").assertDoesNotExist()
         screen.onNodeWithTag("targeting_board").assertIsFocused()
         capture("computer-turn")
 

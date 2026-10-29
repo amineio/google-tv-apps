@@ -43,14 +43,15 @@ fun BattleshipApp(state: SessionState, onAction: (GameAction) -> Unit, onExit: (
             if (state.screen == Screen.HOME) onExit() else onAction(GameAction.Back)
         }
         Box(Modifier.fillMaxSize().background(Ocean)) {
-            if (state.screen != Screen.GAME) {
-                Image(painterResource(R.drawable.naval_background), null, Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop)
-            }
+            Image(painterResource(R.drawable.naval_background), null, Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop)
             val home = state.screen == Screen.HOME
             Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(
-                if (home) listOf(Ocean.copy(alpha = .96f), Ocean.copy(alpha = .69f), Ocean.copy(alpha = .12f))
-                else listOf(Ocean.copy(alpha = .97f), Ocean.copy(alpha = .92f)))))
+                when {
+                    home -> listOf(Ocean.copy(alpha = .96f), Ocean.copy(alpha = .69f), Ocean.copy(alpha = .12f))
+                    state.screen == Screen.GAME -> listOf(Ocean.copy(alpha = .84f), Ocean.copy(alpha = .72f))
+                    else -> listOf(Ocean.copy(alpha = .97f), Ocean.copy(alpha = .92f))
+                })))
             BoxWithConstraints(Modifier.fillMaxSize()) {
                 Box(Modifier.fillMaxSize().padding(horizontal = maxWidth * .05f, vertical = maxHeight * .05f)) {
                     when {

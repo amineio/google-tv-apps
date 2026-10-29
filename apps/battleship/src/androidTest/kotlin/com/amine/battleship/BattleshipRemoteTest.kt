@@ -53,11 +53,32 @@ class BattleshipRemoteTest {
         val attacked = GameEngine.attack(game, Player.HUMAN, hit).state
         screen.setContent { BattleshipApp(activeGame().copy(game = attacked, selected = hit, message = "Hit"), {}, {}) }
         screen.onNode(hasText("Hit") and hasAnyAncestor(hasTestTag("last_shot_feedback"))).assertIsDisplayed()
-        screen.onNodeWithText("TARGET").assertIsDisplayed()
+        screen.onNodeWithText("TARGET").assertDoesNotExist()
+        screen.onNodeWithText("BATTLESHIP").assertDoesNotExist()
+        screen.onNodeWithText("BACK  Pause").assertDoesNotExist()
+        screen.onNodeWithText("ARROWS  Aim    OK  Fire    BACK  Pause").assertDoesNotExist()
+        screen.onNodeWithText("YOUR SHOT").assertDoesNotExist()
+        screen.onNodeWithTag("captain_portrait").assertIsDisplayed()
+        val enemy = screen.onNodeWithTag("targeting_board").fetchSemanticsNode().boundsInRoot
+        val friendly = screen.onNodeWithTag("friendly_board").fetchSemanticsNode().boundsInRoot
+        assertEquals(enemy.width, friendly.width, 1f)
+        assertEquals(enemy.height, friendly.height, 1f)
+        assertEquals(enemy.top, friendly.top, 1f)
         screen.onNodeWithText(hit.label).assertIsDisplayed()
         screen.onNodeWithText("Stand by, captain").assertDoesNotExist()
         screen.onNodeWithText("The computer is taking its turn").assertDoesNotExist()
         screen.onNodeWithText("Ready to fire").assertDoesNotExist()
+        screen.onNodeWithTag("targeting_board").assertIsFocused()
+    }
+
+    @Test fun compactBattleKeepsInvalidTargetAndSaveFailureVisible() {
+        screen.setContent { BattleshipApp(activeGame().copy(
+            message = "Already targeted", saveWarning = "Could not save game."), {}, {}) }
+        screen.onNodeWithText("Already targeted").assertIsDisplayed()
+        screen.onNodeWithText("Could not save game.").assertIsDisplayed()
+        screen.onNodeWithTag("selected_target")
+            .assertContentDescriptionEquals("Target A1. Already targeted.")
+        screen.onNodeWithText("Unexplored").assertDoesNotExist()
         screen.onNodeWithTag("targeting_board").assertIsFocused()
     }
 

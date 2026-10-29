@@ -3,7 +3,7 @@
   "origin": "Composer-authored orchestral recordings, edited and mastered locally. No AI audio model or external runtime.",
   "encoding": "Ogg Vorbis quality4, stereo44100Hz, libVorbis1.3.7 via oggenc1.4.3; fixed serials. FFmpeg9.0.2_1 prepares PCM16 and measures levels.",
   "rights": "Musical recordings retain CC0-1.0 source terms. App code and preparation scripts use repository MIT. Credits are retained despite optional attribution.",
-  "edits": "Menu retains the entire108-second composer-authored loop, with constant gain and no baked fade. Opening uses first6seconds of the same work. Victory uses the first12seconds of its dedicated theme. Defeat preserves the complete15-second GameOver track. One-shots use40ms attack and800ms release fades. No listening or phrase-cut acceptance claim is made.",
+  "edits": "Menu retains the entire108-second composer-authored loop, with constant gain and no baked fade. Opening uses first6seconds of the same work. Victory uses the first12seconds of its dedicated theme. Defeat preserves the complete15-second GameOver track. One-shots use40ms attack and800ms release fades. No listening or phrase-cut acceptance claim is made. Version 1.7 adds the complete 14.489252-second composer-supplied Pirate Indenture loop with constant gain and no baked fades. It plays during active battle and ducks beneath effects.",
   "reviewLimits": "Source terms, dimensions, durations, loudness, hashes and native decoding/playback are testable. Listening quality, loop perception and TV speaker balance require separate observations.",
   "assets": [
     {
@@ -109,6 +109,32 @@
         "loudnessRangeLu": 4.8
       },
       "runtimeGain": 0.4
+    },
+    {
+      "role": "battle",
+      "source_file": "pirate_indenture_loop.wav",
+      "source_sha256": "ae0d1c43a11575237e17923c56aa7f4eaeb91d7d57de738a478083c534007b96",
+      "artist": "Eldritch Grim",
+      "startSeconds": 0,
+      "durationSeconds": 14.489252,
+      "gainDb": -7.33,
+      "targetLufs": -21,
+      "filters": "anull",
+      "oggSerial": 291033,
+      "title": "Pirate Indenture",
+      "sourceUrl": "https://opengameart.org/content/pirate-indenture",
+      "downloadUrl": "https://opengameart.org/sites/default/files/pirate_indenture_loop.wav",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "path": "apps/battleship/src/main/res/raw/music_battle.ogg",
+      "bytes": 212522,
+      "sha256": "fc73177ec1994c70ad107e3ae58ac4db289e72f04b706a8b88c14d98f506a362",
+      "measured": {
+        "integratedLufs": -21.05,
+        "truePeakDbtp": -6.08,
+        "loudnessRangeLu": 2.9
+      },
+      "runtimeGain": 0.28
     }
   ],
   "runtimeLevelReview": "Calculated before system volume and fades: menu about-29LUFS,start-25,victory-24,defeat-28. These are engineering estimates, not speaker or listening acceptance."

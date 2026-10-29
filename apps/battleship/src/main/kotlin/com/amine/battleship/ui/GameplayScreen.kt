@@ -1,20 +1,26 @@
 package com.amine.battleship.ui
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
+import com.amine.battleship.R
 import com.amine.battleship.game.engine.GameEngine
 import com.amine.battleship.game.model.*
 import com.amine.battleship.viewmodel.ImpactBoard
@@ -39,7 +45,7 @@ internal fun GameScreen(state: SessionState, onAction: (GameAction) -> Unit) {
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val columnWidth = (maxWidth - 24.dp) / 2
-        val boardSize = minOf(columnWidth, maxHeight - 142.dp)
+        val boardSize = minOf(columnWidth, maxHeight - 116.dp)
         val chosenShot = view.opponentBoard.shots.firstOrNull { it.coordinate == state.selected }
         val targetState = when {
             state.message == "Already targeted" -> "Already targeted"
@@ -49,35 +55,26 @@ internal fun GameScreen(state: SessionState, onAction: (GameAction) -> Unit) {
             else -> "Unexplored"
         }
         Column(Modifier.fillMaxSize()) {
-            Row(Modifier.fillMaxWidth().height(30.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("BATTLESHIP", fontWeight = FontWeight.Bold, fontSize = 23.sp, letterSpacing = 2.sp)
-                Spacer(Modifier.weight(1f))
+            Row(Modifier.fillMaxWidth().height(40.dp), verticalAlignment = Alignment.CenterVertically) {
+                Image(painterResource(R.drawable.captain_portrait), "Captain",
+                    Modifier.size(40.dp).clip(CircleShape).testTag("captain_portrait"),
+                    contentScale = ContentScale.Crop)
+                Spacer(Modifier.width(12.dp))
+                Box(Modifier.weight(1f)) { LastShotFeedback(game.lastAttack) }
                 Box(Modifier.width(190.dp), contentAlignment = Alignment.CenterEnd) {
                     Text(turnLabel, fontSize = 14.sp, color = if (playerTurn) Cyan else Ink,
                         fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp, maxLines = 1)
                 }
-                Spacer(Modifier.width(22.dp))
-                Text("BACK  Pause", fontSize = 13.sp, color = Muted)
             }
-            Spacer(Modifier.height(3.dp))
-            Row(Modifier.fillMaxWidth().height(32.dp), horizontalArrangement = Arrangement.spacedBy(24.dp),
-                verticalAlignment = Alignment.CenterVertically) {
-                Row(Modifier.width(columnWidth).fillMaxHeight().testTag("selected_target")
-                    .semantics { contentDescription = "Target ${state.selected.label}. $targetState." },
-                    verticalAlignment = Alignment.CenterVertically) {
-                    SectionLabel("TARGET")
-                    Spacer(Modifier.width(14.dp))
-                    Text(state.selected.label, color = Cyan, fontSize = 22.sp, fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.width(49.dp))
-                    Text(targetState, color = Muted, fontSize = 13.sp, maxLines = 1)
-                }
-                Box(Modifier.width(columnWidth)) { LastShotFeedback(game.lastAttack) }
-            }
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(8.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                 Column(Modifier.width(columnWidth), horizontalAlignment = Alignment.CenterHorizontally) {
                     Row(Modifier.width(boardSize).height(18.dp), verticalAlignment = Alignment.CenterVertically) {
                         SectionLabel("ENEMY WATERS")
+                        Spacer(Modifier.width(12.dp))
+                        Text(state.selected.label, color = Cyan, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.testTag("selected_target")
+                                .semantics { contentDescription = "Target ${state.selected.label}. $targetState." })
                         Spacer(Modifier.weight(1f))
                         Text("${view.opponentBoard.ships.size} / 5 SUNK", color = Muted, fontSize = 13.sp)
                     }
@@ -87,7 +84,9 @@ internal fun GameScreen(state: SessionState, onAction: (GameAction) -> Unit) {
                         focusRequester = boardFocus, onAction = onAction, frameTime = frameTime,
                         impact = state.activeImpact?.takeIf { it.board == ImpactBoard.ENEMY })
                     Box(Modifier.width(boardSize).height(34.dp), contentAlignment = Alignment.CenterStart) {
-                        Text("ARROWS  Aim    OK  Fire    BACK  Pause", color = Muted, fontSize = 13.sp, maxLines = 1)
+                        if (state.message == "Already targeted") {
+                            Text(state.message, color = Impact, fontSize = 13.sp, maxLines = 1)
+                        }
                     }
                 }
                 Column(Modifier.width(columnWidth), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -126,13 +125,13 @@ private fun LastShotFeedback(event: AttackEvent?) {
     val description = if (event == null) "No shots fired." else "$source: $result at ${event.shot.coordinate.label}."
     Row(Modifier.fillMaxWidth().height(32.dp).testTag("last_shot_feedback")
         .semantics { contentDescription = description }, verticalAlignment = Alignment.CenterVertically) {
-        Text(if (event == null) "LAST SHOT" else source.uppercase(), color = Muted,
-            fontSize = 13.sp, letterSpacing = .5.sp, modifier = Modifier.width(86.dp))
         val color = if (event?.shot?.outcome in listOf(ShotOutcome.HIT, ShotOutcome.SUNK)) Impact else Ink
-        Text(if (event == null) "—" else if (event.shot.outcome == ShotOutcome.MISS) "○" else "×",
-            color = color, fontSize = 25.sp, modifier = Modifier.width(28.dp))
-        Text(result, color = color, fontSize = 16.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium,
-            maxLines = 1, modifier = Modifier.weight(1f))
+        if (event != null) {
+            Text(if (event.shot.outcome == ShotOutcome.MISS) "○" else "×",
+                color = color, fontSize = 25.sp, modifier = Modifier.width(28.dp))
+            Text(result, color = color, fontSize = 16.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium,
+                maxLines = 1, modifier = Modifier.weight(1f))
+        }
     }
 }
 

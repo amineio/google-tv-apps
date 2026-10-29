@@ -1,0 +1,25 @@
+{
+  "portrait": {
+    "path": "apps/battleship/src/main/res/drawable-nodpi/captain_portrait.webp",
+    "width": 256,
+    "height": 256,
+    "bytes": 14514,
+    "sha256": "c158186b453aca096eafc9c57576c6f270ae6f950a8bf1f5deaecd6ba63d4601",
+    "source": "captain-source.png",
+    "promptRecord": "design.md",
+    "preparation": "cwebp -q 88 -resize 256 256",
+    "rights": "Generated with built-in ImageGen. No external stock source or personal likeness."
+  },
+  "background": {
+    "path": "apps/battleship/src/main/res/drawable-nodpi/naval_background.webp",
+    "sourceRecord": "docs/battleship/gameplay-design/assets.json",
+    "treatment": "Existing image restored beneath .84 to .72 navy wash in GAME; still water retained in boards."
+  },
+  "music": {
+    "sourceRecord": "docs/battleship/music-polish/assets.json",
+    "role": "battle",
+    "runtimeGain": 0.28,
+    "estimatedIntegratedLufs": -32.11,
+    "limits": "Measured digital levels before system volume and runtime fades. Not subjective listening acceptance."
+  }
+}

@@ -27,6 +27,89 @@ class MusicControllerTest {
     private val game = home.copy(screen = Screen.GAME, game = GameEngine.newGame(42))
     private val results = game.copy(screen = Screen.RESULTS, game = game.game!!.copy(phase = GamePhase.GAME_OVER))
 
+    @Test fun openingCompletionStartsBattleLoopWithoutReplayingOpening() {
+        val backend = Backend(); val music = MusicController(backend)
+        music.foreground(true); music.cue(SoundCue.MATCH_START, game)
+        val opening = backend.requests.last(); opening.ready(); opening.done()
+        val battle = backend.requests.last(); battle.ready()
+        assertEquals("BATTLE", battle.track.name)
+        assertTrue(battle.track.loop)
+        assertTrue(battle.player.gain < opening.player.gain)
+        assertTrue(opening.player.released)
+        music.update(game)
+        assertEquals(1, backend.requests.count { it.track == MusicTrack.START })
+        assertEquals(1, battle.player.starts)
+    }
+
+    @Test fun continueAndInterruptedOpeningReturnToBattleWithoutAnotherOpening() {
+        for (interrupt in 0..3) {
+            val backend = Backend(); val music = MusicController(backend)
+            music.foreground(true); music.cue(SoundCue.MATCH_START, game)
+            val opening = backend.requests.last(); opening.ready()
+            when (interrupt) {
+                0 -> { music.update(game.copy(paused = true)); music.update(game) }
+                1 -> { music.foreground(false); music.foreground(true) }
+                2 -> { music.focus(false); music.focus(true) }
+                3 -> { music.update(game.copy(soundEnabled = false)); music.update(game) }
+            }
+            opening.done(); opening.ready()
+            val battle = backend.requests.last(); battle.ready()
+            assertTrue(opening.player.released)
+            assertEquals("BATTLE", battle.track.name)
+            assertEquals(1, backend.requests.count { it.track == MusicTrack.START })
+            assertEquals(1, battle.player.starts)
+        }
+        val backend = Backend(); val music = MusicController(backend)
+        music.foreground(true); music.update(game)
+        assertEquals(listOf("BATTLE"), backend.requests.map { it.track.name })
+    }
+
+    @Test fun finalShotStopsBattleBeforeResultCueAndResultDoesNotReviveLoop() {
+        val backend = Backend(); val music = MusicController(backend)
+        music.foreground(true); music.update(game)
+        val battle = backend.requests.last(); battle.ready()
+        music.update(results.copy(screen = Screen.GAME))
+        assertTrue(battle.player.released)
+        assertEquals(1, backend.requests.size)
+        music.cue(SoundCue.VICTORY, results)
+        val victory = backend.requests.last(); victory.ready(); victory.done()
+        music.update(results); music.focus(false); music.focus(true)
+        assertEquals(listOf("BATTLE", "VICTORY"), backend.requests.map { it.track.name })
+    }
+
+    @Test fun finalShotCancelsOpeningAndItsLateCompletionCannotStartBattle() {
+        val backend = Backend(); val music = MusicController(backend)
+        music.foreground(true); music.cue(SoundCue.MATCH_START, game)
+        val opening = backend.requests.single(); opening.ready()
+        music.update(results.copy(screen = Screen.GAME))
+        opening.done()
+        assertTrue(opening.player.released)
+        assertEquals(listOf(MusicTrack.START), backend.requests.map { it.track })
+    }
+
+    @Test fun battleLoopReleasesOnEveryInterruptionAndReturnsOnlyWhenEligible() {
+        for (interrupt in 0..3) {
+            val backend = Backend(); val music = MusicController(backend)
+            music.foreground(true); music.update(game)
+            val first = backend.requests.single(); first.ready()
+            when (interrupt) {
+                0 -> music.update(game.copy(paused = true))
+                1 -> music.foreground(false)
+                2 -> music.focus(false)
+                3 -> music.update(game.copy(soundEnabled = false))
+            }
+            first.ready(); first.done()
+            assertTrue(first.player.released)
+            assertEquals(1, backend.requests.size)
+            when (interrupt) {
+                0, 3 -> music.update(game)
+                1 -> music.foreground(true)
+                2 -> music.focus(true)
+            }
+            assertEquals(listOf(MusicTrack.BATTLE, MusicTrack.BATTLE), backend.requests.map { it.track })
+        }
+    }
+
     @Test fun menuRemainsOneLoopAcrossHomeHelpAndSettings() {
         val backend = Backend(); val music = MusicController(backend)
         music.foreground(true); music.update(home)
@@ -42,16 +125,6 @@ class MusicControllerTest {
         music.update(SessionState()); music.update(home.copy(soundEnabled = false))
         music.update(game.copy(paused = true, screen = Screen.SETTINGS))
         assertTrue(backend.requests.isEmpty())
-    }
-
-    @Test fun openingRequiresCueAndDoesNotReplayAfterCompletionOrReturn() {
-        val backend = Backend(); val music = MusicController(backend)
-        music.foreground(true); music.update(game)
-        assertTrue(backend.requests.isEmpty()) // Continue/Resume only update state.
-        music.cue(SoundCue.MATCH_START, game)
-        backend.requests.single().ready(); backend.requests.single().done()
-        music.update(game); music.foreground(false); music.foreground(true); music.update(game)
-        assertEquals(listOf(MusicTrack.START), backend.requests.map { it.track })
     }
 
     @Test fun confirmedRestartReplacesAnOpeningEvenIfStateCollectorsSkipThePause() {
@@ -72,10 +145,10 @@ class MusicControllerTest {
             if (!cueFirst) music.update(results)
             music.cue(SoundCue.VICTORY, if (cueFirst) results.copy(screen = Screen.GAME) else results)
             music.update(results)
-            backend.requests.single().ready(); backend.requests.single().done()
+            backend.requests.last().ready(); backend.requests.last().done()
             music.cue(SoundCue.VICTORY, results); music.update(results)
             music.foreground(false); music.foreground(true)
-            assertEquals(listOf(MusicTrack.VICTORY), backend.requests.map { it.track })
+            assertEquals(listOf(MusicTrack.BATTLE, MusicTrack.VICTORY), backend.requests.map { it.track })
         }
     }
 
@@ -87,7 +160,7 @@ class MusicControllerTest {
         music.update(game.copy(soundEnabled = false))
         music.update(game)
         music.cue(SoundCue.DEFEAT, results)
-        assertEquals(listOf(MusicTrack.VICTORY, MusicTrack.DEFEAT), backend.requests.map { it.track })
+        assertEquals(listOf(MusicTrack.VICTORY, MusicTrack.BATTLE, MusicTrack.DEFEAT), backend.requests.map { it.track })
     }
 
     @Test fun replacementAndMuteRejectLatePreparedAndCompletionCallbacks() {
@@ -102,7 +175,9 @@ class MusicControllerTest {
         music.update(game.copy(soundEnabled = false))
         opening.ready(); opening.done()
         assertEquals(0, opening.player.starts); assertTrue(opening.player.released)
-        music.update(game); assertEquals(2, backend.requests.size)
+        music.update(game)
+        assertEquals(3, backend.requests.size)
+        assertEquals(MusicTrack.BATTLE, backend.requests.last().track)
     }
 
     @Test fun backgroundStopFocusLossAndLeavingResultsDiscardOneShots() {
@@ -147,7 +222,7 @@ class MusicControllerTest {
         assertEquals(1, backend.requests.size)
     }
 
-    @Test fun battleEffectsDuckOnlyTheOpening() {
+    @Test fun battleEffectsDuckOpeningAndBattleButLeaveMenuUnchanged() {
         val backend = Backend(); val music = MusicController(backend)
         music.foreground(true); music.cue(SoundCue.MATCH_START, game)
         val opening = backend.requests.single(); opening.ready()
@@ -156,6 +231,13 @@ class MusicControllerTest {
         assertTrue(opening.player.gain < normalGain)
         music.duck(false)
         assertEquals(normalGain, opening.player.gain, .0001f)
+        opening.done()
+        val battle = backend.requests.last(); battle.ready()
+        val battleGain = battle.player.gain
+        music.duck(true)
+        assertTrue(battle.player.gain < battleGain)
+        music.duck(false)
+        assertEquals(battleGain, battle.player.gain, .0001f)
         music.update(home); val menu = backend.requests.last(); menu.ready()
         music.duck(true)
         assertEquals(MusicTrack.MENU.gain, menu.player.gain, .0001f)
