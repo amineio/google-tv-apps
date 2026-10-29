@@ -9,32 +9,48 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
-import androidx.compose.ui.graphics.graphicsLayer
 import com.amine.battleship.game.model.ShotOutcome
 import com.amine.battleship.viewmodel.ImpactPresentation
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.math.sqrt
 
 @Composable
 internal fun ImpactEffects(compact: Boolean, impact: ImpactPresentation?, now: State<Long>) {
-    Canvas(Modifier.fillMaxSize().graphicsLayer()) {
+    Canvas(Modifier.fillMaxSize()) {
         val event = impact ?: return@Canvas
-        val progress = impactProgress(event.startedAtNanos, now.value)
+        val progress = impactProgress(event.startedAtNanos, now.value, event.outcome)
         if (progress >= 1f) return@Canvas
         val geometry = BoardGeometry.measure(size.width, compact)
-        val point = geometry.center(event.coordinate)
+        fun center(cell: com.amine.battleship.game.model.Coordinate) = geometry.center(cell).let { Offset(it.x, it.y) }
+        val at = center(event.coordinate)
+        val elapsed = progress * impactDurationMillis(event.outcome)
         clipRect(geometry.originX, geometry.originY, geometry.right, geometry.bottom) {
-            val at = Offset(point.x, point.y)
             when (event.outcome) {
-                ShotOutcome.MISS -> drawSplash(at, geometry.pitch, progress)
-                ShotOutcome.HIT -> drawBurst(at, geometry.pitch, progress, sunk = false)
-                ShotOutcome.SUNK -> drawBurst(at, geometry.pitch, progress, sunk = true)
+                ShotOutcome.MISS -> drawSplash(at, geometry.pitch, elapsed)
+                ShotOutcome.HIT -> drawFire(at, geometry.pitch, elapsed)
+                ShotOutcome.SUNK -> {
+                    // Ignition stays on the final hit. Delayed fires belong to this hull only.
+                    drawFire(at, geometry.pitch, elapsed, sinking = true)
+                    val cells = event.sunkCells
+                    val fireCells = if (cells.size <= 3) cells else listOf(cells.first(), cells[cells.size / 2], cells.last())
+                    fireCells.filter { it != event.coordinate }.forEachIndexed { index, cell ->
+                        val local = elapsed - 300f - index * 220f
+                        if (local >= 0) drawFire(center(cell), geometry.pitch * .72f, local, sinking = true, heatElapsed = elapsed)
+                    }
+                    if (elapsed in 1100f..2450f) {
+                        val fade = sin(((elapsed - 1100f) / 1350f) * PI).toFloat().coerceIn(0f, 1f)
+                        cells.forEachIndexed { index, cell ->
+                            val point = center(cell)
+                            val radius = geometry.pitch * (.28f + (elapsed - 1100) / 1350f * .24f)
+                            drawArc(Foam.copy(alpha = fade * .30f), index * 57f, 130f, false,
+                                point - Offset(radius, radius), Size(radius * 2, radius * 2), style = Stroke(geometry.pitch * .025f))
+                        }
+                    }
+                }
             }
         }
     }
@@ -43,101 +59,105 @@ internal fun ImpactEffects(compact: Boolean, impact: ImpactPresentation?, now: S
 private val Foam = Color(0xFFCBE5ED)
 private val Spray = Color(0xFF91BECE)
 
-private fun DrawScope.drawSplash(at: Offset, pitch: Float, p: Float) {
-    val fade = 1f - p
-    // Surface rings spread beneath the short crown. Their shadows give the water displacement depth.
+/** Every ring and droplet is in the same overhead plane: equal axes and no screen-Y gravity. */
+private fun DrawScope.drawSplash(at: Offset, pitch: Float, elapsed: Float) {
+    if (elapsed < 180f) {
+        val fade = 1f - elapsed / 180f
+        drawCircle(Color(0xFF020C13).copy(alpha = fade * .9f), pitch * .16f, at)
+        repeat(5) { index ->
+            drawArc(Foam.copy(alpha = fade * .85f), index * 72f + 7f, 45f, false,
+                at - Offset(pitch * .20f, pitch * .20f), Size(pitch * .40f, pitch * .40f), style = Stroke(pitch * .04f))
+        }
+    }
+    if (elapsed in 120f..600f) {
+        val crown = ((elapsed - 120f) / 480f).coerceIn(0f, 1f)
+        val radius = pitch * (.18f + crown * .31f)
+        repeat(9) { index ->
+            val jitter = .80f + (index % 4) * .075f
+            val start = index * 40f + (index % 3 - 1) * 6f
+            val sweep = 11f + index % 4 * 5f
+            drawArc(Foam.copy(alpha = (1f - crown * crown) * (.65f + index % 3 * .10f)), start, sweep, false,
+                at - Offset(radius * jitter, radius * jitter), Size(radius * jitter * 2, radius * jitter * 2),
+                style = Stroke(pitch * (.022f + (1 - crown) * .027f + index % 3 * .004f)))
+        }
+    }
     repeat(3) { index ->
-        val ring = (p - index * .12f).coerceAtLeast(0f)
-        if (ring > 0f) {
-            val rx = pitch * (.20f + ring * (1.02f + index * .11f))
-            val ry = rx * .61f
-            drawOval(Color(0xFF03131D).copy(alpha = fade * .45f), at - Offset(rx, ry - pitch * .035f),
-                Size(rx * 2f, ry * 2f), style = Stroke(pitch * .065f))
-            drawOval(Foam.copy(alpha = fade * (.54f - index * .10f)), at - Offset(rx, ry),
-                Size(rx * 2f, ry * 2f), style = Stroke(pitch * (.026f + fade * .015f)))
+        val ring = ((elapsed - 260f - index * 90f) / 840f).coerceIn(0f, 1f)
+        if (ring > 0) {
+            val radius = pitch * (.20f + ring * .76f)
+            val alpha = (1 - ring) * (.40f - index * .07f)
+            if (index == 0) drawCircle(Foam.copy(alpha = alpha * .72f), radius, at, style = Stroke(pitch * .018f))
+            else repeat(4) { fragment ->
+                val start = fragment * 90f + index * 17f + fragment % 2 * 9f
+                val sweep = 37f + ((fragment + index) % 3) * 13f
+                drawArc(Foam.copy(alpha = alpha * (.72f + fragment % 3 * .12f)), start, sweep, false,
+                    at - Offset(radius, radius), Size(radius * 2, radius * 2),
+                    style = Stroke(pitch * (.016f + fragment % 3 * .004f)))
+            }
         }
     }
-    val crownTime = (p / .64f).coerceIn(0f, 1f)
-    val lift = sin(crownTime * PI).toFloat() * pitch * .48f
-    val spread = pitch * (.18f + p * .27f)
-    if (crownTime < 1f) {
-        val crown = Path()
-        crown.moveTo(at.x - spread, at.y + pitch * .08f)
-        repeat(9) { tooth ->
-            val x = at.x - spread + spread * 2f * tooth / 8f
-            val height = lift * if (tooth % 2 == 0) 1f else .48f
-            crown.lineTo(x, at.y - height + pitch * .03f)
-        }
-        crown.lineTo(at.x + spread * .75f, at.y + pitch * .18f)
-        crown.quadraticTo(at.x, at.y + pitch * .27f, at.x - spread, at.y + pitch * .08f)
-        crown.close()
-        drawPath(crown, Brush.verticalGradient(listOf(Foam.copy(alpha = fade * .85f),
-            Spray.copy(alpha = fade * .33f)), at.y - lift, at.y + pitch * .24f))
-        drawPath(crown, Foam.copy(alpha = fade * .65f), style = Stroke(pitch * .022f))
+    // Uneven foam fragments persist after the crown, breaking the clean reticle pattern.
+    if (elapsed in 280f..650f) repeat(11) { index ->
+        val age = ((elapsed - 280f) / 370f).coerceIn(0f, 1f)
+        val angle = index * 2.39996f + .2f
+        val radius = pitch * (.28f + age * .32f + index % 3 * .035f)
+        val point = at + Offset(cos(angle), sin(angle)) * radius
+        drawCircle(Foam.copy(alpha = (1f - age) * (.58f + index % 3 * .12f)),
+            pitch * (.014f + index % 4 * .004f), point)
     }
-    repeat(13) { index ->
+
+    val spray = ((elapsed - 100f) / 500f).coerceIn(0f, 1f)
+    if (elapsed > 100 && spray < 1) repeat(17) { index ->
         val angle = index * 2.39996f
-        val velocity = .55f + (index % 4) * .13f
-        val radial = pitch * (.12f + p * velocity)
-        val drop = at + Offset(cos(angle) * radial,
-            sin(angle) * radial * .48f - pitch * (1.8f * p - 1.65f * p * p) * velocity)
-        val radius = pitch * (.018f + (index % 3) * .006f) * sqrt(fade)
-        drawOval(Spray.copy(alpha = fade * .6f), drop + Offset(-radius, radius * .4f),
-            Size(radius * 2.1f, radius * 3.1f))
-        drawOval(Foam.copy(alpha = fade * .92f), drop - Offset(radius * .65f, radius),
-            Size(radius * 1.25f, radius * 2.4f))
+        val radius = pitch * (.14f + spray * (.40f + index % 4 * .08f))
+        drawCircle(if (index % 3 == 0) Foam.copy(alpha = 1 - spray) else Spray.copy(alpha = (1 - spray) * .7f),
+            pitch * (.014f + index % 3 * .005f), at + Offset(cos(angle), sin(angle)) * radius)
     }
 }
 
-private fun DrawScope.drawBurst(at: Offset, pitch: Float, p: Float, sunk: Boolean) {
-    val fade = 1f - p
-    val strength = if (sunk) 1.2f else 1f
-    val pressure = pitch * (.23f + p * .92f * strength)
-    drawOval(Spray.copy(alpha = fade * .30f), at - Offset(pressure, pressure * .63f),
-        Size(pressure * 2f, pressure * 1.26f), style = Stroke(pitch * .035f))
+/** Smoke sits below warm lobes. Sinking shares one global heat deadline across its delayed fires. */
+private fun DrawScope.drawFire(at: Offset, pitch: Float, elapsed: Float, sinking: Boolean = false,
+    heatElapsed: Float = elapsed) {
+    val duration = if (sinking) 2500f else 1500f
+    if (elapsed < 0f || heatElapsed >= duration) return
+    val p = heatElapsed / duration
+    val holdUntil = if (sinking) 1400f else 650f
+    val fadeUntil = if (sinking) 1900f else 1050f
+    val ignition = (elapsed / if (sinking) 180f else 80f).coerceIn(.15f, 1f)
+    val heat = (1f - ((heatElapsed - holdUntil) / (fadeUntil - holdUntil)).coerceIn(0f, 1f)) * ignition
 
-    // Smoke sits behind the hot core. Its lifted lobes remain visible outside the shot cross.
-    val smokeFade = sin(p * PI).toFloat() * fade
-    repeat(if (sunk) 9 else 6) { index ->
-        val angle = index * 2.39996f
-        val spread = pitch * (.14f + p * .23f) * strength
-        val center = at + Offset(cos(angle) * spread,
-            sin(angle) * spread * .66f - pitch * (.09f + p * .40f))
-        val radius = pitch * (.16f + p * .24f) * (1f + (index % 3) * .11f) * strength
-        drawCircle(Brush.radialGradient(listOf(Color(0xFF7D8182).copy(alpha = smokeFade * .72f),
-            Color(0xFF4E585E).copy(alpha = smokeFade * .53f), Color.Transparent), center, radius), radius, center)
+    val smoke = sin(p * PI).toFloat() * .64f * (elapsed / 300f).coerceIn(0f, 1f)
+    if (elapsed >= 160) repeat(7) { index ->
+        val angle = index * 2.39996f + .6f
+        val point = at + Offset(cos(angle), sin(angle)) * pitch * (.10f + p * .32f)
+        val radius = pitch * (.16f + p * .22f + index % 3 * .025f)
+        drawCircle(Brush.radialGradient(listOf(Color(0xFF677076).copy(alpha = smoke * .68f),
+            Color(0xFF252D34).copy(alpha = smoke * .48f), Color.Transparent), point, radius), radius, point)
     }
-
-    // Hold the ignition through 120 ms, then lose heat before the 480 ms deadline.
-    val heat = (1f - ((p - .18f) / .60f).coerceIn(0f, 1f))
-    if (heat > 0f) {
-        val radius = pitch * (.43f + p * .24f) * strength
-        drawCircle(Brush.radialGradient(listOf(Color(0xFFFFE3A1).copy(alpha = heat * .98f),
-            Color(0xFFF2A454).copy(alpha = heat * .85f), Color(0xFFC96E38).copy(alpha = heat * .36f),
-            Color.Transparent), at, radius), radius, at)
-        repeat(if (sunk) 7 else 5) { index ->
-            val angle = index * 2.39996f
-            val lobe = at + Offset(cos(angle) * pitch * (.10f + p * .16f) * strength,
-                sin(angle) * pitch * (.07f + p * .12f) * strength - pitch * p * .12f)
-            val lobeRadius = pitch * (.13f + p * .12f) * strength
-            drawCircle(Brush.radialGradient(listOf(Color(0xFFFFE7AA).copy(alpha = heat * .90f),
-                Color(0xFFFFB453).copy(alpha = heat * .72f), Color.Transparent), lobe, lobeRadius), lobeRadius, lobe)
+    if (heat > 0) {
+        repeat(6) { index ->
+            val angle = index * 2.39996f + sin(elapsed * .008f + index * .7f) * .055f
+            val flicker = .92f + .08f * sin(elapsed * .022f + index * 1.37f)
+            val spread = pitch * (.025f + minOf(elapsed / 420f, 1f) * .15f)
+            val point = at + Offset(cos(angle), sin(angle)) * spread
+            val radius = pitch * (.19f + index % 3 * .025f) * flicker
+            drawCircle(Brush.radialGradient(
+                0f to Color(0xFFFFD37B).copy(alpha = heat * .98f),
+                .25f to Color(0xFFFFB552).copy(alpha = heat * .94f),
+                .62f to Color(0xFFF4852E).copy(alpha = heat * .80f),
+                1f to Color.Transparent, center = point, radius = radius), radius, point)
         }
-        drawCircle(Color(0xFFFFEDBC).copy(alpha = heat * .95f),
-            pitch * (.15f + p * .06f) * heat * strength, at - Offset(0f, pitch * p * .08f))
+        // A small hot center adds depth without covering the full cell or its focus border.
+        val coreRadius = pitch * .085f * (0.94f + .06f * sin(elapsed * .019f))
+        drawCircle(Brush.radialGradient(listOf(Color(0xFFFFEDBC).copy(alpha = heat * .90f),
+            Color(0xFFFFB24F).copy(alpha = heat * .65f), Color.Transparent), at, coreRadius), coreRadius, at)
     }
-    repeat(if (sunk) 23 else 15) { index ->
-        val angle = index * 2.39996f + .25f
-        val direction = Offset(cos(angle), sin(angle) * .82f - .13f)
-        val speed = .69f + (index % 5) * .13f
-        val distance = pitch * (.28f + p * speed * strength)
-        val drop = Offset(0f, pitch * p * p * .43f)
-        val tip = at + direction * distance + drop
-        val tail = at + direction * (distance - pitch * (.12f + fade * .11f)) + drop
-        val sparkFade = fade * (1f - p * .25f)
-        drawLine(Color(0xFFF2A64D).copy(alpha = sparkFade * .85f), tail, tip,
-            pitch * (.035f + (index % 2) * .012f) * fade + .5f)
-        drawLine(Color(0xFFFFE8A6).copy(alpha = sparkFade),
-            tip - direction * pitch * .065f, tip, pitch * .022f * fade + .5f)
+    if (elapsed < 700) repeat(11) { index ->
+        val angle = index * 2.39996f + .3f
+        val direction = Offset(cos(angle), sin(angle))
+        val travel = (elapsed / 700f).coerceIn(0f, 1f)
+        val point = at + direction * pitch * (.18f + travel * (.24f + index % 4 * .055f))
+        drawLine(Color(0xFFF6BC68).copy(alpha = (1 - travel) * .85f), point - direction * pitch * .055f,
+            point, pitch * .02f)
     }
 }

@@ -1,0 +1,125 @@
+{
+  "date": "2026-10-29",
+  "generator": "apps/battleship/tools/prepare_scene_audio.py",
+  "regeneration": "python3 apps/battleship/tools/generate_audio.py",
+  "comparison": "python3 apps/battleship/tools/generate_audio.py --check",
+  "rights": "Recorded sources are CC0-1.0. Original synthesis and edits use the repository MIT license. These terms permit redistribution of the bundled source and edited assets.",
+  "sources": [
+    {
+      "files": [
+        "naval_explosion.wav",
+        "naval_launch.wav"
+      ],
+      "creator": "Iwan Gabovitch (qubodup)",
+      "url": "https://opengameart.org/content/tiny-naval-battle-sounds-set",
+      "download": "https://opengameart.org/sites/default/files/qubodup-NavalBattleSoundSet-cc0_0.7z",
+      "license": "CC0-1.0",
+      "note": "Version 2 archive. Its README identifies replacement ExplosionMetal recordings with public-domain sources.",
+      "canonicalFiles": [
+        {
+          "path": "apps/battleship/tools/audio_sources/naval_explosion.wav",
+          "sha256": "db4dcf52a6b0cd2a1c974e2153a8eb39000db91868e08f0047ba5d8dc8c59c78"
+        },
+        {
+          "path": "apps/battleship/tools/audio_sources/naval_launch.wav",
+          "sha256": "42de14f7476dd60c469ca7dba537b629b47eb1e900f6d26466708a03f6e24af0"
+        }
+      ]
+    },
+    {
+      "files": [
+        "ocean_splash.wav"
+      ],
+      "creator": "Thimras",
+      "url": "https://opengameart.org/content/ocean-splash",
+      "download": "https://opengameart.org/sites/default/files/cannon_miss_0.ogg",
+      "license": "CC0-1.0",
+      "canonicalFiles": [
+        {
+          "path": "apps/battleship/tools/audio_sources/ocean_splash.wav",
+          "sha256": "3334d6f1614a061fbf37034b0789ec0c5d69f75f69d93e4c2fdf4ed7f4b6ac15"
+        }
+      ]
+    },
+    {
+      "files": [
+        "water_bubbles.wav"
+      ],
+      "creator": "rubberduck",
+      "url": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+      "download": "https://opengameart.org/sites/default/files/water-splash-slime-sfx.zip",
+      "selectedFile": "bubble_01.ogg",
+      "license": "CC0-1.0",
+      "canonicalFiles": [
+        {
+          "path": "apps/battleship/tools/audio_sources/water_bubbles.wav",
+          "sha256": "2153dfeea3e9ba37977d03211d40925dc21f5d4bd7c1603436024ff56a37e66e"
+        }
+      ]
+    }
+  ],
+  "preparation": "Canonical source WAVs are FFmpeg-decoded 22050Hz mono PCM16 with metadata removed. Generator mixes recordings with original low body and finite fire crackle. Cues use 3ms attacks, 55ms release fades, peak0.72, zero endpoints. Runtime gain remains independently controlled by SoundPool.",
+  "assets": {
+    "fire": {
+      "path": "apps/battleship/src/main/res/raw/fire.wav",
+      "durationSeconds": 0.22,
+      "sampleRateHz": 22050,
+      "channels": 1,
+      "decodedBytes": 9702,
+      "peak": 0.719970703125,
+      "rms": 0.2884672134708352,
+      "firstSample": 0,
+      "lastSample": 0,
+      "sha256": "1b11bae0c96480bf17ead5d19705a0d3b96c61cf7c442268bb28bcaadf029798"
+    },
+    "splash": {
+      "path": "apps/battleship/src/main/res/raw/splash.wav",
+      "durationSeconds": 1.1,
+      "sampleRateHz": 22050,
+      "channels": 1,
+      "decodedBytes": 48510,
+      "peak": 0.719970703125,
+      "rms": 0.09241946424458711,
+      "firstSample": 0,
+      "lastSample": 0,
+      "sha256": "88f4ba4b0a713a84e37cba27082e8900ec67600e2ef017f50174341b8a13b2e9"
+    },
+    "impact": {
+      "path": "apps/battleship/src/main/res/raw/impact.wav",
+      "durationSeconds": 1.5,
+      "sampleRateHz": 22050,
+      "channels": 1,
+      "decodedBytes": 66150,
+      "peak": 0.719970703125,
+      "rms": 0.13392743581304267,
+      "firstSample": 0,
+      "lastSample": 0,
+      "sha256": "f924ba58f99ecf065e609477b1cbb5bb59423f68d969bd8942b99cef80882d19"
+    },
+    "damage": {
+      "path": "apps/battleship/src/main/res/raw/damage.wav",
+      "durationSeconds": 1.5,
+      "sampleRateHz": 22050,
+      "channels": 1,
+      "decodedBytes": 66150,
+      "peak": 0.719970703125,
+      "rms": 0.12911544444174866,
+      "firstSample": 0,
+      "lastSample": 0,
+      "sha256": "10efdc8064108a791ac284a5efa0f02e45456946450b23cead4b96397b258469"
+    },
+    "sunk": {
+      "path": "apps/battleship/src/main/res/raw/sunk.wav",
+      "durationSeconds": 2.5,
+      "sampleRateHz": 22050,
+      "channels": 1,
+      "decodedBytes": 110250,
+      "peak": 0.719970703125,
+      "rms": 0.10495091157058442,
+      "firstSample": 0,
+      "lastSample": 0,
+      "sha256": "2fffa25e4b1538bfc1b69ec1acf2be1cde1d38ef3a725d44ca2ab4ec36aa8aa4"
+    }
+  },
+  "reviewLimits": "Duration, PCM format, decoded memory, peaks, RMS, endpoints and reproducibility are measured. These do not establish listening quality or TV speaker balance. Physical listening remains separate."
+}

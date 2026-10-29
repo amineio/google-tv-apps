@@ -1,6 +1,5 @@
 package com.amine.battleship
 
-import android.os.Build
 import android.os.ParcelFileDescriptor
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -22,7 +21,6 @@ import com.amine.battleship.ui.BattleshipApp
 import com.amine.battleship.ui.BoardPresentationEnvironment
 import com.amine.battleship.ui.LocalBoardPresentation
 import com.amine.battleship.ui.PresentationClock
-import com.amine.battleship.ui.WaterRenderer
 import com.amine.battleship.viewmodel.*
 import kotlinx.coroutines.channels.Channel
 import org.junit.Assert.assertEquals
@@ -34,13 +32,12 @@ import org.junit.Test
 class NativeWaterPresentationTest {
     @get:Rule val screen = createComposeRule()
 
-    @Test fun impactsChangeOnlyTheirTargetBoardAndExpireForBothRenderers() {
+    @Test fun staticSpriteImpactsStayOnTheirBoardAndRunForTheFullOutcomeDuration() {
         val clock = CaptureClock()
-        var renderer by mutableStateOf(WaterRenderer.AUTOMATIC)
         var state by mutableStateOf(activeGame())
         val completed = mutableListOf<Long>()
         screen.setContent {
-            CompositionLocalProvider(LocalBoardPresentation provides BoardPresentationEnvironment(clock, renderer)) {
+            CompositionLocalProvider(LocalBoardPresentation provides BoardPresentationEnvironment(clock)) {
                 BattleshipApp(state, { action ->
                     if (action is GameAction.CompleteImpact) {
                         completed += action.id
@@ -50,42 +47,48 @@ class NativeWaterPresentationTest {
             }
         }
         var id = 0L
-        var shaderWater: ImageBitmap? = null
-        for (choice in WaterRenderer.entries) {
-            screen.runOnIdle { renderer = choice }
-            for (board in ImpactBoard.entries) for (outcome in ShotOutcome.entries)
-                for (coordinate in if (choice == WaterRenderer.AUTOMATIC && board == ImpactBoard.ENEMY)
-                    listOf(Coordinate(0, 0), Coordinate(9, 9), Coordinate(4, 4))
-                    else listOf(Coordinate(0, 0), Coordinate(9, 9))) {
-                val targetTag = if (board == ImpactBoard.ENEMY) "targeting_board" else "friendly_board"
-                val otherTag = if (board == ImpactBoard.ENEMY) "friendly_board" else "targeting_board"
-                screen.runOnIdle { state = state.copy(game = fixtureGame(board, outcome, coordinate), selected = coordinate) }
-                val baseline = screen.onNodeWithTag(targetTag).captureToImage()
-                if (board == ImpactBoard.ENEMY && outcome == ShotOutcome.MISS && coordinate == Coordinate(0, 0)) {
-                    if (choice == WaterRenderer.AUTOMATIC) shaderWater = baseline
-                    else if (Build.VERSION.SDK_INT >= 33) assertTrue(
-                        "Automatic mode must render AGSL rather than silently use the Canvas fallback",
-                        changedPixels(shaderWater!!, baseline) > 12)
-                }
-                val other = screen.onNodeWithTag(otherTag).captureToImage()
-                val acceptedAt = clock.nowNanos()
-                val event = ImpactPresentation(++id, board, coordinate, outcome, acceptedAt)
-                screen.runOnIdle { state = state.copy(activeImpact = event) }
-                capture("${choice.name}-${board.name}-${outcome.name}-${coordinate.label}-start")
-                screen.runOnIdle { clock.advance(acceptedAt + 120_000_000L) }
-                screen.waitForIdle()
-                val peak = screen.onNodeWithTag(targetTag).captureToImage()
-                assertTrue("The effect must alter the target board", changedPixels(baseline, peak) > 12)
-                // Water is frozen here. A wrong board filter changes this exact comparison.
-                assertEquals(0, changedPixels(other, screen.onNodeWithTag(otherTag).captureToImage()))
-                assertTrue("The effect must remain active at 120 ms", event.id !in completed)
-                capture("${choice.name}-${board.name}-${outcome.name}-${coordinate.label}-peak")
-                screen.runOnIdle { clock.advance(acceptedAt + 480_000_000L) }
-                screen.waitForIdle()
-                assertEquals(1, completed.count { it == event.id })
-                assertEquals(0, changedPixels(baseline, screen.onNodeWithTag(targetTag).captureToImage()))
-                capture("${choice.name}-${board.name}-${outcome.name}-${coordinate.label}-completed")
+        for (board in ImpactBoard.entries) for (outcome in ShotOutcome.entries)
+            for (coordinate in if (board == ImpactBoard.ENEMY && outcome == ShotOutcome.MISS)
+                listOf(Coordinate(4, 4), Coordinate(0, 0), Coordinate(9, 9)) else listOf(Coordinate(4, 4))) {
+            val targetTag = if (board == ImpactBoard.ENEMY) "targeting_board" else "friendly_board"
+            val otherTag = if (board == ImpactBoard.ENEMY) "friendly_board" else "targeting_board"
+            val game = fixtureGame(board, outcome, coordinate)
+            screen.runOnIdle { state = state.copy(game = game, selected = coordinate) }
+            val baseline = screen.onNodeWithTag(targetTag).captureToImage()
+            val other = screen.onNodeWithTag(otherTag).captureToImage()
+            val bounds = screen.onNodeWithTag(targetTag).getUnclippedBoundsInRoot()
+            val acceptedAt = clock.nowNanos()
+            val targetBoard = if (board == ImpactBoard.ENEMY) game.computerBoard else game.playerBoard
+            val shot = targetBoard.shots.last()
+            val event = ImpactPresentation(++id, board, coordinate, outcome, acceptedAt,
+                sunkCells = shot.sunkCells, shipType = shot.shipType)
+            screen.runOnIdle { state = state.copy(activeImpact = event) }
+            val stages = when (outcome) {
+                ShotOutcome.MISS -> listOf(160L, 500L, 1000L)
+                ShotOutcome.HIT -> listOf(200L, 600L, 1200L)
+                ShotOutcome.SUNK -> listOf(300L, 1000L, 2000L, 2499L)
             }
+            for (elapsed in stages) {
+                screen.runOnIdle { clock.advance(acceptedAt + elapsed * 1_000_000L) }
+                screen.waitForIdle()
+                assertTrue("$outcome must remain active at $elapsed ms", event.id !in completed)
+                assertEquals(bounds, screen.onNodeWithTag(targetTag).getUnclippedBoundsInRoot())
+                if (elapsed == stages.first()) assertTrue("The effect must alter its board",
+                    changedPixels(baseline, screen.onNodeWithTag(targetTag).captureToImage()) > 12)
+                if ((outcome == ShotOutcome.HIT && elapsed == 600L) || (outcome == ShotOutcome.SUNK && elapsed == 1000L)) {
+                    val burning = screen.onNodeWithTag(targetTag).captureToImage()
+                    assertTrue("$outcome needs visible warm fire at $elapsed ms",
+                        warmFirePixels(burning) > warmFirePixels(baseline) + 16)
+                }
+                assertEquals(0, changedPixels(other, screen.onNodeWithTag(otherTag).captureToImage()))
+                capture("${board.name}-${outcome.name}-${coordinate.label}-$elapsed")
+            }
+            val duration = when (outcome) { ShotOutcome.MISS -> 1100L; ShotOutcome.HIT -> 1500L; ShotOutcome.SUNK -> 2500L }
+            screen.runOnIdle { clock.advance(acceptedAt + duration * 1_000_000L) }
+            screen.waitForIdle()
+            assertEquals(1, completed.count { it == event.id })
+            assertEquals(0, changedPixels(baseline, screen.onNodeWithTag(targetTag).captureToImage()))
+            capture("${board.name}-${outcome.name}-${coordinate.label}-completed")
         }
     }
 
@@ -96,7 +99,7 @@ class NativeWaterPresentationTest {
         lateinit var owner: CaptureLifecycleOwner
         screen.runOnIdle { owner = CaptureLifecycleOwner() }
         screen.setContent {
-            CompositionLocalProvider(LocalBoardPresentation provides BoardPresentationEnvironment(clock, WaterRenderer.CANVAS),
+            CompositionLocalProvider(LocalBoardPresentation provides BoardPresentationEnvironment(clock),
                 LocalLifecycleOwner provides owner) {
                 BattleshipApp(state, { action ->
                     when (action) {
@@ -114,6 +117,8 @@ class NativeWaterPresentationTest {
             }
         }
         screen.onNodeWithTag("targeting_board").assertIsFocused()
+        val initialEnemy = screen.onNodeWithTag("targeting_board").getUnclippedBoundsInRoot()
+        val initialFriendly = screen.onNodeWithTag("friendly_board").getUnclippedBoundsInRoot()
         key(Key.DirectionRight)
         key(Key.DirectionDown)
         screen.onNodeWithTag("targeting_board").assertContentDescriptionContains("Target B2.", substring = true)
@@ -133,6 +138,9 @@ class NativeWaterPresentationTest {
         screen.onNodeWithTag("targeting_board").assertContentDescriptionContains("Target B2.", substring = true)
         screen.runOnIdle { clock.advance(clock.nowNanos() + 1_000_000_000L) }
         assertEquals(listOf(71L, 72L), completed)
+        assertEquals(initialEnemy, screen.onNodeWithTag("targeting_board").getUnclippedBoundsInRoot())
+        assertEquals(initialFriendly, screen.onNodeWithTag("friendly_board").getUnclippedBoundsInRoot())
+        capture("pause-resume")
     }
 
     @Test fun restoredShotHistoryDoesNotRequestImpactCompletion() {
@@ -147,6 +155,7 @@ class NativeWaterPresentationTest {
         screen.runOnIdle { clock.advance(clock.nowNanos() + 1_000_000_000L) }
         screen.waitForIdle()
         assertTrue(actions.none { it is GameAction.CompleteImpact })
+        assertEquals("A restored static board must not schedule animation frames", 0, clock.frameRequests)
         screen.onNodeWithTag("targeting_board").assertIsFocused()
     }
 
@@ -186,23 +195,40 @@ class NativeWaterPresentationTest {
         return changed
     }
 
+    /** Bright orange/yellow fire is distinct from the navy sea, grey hulls and persistent red marks. */
+    private fun warmFirePixels(image: ImageBitmap): Int {
+        val pixels = image.toPixelMap()
+        var count = 0
+        for (y in 0 until image.height) for (x in 0 until image.width) {
+            val color = pixels[x, y]
+            if (color.red > .85f && color.green > .32f && color.blue < .65f &&
+                color.red > color.green * 1.2f && color.green > color.blue * 1.2f) count++
+        }
+        return count
+    }
+
     private fun capture(name: String) {
-        if (InstrumentationRegistry.getArguments().getString("captureWater") != "true") return
+        if (InstrumentationRegistry.getArguments().getString("captureSprites") != "true") return
         require(name.matches(Regex("[A-Za-z0-9-]+")))
         screen.waitForIdle()
         // Gradle can uninstall the APK after testing. Shell-owned captures must survive that cleanup.
         val command = InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(
-            "screencap -p /data/local/tmp/battleship-water-$name.png")
+            "screencap -p /data/local/tmp/battleship-sprites-$name.png")
         ParcelFileDescriptor.AutoCloseInputStream(command).use { it.readBytes() }
     }
 
     private class CaptureClock : PresentationClock {
         private var now = 12_000_000_000L
         private val impactFrames = Channel<Long>(Channel.CONFLATED)
-        // Continuous water intentionally stays frozen for pixel comparisons and repeatable captures.
+        var frameRequests = 0
+            private set
+        // Only finite accepted impacts may request frames.
         override fun nowNanos(): Long = now
-        override suspend fun awaitFrame(continuous: Boolean): Long =
-            if (continuous) kotlinx.coroutines.awaitCancellation() else impactFrames.receive()
+        override suspend fun awaitFrame(continuous: Boolean): Long {
+            check(!continuous) { "Static water must not request continuous frames" }
+            frameRequests++
+            return impactFrames.receive()
+        }
         fun advance(nanos: Long) { now = nanos; impactFrames.trySend(nanos) }
     }
 

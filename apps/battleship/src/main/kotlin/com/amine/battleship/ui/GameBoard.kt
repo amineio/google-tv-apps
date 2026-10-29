@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -56,8 +55,9 @@ internal fun GameBoard(
         textAlign = Paint.Align.CENTER
         typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
     } }
-    val frozenTime = remember { BoardFrameTime(mutableFloatStateOf(0f), mutableLongStateOf(0L), enabled = true) }
+    val frozenTime = remember { BoardFrameTime(mutableLongStateOf(0L), enabled = true) }
     val time = frameTime ?: frozenTime
+    val bitmaps = shipBitmaps()
     val sunkCells = shots.flatMap { it.sunkCells }.toSet()
     val chosenShot = shots.firstOrNull { it.coordinate == selected }
     val selectedState = when {
@@ -103,7 +103,7 @@ internal fun GameBoard(
             .testTag("friendly_board")
     }
     Box(inputModifier) {
-        WaterSurface(compact = selected == null, seconds = time.waterSeconds)
+        WaterSurface()
         Canvas(Modifier.fillMaxSize().graphicsLayer()) {
             val geometry = BoardGeometry.measure(size.width, compact = selected == null)
             val gutter = geometry.originX
@@ -111,9 +111,6 @@ internal fun GameBoard(
             val side = geometry.side
             val origin = Offset(geometry.originX, geometry.originY)
             fun center(coordinate: Coordinate): Offset = geometry.center(coordinate).let { Offset(it.x, it.y) }
-            ships.forEach { ship ->
-                drawNavalShip(ship, origin, pitch, ship.cells.all { cell -> shots.any { it.coordinate == cell } })
-            }
             for (line in 0..10) {
                 val axis = line * pitch
                 drawLine(Muted.copy(alpha = if (line == 0 || line == 10) .6f else .28f),
@@ -121,7 +118,14 @@ internal fun GameBoard(
                 drawLine(Muted.copy(alpha = if (line == 0 || line == 10) .6f else .28f),
                     origin + Offset(0f, axis), origin + Offset(side, axis), 1.dp.toPx())
             }
-            labels.textSize = if (selected == null) minOf(13.sp.toPx(), pitch * .8f) else pitch * .43f
+            ships.forEach { ship ->
+                val sinking = impact?.takeIf { event -> event.outcome == ShotOutcome.SUNK &&
+                    event.sunkCells.toSet() == ship.cells.toSet() && time.enabled }
+                drawNavalShip(ship, bitmaps.getValue(ship.type), origin, pitch,
+                    ship.cells.all { cell -> cell in sunkCells },
+                    sinking?.let { impactProgress(it.startedAtNanos, time.impactNanos.value, it.outcome) })
+            }
+            labels.textSize = 13.sp.toPx()
             for (index in 0..9) {
                 labels.color = (if (selected?.column == index) Cyan else Muted).toArgb()
                 drawContext.canvas.nativeCanvas.drawText(('A' + index).toString(),

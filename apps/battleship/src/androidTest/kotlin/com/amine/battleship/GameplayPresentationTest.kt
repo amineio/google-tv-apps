@@ -15,6 +15,7 @@ import com.amine.battleship.ui.BattleshipApp
 import com.amine.battleship.viewmodel.Screen
 import com.amine.battleship.viewmodel.SessionState
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Rule
 import org.junit.Test
@@ -31,6 +32,17 @@ class GameplayPresentationTest {
         val targetText = mutableListOf<TextLayoutResult>()
         screen.onNodeWithText("Unexplored").performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(targetText) }
         assertFalse("The target status must show its complete text", targetText.single().hasVisualOverflow)
+        val firstEnemy = screen.onNodeWithTag("targeting_board").getUnclippedBoundsInRoot()
+        val firstFriendly = screen.onNodeWithTag("friendly_board").getUnclippedBoundsInRoot()
+        assertEquals((firstEnemy.right - firstEnemy.left).value, (firstFriendly.right - firstFriendly.left).value, .1f)
+        assertEquals(firstEnemy.top, firstFriendly.top)
+        assertEquals(firstEnemy.bottom, firstFriendly.bottom)
+        assertTrue("Grid pitch must be at least 30dp", (firstEnemy.right - firstEnemy.left).value * .91826f / 10f >= 30f)
+        for (elapsed in listOf(500L, 1500L)) {
+            screen.mainClock.advanceTimeBy(elapsed)
+            assertEquals(firstEnemy, screen.onNodeWithTag("targeting_board").getUnclippedBoundsInRoot())
+            assertEquals(firstFriendly, screen.onNodeWithTag("friendly_board").getUnclippedBoundsInRoot())
+        }
         capture("overview")
 
         val dense = denseMatch()
@@ -41,7 +53,20 @@ class GameplayPresentationTest {
         screen.onNodeWithTag("targeting_board").assertIsFocused()
         val enemy = screen.onNodeWithTag("targeting_board").getUnclippedBoundsInRoot()
         val friendly = screen.onNodeWithTag("friendly_board").getUnclippedBoundsInRoot()
-        assertTrue(enemy.right - enemy.left > (friendly.right - friendly.left) * 1.4f)
+        assertEquals(firstEnemy, enemy)
+        assertEquals(firstFriendly, friendly)
+        val longFeedback = dense.copy(lastAttack = AttackEvent(Player.HUMAN,
+            Shot(Coordinate(4, 4), ShotOutcome.SUNK, ShipType.BATTLESHIP)))
+        screen.runOnIdle { state = state.copy(game = longFeedback, message = "Already targeted") }
+        screen.onNodeWithText("Battleship sunk").assertIsDisplayed()
+        val resultText = mutableListOf<TextLayoutResult>()
+        screen.onNodeWithText("Battleship sunk").performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(resultText) }
+        assertFalse("Long feedback must fit its fixed status row", resultText.single().hasVisualOverflow)
+        screen.onNodeWithText("Already targeted").assertIsDisplayed()
+        assertEquals(firstEnemy, screen.onNodeWithTag("targeting_board").getUnclippedBoundsInRoot())
+        assertEquals(firstFriendly, screen.onNodeWithTag("friendly_board").getUnclippedBoundsInRoot())
+        capture("long-feedback")
+
         capture("dense")
 
         val unused = allCells().first { target -> dense.computerBoard.shots.none { it.coordinate == target } }

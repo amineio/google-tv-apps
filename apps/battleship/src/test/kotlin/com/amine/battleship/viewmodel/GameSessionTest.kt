@@ -36,7 +36,7 @@ class GameSessionTest {
         runCurrent()
         session.action(GameAction.Play)
         session.action(GameAction.Fire)
-        advanceTimeBy(2_000)
+        advanceTimeBy(6_000)
         runCurrent()
         session.action(GameAction.Fire)
         assertEquals("Already targeted", session.state.value.message)
@@ -54,7 +54,7 @@ class GameSessionTest {
             session.action(GameAction.Move(target.row - selected.row, target.column - selected.column))
             session.action(GameAction.Fire)
             if (index != targets.lastIndex) {
-                advanceTimeBy(2_000)
+                advanceTimeBy(6_000)
                 runCurrent()
             }
         }
@@ -72,7 +72,7 @@ class GameSessionTest {
         runCurrent()
         session.action(GameAction.Play)
         session.action(GameAction.Fire)
-        advanceTimeBy(2_000)
+        advanceTimeBy(6_000)
         runCurrent()
         session.action(GameAction.Fire)
         session.action(GameAction.Move(-1, 0))
@@ -92,7 +92,7 @@ class GameSessionTest {
         runCurrent()
         session.action(GameAction.Play)
         session.action(GameAction.Fire)
-        advanceTimeBy(2_000)
+        advanceTimeBy(6_000)
         runCurrent()
         assertEquals("DAMAGE", cues.last())
     }
@@ -111,7 +111,7 @@ class GameSessionTest {
                 val current = session.state.value.selected
                 session.action(GameAction.Move(target.row - current.row, target.column - current.column))
                 session.action(GameAction.Fire)
-                advanceTimeBy(2_000)
+                advanceTimeBy(6_000)
                 runCurrent()
             }
             assertEquals(Player.HUMAN, session.state.value.game!!.winner)
@@ -134,7 +134,7 @@ class GameSessionTest {
             val current = session.state.value.selected
             session.action(GameAction.Move(target.row - current.row, target.column - current.column))
             session.action(GameAction.Fire)
-            advanceTimeBy(2_000)
+            advanceTimeBy(6_000)
             runCurrent()
         }
         assertEquals(Player.COMPUTER, session.state.value.game!!.winner)
@@ -149,11 +149,11 @@ class GameSessionTest {
         session.action(GameAction.Fire)
         assertEquals(GamePhase.COMPUTER_TURN, session.state.value.game!!.phase)
         session.action(GameAction.Pause)
-        advanceTimeBy(2_000)
+        advanceTimeBy(6_000)
         runCurrent()
         assertEquals(0, session.state.value.game!!.playerBoard.shots.size)
         session.action(GameAction.Resume)
-        advanceTimeBy(1_000)
+        advanceTimeBy(6_000)
         runCurrent()
         assertEquals(1, session.state.value.game!!.playerBoard.shots.size)
         assertEquals(GamePhase.PLAYER_TURN, session.state.value.game!!.phase)
@@ -166,7 +166,7 @@ class GameSessionTest {
         session.action(GameAction.Play)
         repeat(30) { session.action(GameAction.Fire) }
         assertEquals(1, session.state.value.game!!.computerBoard.shots.size)
-        advanceTimeBy(1_000)
+        advanceTimeBy(6_000)
         runCurrent()
         session.action(GameAction.Fire)
         assertEquals(1, session.state.value.game!!.computerBoard.shots.size)
@@ -183,7 +183,7 @@ class GameSessionTest {
         session.action(GameAction.Restart)
         assertEquals(Confirmation.RESTART, session.state.value.confirmation)
         session.action(GameAction.Confirm)
-        advanceTimeBy(2_000)
+        advanceTimeBy(6_000)
         runCurrent()
         assertTrue(session.state.value.game!!.playerBoard.shots.isEmpty())
         assertTrue(session.state.value.game!!.computerBoard.shots.isEmpty())
@@ -195,7 +195,7 @@ class GameSessionTest {
         session.action(GameAction.Play)
         session.action(GameAction.Fire)
         session.background()
-        advanceTimeBy(2_000)
+        advanceTimeBy(6_000)
         runCurrent()
         assertTrue(session.state.value.paused)
         assertTrue(session.state.value.game!!.playerBoard.shots.isEmpty())
@@ -210,11 +210,11 @@ class GameSessionTest {
         val session = GameSession(backgroundScope, repository, aiDelayMs = 500, ioDispatcher = StandardTestDispatcher(testScheduler))
         runCurrent()
         assertEquals(Screen.HOME, session.state.value.screen)
-        advanceTimeBy(2_000)
+        advanceTimeBy(6_000)
         runCurrent()
         assertTrue(session.state.value.game!!.playerBoard.shots.isEmpty())
         session.action(GameAction.Continue)
-        advanceTimeBy(1_000)
+        advanceTimeBy(6_000)
         runCurrent()
         assertEquals(1, session.state.value.game!!.playerBoard.shots.size)
     }

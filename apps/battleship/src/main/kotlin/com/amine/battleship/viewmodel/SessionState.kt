@@ -3,6 +3,7 @@ package com.amine.battleship.viewmodel
 import com.amine.battleship.game.model.Coordinate
 import com.amine.battleship.game.model.GameState
 import com.amine.battleship.game.model.ShotOutcome
+import com.amine.battleship.game.model.ShipType
 
 enum class ImpactBoard { ENEMY, FRIENDLY }
 
@@ -12,6 +13,8 @@ data class ImpactPresentation(
     val coordinate: Coordinate,
     val outcome: ShotOutcome,
     val startedAtNanos: Long,
+    val sunkCells: List<Coordinate> = emptyList(),
+    val shipType: ShipType? = null,
 )
 
 enum class Screen { HOME, GAME, HELP, SETTINGS, RESULTS }

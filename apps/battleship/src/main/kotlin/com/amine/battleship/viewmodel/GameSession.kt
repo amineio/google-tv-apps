@@ -6,12 +6,13 @@ import com.amine.battleship.game.engine.GameEngine
 import com.amine.battleship.game.model.*
 import com.amine.battleship.persistence.GameSaveRepository
 import com.amine.battleship.persistence.SavedSession
+import com.amine.battleship.ui.impactDurationMillis
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlin.random.Random
 
-enum class SoundCue { SELECT, FIRE, MISS, HIT, DAMAGE, SUNK, VICTORY, DEFEAT }
+enum class SoundCue { SELECT, FIRE, MISS, HIT, DAMAGE, SUNK, VICTORY, DEFEAT, STOP }
 
 private const val REPEATED_SHOT_MESSAGE = "Already targeted"
 
@@ -90,6 +91,7 @@ class GameSession(
             GameAction.Help -> open(Screen.HELP)
             GameAction.Settings -> open(Screen.SETTINGS)
             GameAction.ToggleSound -> {
+                cues.trySend(SoundCue.STOP)
                 update { copy(soundEnabled = !soundEnabled) }
                 cue(SoundCue.SELECT)
                 persist()
@@ -135,18 +137,18 @@ class GameSession(
         update { copy(game = result.state, resolving = true, showHint = false,
             message = describe(Player.HUMAN, shot), activeImpact = impact) }
         persist()
-        resolveSound(Player.HUMAN, shot, result.state)
-        if (result.state.phase == GamePhase.GAME_OVER) finishAfterFeedback() else scheduleComputer()
+        resolveSound(Player.HUMAN, shot)
+        if (result.state.phase == GamePhase.GAME_OVER) finishAfterFeedback(shot) else scheduleComputer(impactDurationMillis(shot.outcome))
     }
 
-    private fun scheduleComputer() {
+    private fun scheduleComputer(outgoingDurationMs: Long = 0) {
         val current = state.value
         val game = current.game ?: return
         if (current.screen != Screen.GAME || current.paused || game.phase != GamePhase.COMPUTER_TURN) return
         cancelTurn()
         val expectedGeneration = generation
         turnJob = scope.launch {
-            delay(aiDelayMs)
+            delay(maxOf(aiDelayMs, outgoingDurationMs))
             val latest = state.value
             val match = latest.game ?: return@launch
             if (generation != expectedGeneration || latest.paused || latest.screen != Screen.GAME || match.phase != GamePhase.COMPUTER_TURN) return@launch
@@ -158,26 +160,31 @@ class GameSession(
             update { copy(game = result.state, resolving = true,
                 message = describe(Player.COMPUTER, shot), activeImpact = impact) }
             persist()
-            resolveSound(Player.COMPUTER, shot, result.state)
-            delay(500)
+            resolveSound(Player.COMPUTER, shot)
+            delay(impactDurationMillis(shot.outcome))
             if (generation != expectedGeneration) return@launch
+            if (result.state.phase == GamePhase.GAME_OVER) cueResult(result.state)
             update {
                 if (result.state.phase == GamePhase.GAME_OVER) copy(resolving = false, screen = Screen.RESULTS, activeImpact = null)
-                else copy(resolving = false, screen = Screen.GAME)
+                else copy(resolving = false, screen = Screen.GAME, activeImpact = null)
             }
         }
     }
 
-    private fun finishAfterFeedback() {
+    private fun finishAfterFeedback(shot: Shot) {
         cancelTurn()
         val expectedGeneration = generation
         turnJob = scope.launch {
-            delay(650)
-            if (generation == expectedGeneration) update { copy(screen = Screen.RESULTS, resolving = false, activeImpact = null) }
+            delay(impactDurationMillis(shot.outcome))
+            if (generation == expectedGeneration) {
+                state.value.game?.let(::cueResult)
+                update { copy(screen = Screen.RESULTS, resolving = false, activeImpact = null) }
+            }
         }
     }
 
     private fun pause() {
+        cues.trySend(SoundCue.STOP)
         if (state.value.screen != Screen.GAME) return
         cancelTurn()
         if (state.value.game?.phase == GamePhase.GAME_OVER) update { copy(screen = Screen.RESULTS, resolving = false, activeImpact = null) }
@@ -207,6 +214,7 @@ class GameSession(
     }
 
     private fun home() {
+        cues.trySend(SoundCue.STOP)
         cancelTurn()
         returnScreen = Screen.HOME
         update { copy(screen = Screen.HOME, paused = false, resolving = false, confirmation = null, activeImpact = null) }
@@ -219,6 +227,8 @@ class GameSession(
         coordinate = shot.coordinate,
         outcome = shot.outcome,
         startedAtNanos = nanoTimeSource(),
+        sunkCells = shot.sunkCells,
+        shipType = shot.shipType,
     )
 
     private fun cancelTurn() { generation++; turnJob?.cancel(); turnJob = null }
@@ -230,14 +240,15 @@ class GameSession(
             soundEnabled = value.soundEnabled, showHint = value.showHint))
     }
     private fun cue(sound: SoundCue) { if (state.value.soundEnabled) cues.trySend(sound) }
-    private fun resolveSound(attacker: Player, shot: Shot, match: GameState) {
+    private fun resolveSound(attacker: Player, shot: Shot) {
         cue(when {
-            match.winner == Player.HUMAN -> SoundCue.VICTORY
-            match.winner == Player.COMPUTER -> SoundCue.DEFEAT
             shot.outcome == ShotOutcome.SUNK -> SoundCue.SUNK
             shot.outcome == ShotOutcome.HIT -> if (attacker == Player.HUMAN) SoundCue.HIT else SoundCue.DAMAGE
             else -> SoundCue.MISS
         })
+    }
+    private fun cueResult(match: GameState) {
+        cue(if (match.winner == Player.HUMAN) SoundCue.VICTORY else SoundCue.DEFEAT)
     }
     private fun describe(player: Player, shot: Shot): String {
         return when (shot.outcome) {

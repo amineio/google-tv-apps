@@ -1,0 +1,167 @@
+{
+  "date": "2026-10-29",
+  "assets": [
+    {
+      "name": "carrier",
+      "prompt": "Production game sprite for a native Battleship board. One complete modern naval ship, strict orthographic overhead plan view, camera exactly vertical, no visible side hull, no horizon, bow pointing straight UP. Realistically painted high-end strategy-game art, crisp steel hull, restrained blue-gray palette, warm ivory deck details, consistent soft lighting from upper left, clean recognizable silhouette at small TV game scale. Entire ship centered with generous transparent margin. No water, no wake, no smoke, no fire, no labels, no text, no border, no grid, no cast shadow outside hull. Actual transparent background. Tall narrow hull. Keep deck plausible and neatly drawn. Aircraft carrier, longest hull, dark flat flight deck with subtle runway markings, island on starboard, no aircraft outside hull. Ship fills about 85% canvas height, width about 28% of its length.",
+      "original_prompt": "Production game sprite for a native Battleship board. One complete modern naval ship, strict orthographic overhead plan view, camera exactly vertical, no visible side hull, no horizon, bow pointing straight UP. Realistically painted high-end strategy-game art, crisp steel hull, restrained blue-gray palette, warm ivory deck details, consistent soft lighting from upper left, clean recognizable silhouette at small TV game scale. Entire ship centered with generous transparent margin. No water, no wake, no smoke, no fire, no labels, no text, no border, no grid, no cast shadow outside hull. Actual transparent background. Tall narrow hull. Keep deck plausible and neatly drawn. Aircraft carrier, longest hull, dark flat flight deck with subtle runway markings, island on starboard, no aircraft outside hull. Ship fills about 85% canvas height, width about 28% of its length.",
+      "source": "exec-4000fe64-4575-4453-8754-d35dbf9198ab.png",
+      "tool": "ImageGen built-in",
+      "rights": "AI-generated project artwork; no third-party image references. Generated original ship master used for cleanup. Tool and output rights are separate from repository code license.",
+      "source_dimensions": [
+        887,
+        1774
+      ],
+      "crop": {
+        "x": 263,
+        "y": 41,
+        "width": 385,
+        "height": 1681,
+        "alpha_bounds_threshold": 0.2
+      },
+      "bundled_path": "apps/battleship/src/main/res/drawable-nodpi/ship_carrier.webp",
+      "sha256": "954c5d4552a6b35918446415d8132b981f1a698fbc1243b9f6833c65943c2251",
+      "bytes": 42288,
+      "bundled_dimensions": [
+        176,
+        768
+      ],
+      "source_sha256": "d52296ee75153fd8d255e856a970ff8bfddfe2a1b318211b801c9d24e1421ba5",
+      "preparation": "Tight physical hull crop from alpha20% bounds; WebP quality88, height768px. Ocean resized1600px wide. Cropping preserves original alpha. Native rendering normalizes per-class width for cell footprints."
+    },
+    {
+      "name": "battleship",
+      "prompt": "Edit this game sprite cutout. Preserve the ship artwork exactly, same overhead geometry, same bow-up orientation, same deck details, colors and materials. REMOVE ALL exterior gray glow, halo, backdrop, atmosphere and shadow surrounding the hull. Every pixel outside the physical ship silhouette must be completely transparent alpha=0, including alongside the tapered bow and stern. Only the ship remains. No background of any color, no glow, no drop shadow, no water, no new objects. Return a clean isolated RGBA game sprite with real transparent background. Center the complete ship with modest transparent margin.",
+      "original_prompt": "Production game sprite for a native Battleship board. One complete modern naval ship, strict orthographic overhead plan view, camera exactly vertical, no visible side hull, no horizon, bow pointing straight UP. Realistically painted high-end strategy-game art, crisp steel hull, restrained blue-gray palette, warm ivory deck details, consistent soft lighting from upper left, clean recognizable silhouette at small TV game scale. Entire ship centered with generous transparent margin. No water, no wake, no smoke, no fire, no labels, no text, no border, no grid, no cast shadow outside hull. Actual transparent background. Tall narrow hull. Keep deck plausible and neatly drawn. Battleship, four-cell ship, long armored hull with three clear large gun turrets and central superstructure. Ship fills about 85% canvas height, hull width about 24% of its length.",
+      "source": "exec-5684adb0-ace0-4017-a5e1-ec6730633082.png",
+      "tool": "ImageGen built-in",
+      "rights": "AI-generated project artwork; no third-party image references. Generated original ship master used for cleanup. Tool and output rights are separate from repository code license.",
+      "source_dimensions": [
+        1024,
+        1536
+      ],
+      "crop": {
+        "x": 370,
+        "y": 13,
+        "width": 289,
+        "height": 1510,
+        "alpha_bounds_threshold": 0.2
+      },
+      "bundled_path": "apps/battleship/src/main/res/drawable-nodpi/ship_battleship.webp",
+      "sha256": "a7d48e6a5f9fc1c1929c8b978fba823ec39265f786e2f3fba3f9d51626e26570",
+      "bytes": 47456,
+      "bundled_dimensions": [
+        147,
+        768
+      ],
+      "source_sha256": "6068947e09175cdbb4001883efc39e108c3e3cfa2b20cca6e5c87561fecd93dd",
+      "preparation": "Tight physical hull crop from alpha20% bounds; WebP quality88, height768px. Ocean resized1600px wide. Cropping preserves original alpha. Native rendering normalizes per-class width for cell footprints."
+    },
+    {
+      "name": "cruiser",
+      "prompt": "Edit this game sprite cutout. Preserve the ship artwork exactly, same overhead geometry, same bow-up orientation, same deck details, colors and materials. REMOVE ALL exterior gray glow, halo, backdrop, atmosphere and shadow surrounding the hull. Every pixel outside the physical ship silhouette must be completely transparent alpha=0, including alongside the tapered bow and stern. Only the ship remains. No background of any color, no glow, no drop shadow, no water, no new objects. Return a clean isolated RGBA game sprite with real transparent background. Center the complete ship with modest transparent margin.",
+      "original_prompt": "Production game sprite for a native Battleship board. One complete modern naval ship, strict orthographic overhead plan view, camera exactly vertical, no visible side hull, no horizon, bow pointing straight UP. Realistically painted high-end strategy-game art, crisp steel hull, restrained blue-gray palette, warm ivory deck details, consistent soft lighting from upper left, clean recognizable silhouette at small TV game scale. Entire ship centered with generous transparent margin. No water, no wake, no smoke, no fire, no labels, no text, no border, no grid, no cast shadow outside hull. Actual transparent background. Tall narrow hull. Keep deck plausible and neatly drawn. Guided missile cruiser, three-cell ship, sleek hull with two angular superstructures and compact turrets. Ship fills about 85% canvas height, width about 26% of its length.",
+      "source": "exec-2ddeedb8-0703-4a6b-a07d-bb0acab6f1f1.png",
+      "tool": "ImageGen built-in",
+      "rights": "AI-generated project artwork; no third-party image references. Generated original ship master used for cleanup. Tool and output rights are separate from repository code license.",
+      "source_dimensions": [
+        1024,
+        1536
+      ],
+      "crop": {
+        "x": 396,
+        "y": 27,
+        "width": 233,
+        "height": 1480,
+        "alpha_bounds_threshold": 0.2
+      },
+      "bundled_path": "apps/battleship/src/main/res/drawable-nodpi/ship_cruiser.webp",
+      "sha256": "beafbe6ff7623fbceae38efaeb120e00ceebff7297c9d909cee2b60b4c0a9696",
+      "bytes": 37886,
+      "bundled_dimensions": [
+        121,
+        768
+      ],
+      "source_sha256": "7918f972715cd1adafc61f6c2d23c7f8630bf9acb1619a156cbff5c10fbcf9a8",
+      "preparation": "Tight physical hull crop from alpha20% bounds; WebP quality88, height768px. Ocean resized1600px wide. Cropping preserves original alpha. Native rendering normalizes per-class width for cell footprints."
+    },
+    {
+      "name": "submarine",
+      "prompt": "Edit this game sprite cutout. Preserve the ship artwork exactly, same overhead geometry, same bow-up orientation, same deck details, colors and materials. REMOVE ALL exterior gray glow, halo, backdrop, atmosphere and shadow surrounding the hull. Every pixel outside the physical ship silhouette must be completely transparent alpha=0, including alongside the tapered bow and stern. Only the ship remains. No background of any color, no glow, no drop shadow, no water, no new objects. Return a clean isolated RGBA game sprite with real transparent background. Center the complete ship with modest transparent margin.",
+      "original_prompt": "Production game sprite for a native Battleship board. One complete modern naval ship, strict orthographic overhead plan view, camera exactly vertical, no visible side hull, no horizon, bow pointing straight UP. Realistically painted high-end strategy-game art, crisp steel hull, restrained blue-gray palette, warm ivory deck details, consistent soft lighting from upper left, clean recognizable silhouette at small TV game scale. Entire ship centered with generous transparent margin. No water, no wake, no smoke, no fire, no labels, no text, no border, no grid, no cast shadow outside hull. Actual transparent background. Tall narrow hull. Keep deck plausible and neatly drawn. Submarine, three-cell ship, elegant rounded dark navy hull, small central conning tower, aft fins within silhouette. Ship fills about 85% canvas height, width about 24% of its length.",
+      "source": "exec-f9c35f0f-e144-40fc-b636-69082ddd2dc5.png",
+      "tool": "ImageGen built-in",
+      "rights": "AI-generated project artwork; no third-party image references. Generated original ship master used for cleanup. Tool and output rights are separate from repository code license.",
+      "source_dimensions": [
+        1024,
+        1536
+      ],
+      "crop": {
+        "x": 373,
+        "y": 20,
+        "width": 279,
+        "height": 1492,
+        "alpha_bounds_threshold": 0.2
+      },
+      "bundled_path": "apps/battleship/src/main/res/drawable-nodpi/ship_submarine.webp",
+      "sha256": "783ff2f0bcfea5762741a9ff2e6143efdca0f077f3c73635d330dfd6c7bae3fb",
+      "bytes": 31166,
+      "bundled_dimensions": [
+        144,
+        768
+      ],
+      "source_sha256": "1f3668d388b9c9a457d1781ca38f57ae8f7f4a8566dd059bcad18cf98e35a268",
+      "preparation": "Tight physical hull crop from alpha20% bounds; WebP quality88, height768px. Ocean resized1600px wide. Cropping preserves original alpha. Native rendering normalizes per-class width for cell footprints."
+    },
+    {
+      "name": "destroyer",
+      "prompt": "Edit this game sprite cutout. Preserve the ship artwork exactly, same overhead geometry, same bow-up orientation, same deck details, colors and materials. REMOVE ALL exterior gray glow, halo, backdrop, atmosphere and shadow surrounding the hull. Every pixel outside the physical ship silhouette must be completely transparent alpha=0, including alongside the tapered bow and stern. Only the ship remains. No background of any color, no glow, no drop shadow, no water, no new objects. Return a clean isolated RGBA game sprite with real transparent background. Center the complete ship with modest transparent margin.",
+      "original_prompt": "Production game sprite for a native Battleship board. One complete modern naval ship, strict orthographic overhead plan view, camera exactly vertical, no visible side hull, no horizon, bow pointing straight UP. Realistically painted high-end strategy-game art, crisp steel hull, restrained blue-gray palette, warm ivory deck details, consistent soft lighting from upper left, clean recognizable silhouette at small TV game scale. Entire ship centered with generous transparent margin. No water, no wake, no smoke, no fire, no labels, no text, no border, no grid, no cast shadow outside hull. Actual transparent background. Tall narrow hull. Keep deck plausible and neatly drawn. Destroyer, two-cell ship, compact pointed hull, single forward turret and tidy bridge, visibly shorter and stouter than a cruiser. Ship fills about 85% canvas height, width about 33% of its length.",
+      "source": "exec-14470032-d01d-4cd6-91c3-5ee036c9c78e.png",
+      "tool": "ImageGen built-in",
+      "rights": "AI-generated project artwork; no third-party image references. Generated original ship master used for cleanup. Tool and output rights are separate from repository code license.",
+      "source_dimensions": [
+        1024,
+        1536
+      ],
+      "crop": {
+        "x": 387,
+        "y": 56,
+        "width": 251,
+        "height": 1404,
+        "alpha_bounds_threshold": 0.2
+      },
+      "bundled_path": "apps/battleship/src/main/res/drawable-nodpi/ship_destroyer.webp",
+      "sha256": "4aa7f7fe8befb62f7e046cc793cd476e252526c6ca3ce1c0dbca30441cd3e706",
+      "bytes": 43498,
+      "bundled_dimensions": [
+        138,
+        768
+      ],
+      "source_sha256": "13eede0d9f3d07e83e12ac2e612f372987e1ca4baa808b8c1a167a3d15b95e4a",
+      "preparation": "Tight physical hull crop from alpha20% bounds; WebP quality88, height768px. Ocean resized1600px wide. Cropping preserves original alpha. Native rendering normalizes per-class width for cell footprints."
+    },
+    {
+      "name": "ocean",
+      "prompt": "Production game background texture, seamless-looking expanse of deep navy blue ocean seen from directly overhead, realistic calm water photographed from a vertical drone, subtle fine irregular ripples, muted desaturated dark teal-blue, even soft overcast illumination, restrained gentle detail for a readable strategy game grid overlay. Flat plane viewed exactly from above, NO horizon NO coast NO boats NO foam NO white glare NO text NO objects NO grid NO interface. High-quality elegant quiet water, landscape 16:9 composition. Dark enough for ivory grid lines.",
+      "original_prompt": "Production game background texture, seamless-looking expanse of deep navy blue ocean seen from directly overhead, realistic calm water photographed from a vertical drone, subtle fine irregular ripples, muted desaturated dark teal-blue, even soft overcast illumination, restrained gentle detail for a readable strategy game grid overlay. Flat plane viewed exactly from above, NO horizon NO coast NO boats NO foam NO white glare NO text NO objects NO grid NO interface. High-quality elegant quiet water, landscape 16:9 composition. Dark enough for ivory grid lines.",
+      "source": "exec-30292725-e910-4274-b13e-674aac90720e.png",
+      "tool": "ImageGen built-in",
+      "rights": "AI-generated project artwork; no third-party image references. Generated original ship master used for cleanup. Tool and output rights are separate from repository code license.",
+      "source_dimensions": [
+        1672,
+        941
+      ],
+      "bundled_path": "apps/battleship/src/main/res/drawable-nodpi/ocean_still.webp",
+      "sha256": "4a0020ce786c17639394fc410f2a6b631de8a768da84e11ec4b37958c94a6e1f",
+      "bytes": 176450,
+      "bundled_dimensions": [
+        1600,
+        901
+      ],
+      "source_sha256": "1748cc5614d4ed0be1cbfff2b23dc2e936a1f17cd2426770dedd19b5957766fc",
+      "preparation": "WebP quality88, resized1600px wide. Native square center crop, uniform navy overlay28%, no motion."
+    }
+  ],
+  "review": "ImageGen preview gray surrounds did not remain after true alpha compositing. Native captures showed clean ship cutouts."
+}

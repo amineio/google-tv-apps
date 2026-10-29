@@ -14,14 +14,14 @@ Repeated attacks preserve the turn. The first side to sink all five ships wins.
 
 The left board shows enemy waters. Intact enemy ships remain hidden.
 Red crosses mark hits. Pale rings mark misses. Sunk ships reveal their full shape.
-The smaller board shows your ships and their damage.
+The matching right board shows your ships and their damage.
 The computer uses only previous shot results and information about sunk ships.
 
 Pause provides Resume, Restart Game, Settings, and Return to Main Menu.
 Restart and replacement require confirmation. Returning home retains the match for Continue Game.
 The app saves completed moves in an app-private file. Reopening the app offers Continue Game for an unfinished match.
 The app pauses delayed actions when it enters the background. Resume continues the saved turn.
-Settings provides a sound control. Short locally synthesized effects are optional. There is no background music.
+Settings provides a sound control. Short bundled recordings and synthesized effects are optional. There is no background music.
 Version 1.1 adds layered impacts, a distinct friendly damage sound, a victory fanfare, and a descending defeat bugle.
 The right panel shows the target coordinate and compact shot feedback. Named sunk-ship feedback remains visible during aiming.
 Version 1.2 adds a naval command panel, a generated battleship illustration, and five distinct native ship designs.
@@ -29,10 +29,13 @@ Separate target and last-shot regions keep feedback clear during aiming. Damage 
 The [three-round design review](../../docs/battleship/gameplay-design/review.md) records the native captures and expert scores.
 Version 1.3 adds a generated ship icon, a TV banner, and a text-free launcher background.
 Battleship owns these resources. Family Home reads the optional background through application metadata.
-Version 1.4 adds calm moving water, miss splashes, and compact hit and sinking explosions on both boards.
-Android 13 and later use native water shaders. Older devices and shader failures use a Canvas fallback.
-Effects stop during pause or background activity. Continue shows saved markers without replaying old impacts.
-The existing controls, ship visibility, audio, and turn timing remain unchanged.
+Version 1.4 introduced moving water and compact impacts.
+Version 1.5 replaces that water with a generated still ocean image and adds five generated overhead ship sprites.
+Both grids now have equal size. A fixed status strip and fleet roster preserve board space during play.
+Miss splashes last 1.1 seconds, hits last 1.5 seconds, and burning and sinking last 2.5 seconds.
+The next attack and results wait for the complete effect. Pause and background activity discard active effects.
+Continue shows saved markers without replaying old impacts. The game rules and hidden enemy ships remain unchanged.
+Recorded CC0 sounds replace the battle cues. A mixed sinking cue follows the full visual sequence.
 
 ## Build
 
@@ -92,20 +95,24 @@ Unit tests cover placement, rules, hidden information, persistence, interruption
 
 The [design record](../../docs/superpowers/specs/2026-10-28-battleship-design.md) defines the interface.
 The [asset record](../../docs/battleship/concepts/assets.json) contains prompts, dimensions, synthesis details, and rights information.
-The [audio record](../../docs/battleship/audio-polish-assets.json) contains the original scores, levels, and file hashes for version 1.1.
+The [score record](../../docs/battleship/audio-polish-assets.json) contains current result music and explicitly historical version 1.1 battle recipes.
 The [gameplay art record](../../docs/battleship/gameplay-design/assets.json) contains the ImageGen prompts, dimensions, compressed paths, and rights for version 1.2.
 The [launcher art record](../../docs/battleship/launcher-art/assets.json) records the same information for version 1.3.
 The [launcher validation record](../../docs/battleship/launcher-art/validation.md) records its tests, review, and installation results.
-The [water design](../../docs/superpowers/specs/2026-10-29-battleship-water-design.md) defines the animation and lifecycle behavior.
+The [version 1.4 water design](../../docs/superpowers/specs/2026-10-29-battleship-water-design.md) records the earlier shader approach.
 The [water concept record](../../docs/battleship/water-effects/assets.json) contains the ImageGen prompts, references, dimensions, and rights.
 The [water validation record](../../docs/battleship/water-effects/validation.md) contains native captures, test results, installation evidence, and device limits.
-To reproduce its bundled effects, use Python 3 from the repository root:
+The [sprite design](../../docs/superpowers/specs/2026-10-29-battleship-sprites-design.md) defines the current scene and timing.
+The [sprite record](../../docs/battleship/sprite-polish/assets.json) records generated ship and water assets.
+The [current audio record](../../docs/battleship/sprite-polish/audio-assets.json) records CC0 sources, edits, levels, and hashes.
+The [version 1.5 validation record](../../docs/battleship/sprite-polish/validation.md) records two scored design rounds, tests, and final TV installation.
+To compare the current bundled audio with its deterministic recipes, use Python 3 from the repository root:
 
 ```sh
 python3 apps/battleship/tools/generate_audio.py --check
 ```
 
-Remove `--check` to regenerate the five WAV files and the audio record.
+Remove `--check` to regenerate the current battle cues, result music, and audio records.
 Outfit retains its [font license](FONT-LICENSE-OFL.txt).
 Manual placement, other difficulties, networking, tablet layouts, and multiplayer remain outside this release.
 

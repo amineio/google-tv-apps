@@ -1,0 +1,37 @@
+[
+  {
+    "path": "docs/battleship/sprite-polish/native-miss.webp",
+    "source_capture": "battleship-sprites-ENEMY-MISS-E5-500.png",
+    "source_sha256": "53e364448b4212b3b2e2f6db90f14b13b60db35a10b9e0ce19f787a08d558912",
+    "sha256": "338f9d359061255f68bc1f87bfa4bb0a5825fc035df0635497dff7ffd1198535",
+    "kind": "Native emulator screenshot, not generated UI concept."
+  },
+  {
+    "path": "docs/battleship/sprite-polish/native-hit.webp",
+    "source_capture": "battleship-sprites-ENEMY-HIT-E5-600.png",
+    "source_sha256": "cb5e3bf55ae60c0024dffac78368183fed1fccacac27925dad3c3bca5abe1db3",
+    "sha256": "000876ad9aa8ec226943b4da7877f855da6b471f981aa6a7d7aa0342f27f4d32",
+    "kind": "Native emulator screenshot, not generated UI concept."
+  },
+  {
+    "path": "docs/battleship/sprite-polish/native-burning.webp",
+    "source_capture": "battleship-sprites-ENEMY-SUNK-E5-1000.png",
+    "source_sha256": "e3ad0e27d56b4bdabf166843d7ae87a4e19ac7e6d4af558f472887ec4bcc73c5",
+    "sha256": "1942f553326e2520cfc65694a883f703fc74d3c58eb1fe71096b898062e0c8eb",
+    "kind": "Native emulator screenshot, not generated UI concept."
+  },
+  {
+    "path": "docs/battleship/sprite-polish/native-submerged.webp",
+    "source_capture": "battleship-sprites-ENEMY-SUNK-E5-2499.png",
+    "source_sha256": "134ba97ba5a90c57fa9122f8792fef3204af6de84a2539b5c95406874b54ff9b",
+    "sha256": "e32add567bd45827bcf0955e7627a4d88bdd953c4019421faf65901c3328dc51",
+    "kind": "Native emulator screenshot, not generated UI concept."
+  },
+  {
+    "path": "docs/battleship/sprite-polish/native-live.webp",
+    "source_capture": "frame-45.png",
+    "source_sha256": "246972c5ebc76344e8b3900b17314022e2d40102a492b95036c988216edc084d",
+    "sha256": "be48e0289b2667040b87df3dbc9fbdde683c83435229573baad4a7fdbc4791cd",
+    "kind": "Native emulator screenshot, not generated UI concept."
+  }
+]

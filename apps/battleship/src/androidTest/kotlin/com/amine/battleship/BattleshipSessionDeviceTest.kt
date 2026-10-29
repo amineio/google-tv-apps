@@ -55,7 +55,8 @@ class BattleshipSessionDeviceTest {
         // Production input and the computer opponent never receive this information.
         val targets = screen.activity.game.state.value.game!!.computerBoard.ships.flatMap { it.cells }
         for (target in targets) {
-            screen.waitUntil(5_000) {
+            // A full outgoing and incoming sinking sequence can take five seconds.
+            screen.waitUntil(10_000) {
                 val state = screen.activity.game.state.value
                 state.game?.phase == GamePhase.PLAYER_TURN && !state.resolving
             }

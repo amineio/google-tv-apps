@@ -14,7 +14,7 @@ internal data class BoardGeometry(val originX: Float, val originY: Float, val pi
 
     companion object {
         fun measure(width: Float, compact: Boolean): BoardGeometry {
-            val gutter = width * if (compact) .10f else .067f
+            val gutter = width * .067f
             return BoardGeometry(gutter, gutter, (width - gutter * 1.22f) / 10f)
         }
     }

@@ -1,5 +1,6 @@
 package com.amine.battleship.viewmodel
 
+import com.amine.battleship.ui.impactDurationMillis
 import com.amine.battleship.game.model.Coordinate
 import com.amine.battleship.game.model.GamePhase
 import com.amine.battleship.game.model.ShotOutcome
@@ -51,14 +52,17 @@ class GameSessionImpactTest {
         session.aim(cells.first())
         session.action(GameAction.Fire)
         assertEquals(ShotOutcome.HIT, requireNotNull(session.state.value.activeImpact).outcome)
-        advanceTimeBy(1_351)
+        advanceTimeBy(6_000)
         runCurrent()
         session.aim(cells.last())
         session.action(GameAction.Fire)
-        assertEquals(ShotOutcome.SUNK, requireNotNull(session.state.value.activeImpact).outcome)
+        val sinking = requireNotNull(session.state.value.activeImpact)
+        assertEquals(ShotOutcome.SUNK, sinking.outcome)
+        assertEquals(cells, sinking.sunkCells)
+        assertEquals(ShipType.DESTROYER, sinking.shipType)
     }
 
-    @Test fun acceptedComputerShotUsesFriendlyBoardAndDoesNotChangeTurnTiming() = runTest {
+    @Test fun acceptedComputerShotUsesFriendlyBoardAndWaitsForOutgoingEffect() = runTest {
         var now = 100L
         val session = session(clock = { now })
         runCurrent()
@@ -66,7 +70,7 @@ class GameSessionImpactTest {
         session.action(GameAction.Fire)
         val human = requireNotNull(session.state.value.activeImpact)
         now = 200L
-        advanceTimeBy(849)
+        advanceTimeBy(impactDurationMillis(human.outcome) - 1)
         runCurrent()
         assertTrue(session.state.value.game!!.playerBoard.shots.isEmpty())
         advanceTimeBy(1)
@@ -79,7 +83,7 @@ class GameSessionImpactTest {
         assertEquals(200L, computer.startedAtNanos)
         assertTrue(computer.id > human.id)
         assertTrue(session.state.value.resolving)
-        advanceTimeBy(499)
+        advanceTimeBy(impactDurationMillis(computer.outcome) - 1)
         runCurrent()
         assertTrue(session.state.value.resolving)
         advanceTimeBy(1)
@@ -97,9 +101,9 @@ class GameSessionImpactTest {
         session.action(GameAction.Fire)
         assertEquals(first, session.state.value.activeImpact)
         assertEquals(1, clockReads)
-        advanceTimeBy(1_351)
+        advanceTimeBy(6_000)
         runCurrent()
-        session.action(GameAction.CompleteImpact(requireNotNull(session.state.value.activeImpact).id))
+        session.state.value.activeImpact?.let { session.action(GameAction.CompleteImpact(it.id)) }
         session.action(GameAction.Fire)
         assertNull(session.state.value.activeImpact)
         assertEquals(2, clockReads)
@@ -133,7 +137,7 @@ class GameSessionImpactTest {
         session.action(GameAction.Play)
         session.action(GameAction.Fire)
         val old = requireNotNull(session.state.value.activeImpact)
-        advanceTimeBy(850)
+        advanceTimeBy(impactDurationMillis(old.outcome))
         runCurrent()
         val current = requireNotNull(session.state.value.activeImpact)
         session.action(GameAction.CompleteImpact(old.id))
@@ -215,7 +219,7 @@ class GameSessionImpactTest {
             session.aim(target)
             session.action(GameAction.Fire)
             assertNotNull(session.state.value.activeImpact)
-            advanceTimeBy(2_000)
+            advanceTimeBy(6_000)
             runCurrent()
         }
         assertEquals(GamePhase.GAME_OVER, session.state.value.game!!.phase)

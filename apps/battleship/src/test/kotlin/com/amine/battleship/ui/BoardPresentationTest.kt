@@ -2,6 +2,7 @@ package com.amine.battleship.ui
 
 import com.amine.battleship.game.engine.GameEngine
 import com.amine.battleship.game.model.GamePhase
+import com.amine.battleship.game.model.ShotOutcome
 import com.amine.battleship.game.model.Coordinate
 import com.amine.battleship.viewmodel.Confirmation
 import com.amine.battleship.viewmodel.Screen
@@ -23,21 +24,21 @@ class BoardPresentationTest {
         assertEquals(board.originY + board.pitch * 10f, board.bottom, .001f)
     }
 
-    @Test fun friendlyGeometryPreservesItsWiderLabelGutter() {
-        val board = BoardGeometry.measure(400f, compact = true)
-        assertEquals(40f, board.originX, .001f)
-        assertEquals(35.12f, board.pitch, .001f)
-        assertTrue(board.center(Coordinate(9, 9)).x < board.right)
+    @Test fun equalBoardContainersHaveEqualActualGridBounds() {
+        val enemy = BoardGeometry.measure(350f, compact = false)
+        val friendly = BoardGeometry.measure(350f, compact = true)
+        assertEquals(enemy, friendly)
+        assertTrue(enemy.pitch >= 30f)
     }
 
-    @Test fun impactProgressUsesAcceptedTimestampAndEndsAt480Milliseconds() {
+    @Test fun progressUsesEachOutcomeDeadlineAndClampsClockSkew() {
         val accepted = 12_000_000_000L
-        assertEquals(0f, impactProgress(accepted, accepted - 10L), 0f)
-        assertEquals(0f, impactProgress(accepted, accepted), 0f)
-        assertEquals(.25f, impactProgress(accepted, accepted + 120_000_000L), .00001f)
-        assertEquals(.5f, impactProgress(accepted, accepted + 240_000_000L), .00001f)
-        assertEquals(1f, impactProgress(accepted, accepted + 480_000_000L), 0f)
-        assertEquals(1f, impactProgress(accepted, accepted + 2_000_000_000L), 0f)
+        for ((outcome, duration) in listOf(ShotOutcome.MISS to 1100L, ShotOutcome.HIT to 1500L, ShotOutcome.SUNK to 2500L)) {
+            assertEquals(0f, impactProgress(accepted, accepted - 10L, outcome), 0f)
+            assertEquals(.5f, impactProgress(accepted, accepted + duration * 500_000L, outcome), .00001f)
+            assertEquals(1f, impactProgress(accepted, accepted + duration * 1_000_000L, outcome), 0f)
+            assertEquals(1f, impactProgress(accepted, accepted + 9_000_000_000L, outcome), 0f)
+        }
     }
 
     @Test fun presentationClockRunsOnlyForResumedUnobstructedGameplay() {
