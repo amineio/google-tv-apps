@@ -47,6 +47,15 @@ Repeated control instructions and target narration no longer occupy gameplay spa
 Help remains available from the main menu.
 The [battle atmosphere record](../../docs/battleship/battle-atmosphere/design.md) contains prompts, assets, and layout decisions.
 
+Version 1.8 simplifies the main menu and adds English, Dutch, and French in Settings.
+The selected language stays with the saved match. Old saves default to English.
+How to Play uses three illustrated cards instead of a paragraph block.
+Its Tactics page adds four short tips with native diagrams in all three languages.
+The user-provided photograph guides the tips. The app does not bundle that photograph.
+A distinct opponent portrait frames the right side. A circular targeting sight follows the selected cell.
+Previous shots keep their hit or miss markers without corner highlights.
+The [menu and help record](../../docs/battleship/menu-help-refresh/design.md) records the generated references.
+
 ## Build
 
 Install JDK 17, Android SDK platform `android-37.0`, and build tools `36.0.0`.
@@ -91,6 +100,11 @@ adb -s emulator-5580 exec-out screencap -p > /tmp/battleship-game.png
 ```
 
 Read the [Kotlin TV guide](../../docs/kotlin-tv-development.md) for emulator startup and repository conventions.
+Follow its [risk-based test workflow](../../docs/kotlin-tv-development.md#choose-tests-by-risk) during iteration.
+Select one instrumented test class per invocation and inspect its XML results.
+After a minor resource correction, repeat affected tests and captures.
+Keep release lint and packaging in the final delivery checks.
+For ordinary interface changes, use one focused physical TV smoke test after emulator coverage.
 Instrumented tests use directional events. The runner can remove its tested APK afterward.
 Keep personal account screens and device identifiers out of Git.
 Emulator results establish layout and remote behavior. Physical TV readability, audio volume, and remote hardware require separate observations.

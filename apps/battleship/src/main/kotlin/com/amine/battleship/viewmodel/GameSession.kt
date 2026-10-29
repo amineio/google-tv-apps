@@ -42,6 +42,7 @@ class GameSession(
                 game = saved?.game?.takeIf { it.phase != GamePhase.GAME_OVER },
                 selected = saved?.selected ?: Coordinate(0, 0),
                 soundEnabled = saved?.soundEnabled ?: true,
+                language = saved?.language ?: com.amine.battleship.localization.AppLanguage.ENGLISH,
                 showHint = saved?.showHint ?: true,
                 saveWarning = if (repository.recoveredInvalidSave) "The saved match did not open. Start a new game." else null,
             )
@@ -90,6 +91,10 @@ class GameSession(
             GameAction.Home -> if (state.value.screen == Screen.GAME && unfinished()) confirm(Confirmation.MAIN_MENU) else home()
             GameAction.Help -> open(Screen.HELP)
             GameAction.Settings -> open(Screen.SETTINGS)
+            GameAction.CycleLanguage -> {
+                update { copy(language = language.next()) }
+                persist()
+            }
             GameAction.ToggleSound -> {
                 cues.trySend(SoundCue.STOP)
                 update { copy(soundEnabled = !soundEnabled) }
@@ -238,7 +243,7 @@ class GameSession(
         if (!state.value.loaded) return
         val value = state.value
         saves.trySend(SavedSession(game = value.game?.takeIf { it.phase != GamePhase.GAME_OVER }, selected = value.selected,
-            soundEnabled = value.soundEnabled, showHint = value.showHint))
+            soundEnabled = value.soundEnabled, language = value.language, showHint = value.showHint))
     }
     private fun cue(sound: SoundCue) { if (state.value.soundEnabled) cues.trySend(sound) }
     private fun resolveSound(attacker: Player, shot: Shot) {

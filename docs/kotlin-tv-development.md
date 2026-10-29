@@ -43,6 +43,9 @@ Use native Compose for TV controls for the final interface.
 Keep text, app tiles, focus rings, and buttons separate from background artwork.
 Generated screen images are references, not interactive screens or proof of the final app.
 Capture the running app after implementation and compare it with the selected direction.
+For substantial game changes, use an independent game UI/UX reviewer for both concepts and final native captures.
+Ask the reviewer to inspect readability, board size, visual hierarchy, focus, and unnecessary instructions.
+Keep grids, teaching diagrams, labels, and controls in native code. Generated artwork does not establish their correctness.
 
 ## Reuse the Family Home lessons
 
@@ -202,6 +205,42 @@ git diff --check
 GitHub builds are paused. Both retained workflows accept manual runs only.
 Do not enable them, upload APKs, or create releases without an explicit request.
 
+## Choose tests by risk
+
+Use the smallest test set that covers the current change during iteration.
+At an integration checkpoint, broaden coverage when logic, persistence, or shared behavior changes.
+Keep the final release build and lint results, and record the commands and tested revision.
+
+| Change | Iteration | Integration and delivery |
+| --- | --- | --- |
+| Text, artwork, or spacing | Focused emulator capture and affected navigation test | Release build, lint, and affected resource or interface tests |
+| Language selection or translated layouts | Locale persistence tests and captures in each language | Relevant app suite once, release packaging, and offline language coverage |
+| Game rules, saved state, lifecycle, or shared controls | Focused regression tests | Relevant unit and emulator suites once at a testable checkpoint |
+| Playback, audio focus, accessibility, Cast, or wake | Focused logic and emulator tests | Relevant local and emulator coverage. State untested hardware behavior |
+| Documentation only | Review links, commands, and the diff | No app installation or device suite unless behavior also changes |
+
+After a minor resource correction, repeat affected captures and tests.
+Do not repeat an unaffected full suite without a new failure or an unresolved concern.
+If a required test fails, resolve it or report the blocker before delivery.
+This workflow changes test scope, not the requirement to cover changed behavior.
+
+For Battleship, use its wrapper and the dedicated emulator serial from [the app guide](../apps/battleship/README.md#install-and-inspect).
+After setting the JDK and SDK paths above, select a single emulator test class with:
+
+```sh
+ANDROID_SERIAL=emulator-5580 apps/battleship/gradlew -p apps/battleship connectedDebugAndroidTest '-Pandroid.testInstrumentationRunnerArguments.class=com.amine.battleship.HelpScreenTest' --console=plain
+```
+
+Replace the class with the test that covers the change.
+Use one class per invocation or a package filter with proven selection behavior.
+In two observed Battleship runs, a comma-separated class filter returned `BUILD SUCCESSFUL`, but XML contained only the first class.
+This observation does not establish the cause or behavior of every runner version.
+Inspect the XML test counts and class names before claiming coverage.
+Build success alone does not establish that all selected tests ran.
+Keep each invocation's XML report before another run replaces it.
+For an integration checkpoint, use the app guide's unit, lint, build, and emulator commands.
+Keep one coordinator responsible for builds and device input throughout these steps.
+
 ## Iterate in the emulator
 
 Emulator coverage is sufficient for development and delivery by default.
@@ -218,11 +257,25 @@ Use directional input to test initial focus, row scrolling, dialogs, and focus a
 Do not force focus onto a button when the test must prove navigation to that button.
 Cover empty lists, long app names, removed apps, and saved state after recreation.
 Make sure that final captures use the intended build, font weights, and screen density.
+Use a fresh filename for each capture and inspect its modification time before review.
+Do not reuse an old PNG after a capture command fails.
+For Activity Back behavior, use `Instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)` in instrumented tests.
+A Compose `Key.Back` event alone does not exercise the Activity Back dispatcher.
+
+For in-app language changes, make Compose observe `LocalConfiguration` or `LocalResources` through a reactive locale provider.
+Bundle all supported languages offline. If delivery uses app bundles, disable language splitting when the app changes language itself.
+Inspect long translations on the actual layout, especially ship names.
+Use semantic line breaks and shared board geometry instead of shrinking one board to fit a translated label.
 
 Keep instrumented tests on the emulator by default. The runner can uninstall the tested app afterward.
 Presentation fixtures prove interface behavior. They do not prove the real accessibility helper or third-party playback behavior.
-Android UI automation normally suppresses accessibility services during inspection.
-For manual helper tests, use explicit ADB input and screenshots, as described in the app guide.
+Android UI automation can suppress accessibility services during inspection.
+During Battleship work on 2026-10-29, physical TV UI dumps coincided with Family Home redirects and accessibility interruptions.
+This observation does not establish one cause for every redirect.
+For ordinary visual inspection, prefer explicit ADB input and screenshots over repeated UI dumps.
+If launcher redirects repeat, stop the loop and inspect the current screen.
+Do not disable helpers or change Home routing to obtain a screenshot.
+For manual helper tests, use the affected app guide.
 
 ## Physical TV and delivery
 

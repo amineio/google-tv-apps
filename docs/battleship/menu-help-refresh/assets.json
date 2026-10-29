@@ -1,0 +1,56 @@
+{
+  "opponentPortrait": {
+    "path": "apps/battleship/src/main/res/drawable-nodpi/opponent_portrait.webp",
+    "source": "opponent-source.png",
+    "promptRecord": "design.md",
+    "width": 256,
+    "height": 256,
+    "bytes": 12836,
+    "sha256": "a2ad35f71bd17e8f4f9e45d008e82900a36eec6746e55c9e49d837028b59904b",
+    "preparation": "cwebp -q 88 -resize 256 256",
+    "rights": "Generated with built-in ImageGen from text. Fictional officer, no external image source or personal likeness."
+  },
+  "helpDiagrams": {
+    "origin": "Native Compose Canvas using shared TargetReticle and existing ship bitmaps.",
+    "license": "Repository MIT for new code; existing ship asset record retained."
+  },
+  "tacticsReference": {
+    "source": "User-provided 30213.jpg photograph, supplied in the conversation on 2026-10-29.",
+    "onlineSource": "No online URL or original publisher supplied. No external license claim.",
+    "use": "Content reference only. Photograph and its surrounding scene are not bundled. Short translated copy and native diagrams adapt the four tactics.",
+    "rulesReview": "tactics-review.md",
+    "license": "Repository MIT for new native drawing code."
+  },
+  "tacticsCaptures": [
+    {
+      "path": "docs/battleship/menu-help-refresh/native-tactics-en.webp",
+      "language": "en",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 53234,
+      "sha256": "e0ec465532095f311d1266184e341ad8f24d6084e2f22b97e81a28d4507b31d3",
+      "preparation": "cwebp -q 84",
+      "source": "Generic emulator capture of native TacticsScreenTest; captureHelp=true"
+    },
+    {
+      "path": "docs/battleship/menu-help-refresh/native-tactics-nl.webp",
+      "language": "nl",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 62316,
+      "sha256": "07e844626c5cd6647a0f54b56b1b83f5fafc12df7c26b6d8018c095dcd5101b8",
+      "preparation": "cwebp -q 84",
+      "source": "Generic emulator capture of native TacticsScreenTest; captureHelp=true"
+    },
+    {
+      "path": "docs/battleship/menu-help-refresh/native-tactics-fr.webp",
+      "language": "fr",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 60998,
+      "sha256": "0bb7db9653a599c1bc88f5ea53a956bcabae92500873c08881d62030c97d49cc",
+      "preparation": "cwebp -q 84",
+      "source": "Generic emulator capture of native TacticsScreenTest; captureHelp=true"
+    }
+  ]
+}
