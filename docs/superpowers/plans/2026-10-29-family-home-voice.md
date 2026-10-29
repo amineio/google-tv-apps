@@ -12,13 +12,15 @@
 
 ## Global Constraints
 
-- Family Home version `1.9`, version code `10`; min SDK `34`, target SDK `37`.
+- Family Home version `1.10`, version code `11`; min SDK `34`, target SDK `37`.
 - Dutch, English, and French follow device language; unsupported languages can use installed offline English only.
 - No network permission, network voice, silent downloads, cloud service, or named-audio persistence.
 - Preserve duration, balances, profiles, PIN, usage, visual warnings, and helper/Home-role requirements.
 - Coordinator owns Git, builds, and device input. Workers own all edits, with one owner per shared file.
 - No physical TV, cloud build, APK upload, public release, or personal test data.
 - User authorization already covers implementation; no repeated approval gate.
+
+Concurrent main commit `95c590d1` used 1.9 / code 10 for the Home key correction. The combined release uses 1.10 / code 11, superseding the provisional speech version. Keep the merged Home key source and tests unchanged.
 
 ## Review Focus
 

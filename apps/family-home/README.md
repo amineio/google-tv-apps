@@ -9,6 +9,8 @@ Follow [AGENTS.md](../../AGENTS.md) for coordinator ownership, delegated file ed
 
 ## Interface
 
+Version 1.10 adds offline spoken timer updates and retains the Home key correction from version 1.9.
+Read the [Home key routing record](../../docs/family-home/home-key-routing.md) for that correction and its checks.
 Version 1.8 adds direct profile switching, resume badges, and a saved app order for each profile.
 Version 1.7 adds weekly usage charts and a profile action menu.
 Version 1.6 adds backgrounds supplied by the selected app, including Battleship.
@@ -209,7 +211,7 @@ The Java source remains in this repository for a future rebuild if needed.
 
 ## Spoken timer updates
 
-Version 1.9 adds offline Android text-to-speech for child session start, resume, five-minute and one-minute warnings, and expiry.
+Version 1.10 adds offline Android text-to-speech for child session start, resume, five-minute and one-minute warnings, and expiry.
 Complete sentences use the child's local profile name. Start and resume round the remaining balance up to whole minutes.
 Late warnings say “less than” the threshold. A five-minute session still skips its five-minute warning.
 The saved warning flags prevent repeated warnings after recovery or app return.
