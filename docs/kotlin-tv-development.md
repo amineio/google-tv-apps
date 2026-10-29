@@ -112,7 +112,7 @@ Family Home decodes only the selected background off the main thread, with a max
 It preserves aspect ratio and does not enlarge small images during decoding.
 The existing Chess artwork takes precedence. Missing or unusable backgrounds retain the app tile and its gradient.
 
-Before delivery, inspect the installed app through the actual Family Home launcher:
+Before delivery, inspect the installed app through Family Home in the emulator:
 
 1. Inspect the icon at small sizes and the banner at 320 by 180 and 384 by 216 pixels.
 2. Make sure that artwork fills its bounds, preserves proportions, and shows the correct title without clipping.
@@ -121,7 +121,7 @@ Before delivery, inspect the installed app through the actual Family Home launch
 5. Open the app and return to the launcher, then make sure that focus and artwork match.
 6. Replace the installed APK and make sure that the launcher refreshes its artwork while preserving the selected app.
 
-Use the emulator first. Keep physical TV observations separate from emulator results.
+Emulator inspection is sufficient by default. Keep any physical TV observations separate from emulator results.
 Reuse the patterns in [Battleship's artwork tests](../apps/battleship/src/androidTest/kotlin/com/amine/battleship/LauncherArtworkTest.kt).
 Read its [asset record](battleship/launcher-art/assets.json) and [validation record](battleship/launcher-art/validation.md) for a completed example.
 
@@ -143,22 +143,28 @@ Choose a size limit for each new app instead of copying that limit without revie
 ImageGen does not create audio. Use an audio generation tool or local synthesis for music and sound effects.
 Document the tool, prompt or synthesis parameters, license, and output duration.
 Trim and normalize audio with an audio tool such as FFmpeg.
-Listen to the final files and test their volume on the TV.
+Listen to changed audio files locally when a listener is available.
+Use physical TV listening only for an explicit user request or a user-reported audio issue.
+Record any listening limit. Successful decoding and MediaPlayer state do not prove speaker balance or musical quality.
 Keep audio optional and easy to mute. Avoid repeating music on a launcher unless the user requests it.
 Do not add audio generation services to the app merely to bundle a sound file.
 
 ## Use scoped subagents
 
+Every conversation's main thread remains the coordinator and delegates development and independent review to subagents.
+This applies to new and follow-up threads.
 For substantial work, separate design, implementation, and independent review.
 Give each subagent a bounded task with file ownership and a clear completion condition.
 Include the selected design, product constraints, and relevant build commands in the handoff.
 Run independent research, asset exploration, and read-only reviews in parallel when useful.
 Keep edits to shared files sequential.
 
-One coordinator owns integration, Git delivery, emulator sessions, and physical TV input.
+One coordinator owns planning, integration commands, builds, Git delivery, emulator sessions, and physical TV input.
+Delegate all implementation file edits to subagents, including small code changes.
+Give shared files to one implementation owner at a time.
 Do not let two agents build the same app or control the same device concurrently.
 Use a fresh reviewer for the completed change and resolve material findings.
-For small documentation or configuration edits, work directly and keep review proportional to the risk.
+Delegate documentation and configuration edits too. Keep their review proportional to the risk.
 
 ## Build locally
 
@@ -198,6 +204,7 @@ Do not enable them, upload APKs, or create releases without an explicit request.
 
 ## Iterate in the emulator
 
+Emulator coverage is sufficient for development and delivery by default.
 Use the existing `Family_TV_API_34` Google TV emulator for layout and D-pad work.
 Read [the emulator instructions](../apps/family-home/README.md#local-tv-emulator) for startup, install, and capture commands.
 Set an explicit device serial so that the emulator and physical TV cannot receive each other's commands.
@@ -219,9 +226,14 @@ For manual helper tests, use explicit ADB input and screenshots, as described in
 
 ## Physical TV and delivery
 
-Use the physical TV for Cast, streaming pause, wake behavior, and final visual review.
-Make sure that the TV is available before tests that interrupt playback.
-If someone is watching, stop device input and finish independent work.
+Do not routinely install or test changes on the physical TV.
+The user tests on the TV and reports issues.
+Use the physical TV only for an explicit user request or a user-reported issue.
+Changes to audio focus, playback, accessibility, Cast, wake, or other hardware behavior do not create an automatic physical test gate.
+For authorized physical work, limit installation and tests to the requested behavior or reported issue.
+After installation, make sure that the installed version and APK hash match the intended build.
+Requested development, testing, and installation take priority over TV viewing.
+Stop device input when the user explicitly asks you to stop.
 Do not clear app data or end an existing session as routine test cleanup.
 Preserve Google TV Home and `com.google.android.tungsten.setupwraith` because Cast uses their credentials.
 
@@ -231,5 +243,6 @@ The user deferred repository privatization. Do not detach the fork or change vis
 While the repository remains public, keep new family screenshots and personal data out of Git.
 
 Report local tests, emulator results, physical observations, installation, and Git delivery separately.
-State which physical tests remain deferred. Do not infer their results from interface tests.
+State any untested hardware behavior and any requested physical tests that remain unperformed.
+Do not infer physical results from interface tests or make missing evidence an automatic physical test gate.
 After an authorized installation, follow the commit and push instructions in [AGENTS.md](../AGENTS.md).
