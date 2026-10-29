@@ -1,5 +1,6 @@
 package com.amine.battleship.viewmodel
 
+import com.amine.battleship.localization.AppLanguage
 import com.amine.battleship.game.model.Coordinate
 import com.amine.battleship.game.model.GameState
 import com.amine.battleship.game.model.ShotOutcome
@@ -31,6 +32,7 @@ data class SessionState(
     val resolving: Boolean = false,
     val message: String = "",
     val soundEnabled: Boolean = true,
+    val language: AppLanguage = AppLanguage.ENGLISH,
     val showHint: Boolean = true,
     val saveWarning: String? = null,
 )
@@ -50,5 +52,6 @@ sealed interface GameAction {
     data object Back : GameAction
     data object Confirm : GameAction
     data object Cancel : GameAction
+    data object CycleLanguage : GameAction
     data object ToggleSound : GameAction
 }

@@ -23,6 +23,8 @@ Read the current Gradle files before copying tool versions or dependencies.
 For a substantial visual change, use ImageGen to explore screen concepts before implementation.
 Show the concepts in chat so that the user can review them from a phone.
 Use generated images as design references. Build the interface with native Compose for TV controls.
+For substantial game changes, ask an independent game UI/UX reviewer to inspect the concept and final native captures.
+Keep board geometry, diagrams, labels, and focus controls in native code.
 Use ImageGen for suitable raster assets such as portraits, backgrounds, and illustrations.
 Use vector or code assets for simple icons, labels, and focus outlines.
 Record asset prompts, source references, dimensions, and license information.
@@ -39,31 +41,50 @@ Do not add music or sounds unless the app design calls for them.
 
 ## Subagents
 
+Every conversation's main thread remains the coordinator and delegates development and independent review to subagents.
+This applies to new and follow-up threads.
 For substantial app work, use focused design, implementation, and independent review tasks.
 Give each subagent the exact scope, owned files, constraints, and validation commands.
 Parallelize independent research, asset work, and read-only reviews.
-Keep shared-file changes, integration, Git operations, and device input under one coordinator.
+One coordinator owns planning, integration commands, builds, device input, and Git delivery.
+Delegate all implementation file edits to subagents, including small code changes.
+Give shared files to one implementation owner at a time.
 Do not run multiple builds or instrumented test sessions against the same app or device at once.
 Use one fresh reviewer for the completed change. Fix material findings before delivery.
-Handle small documentation or configuration changes directly unless a separate review adds value.
+Delegate documentation and configuration edits too. Keep their review proportional to the risk.
 
 ## Local iteration and evidence
 
 Build and test locally. GitHub APK builds are paused, and workflow definitions accept manual runs only.
 Do not enable cloud builds, upload APKs, or create public releases without an explicit request.
 Use the Google TV emulator for layout, contrast, and D-pad iteration.
+During iteration, run focused tests for the changed behavior.
+At an integration checkpoint, run the relevant app suite when logic, persistence, or shared behavior changes.
+After a minor resource correction, repeat affected tests and captures without repeating unaffected suites.
+Record the tested revision and commands. Keep lint and release packaging in the final delivery checks.
+Follow the [risk-based test workflow](docs/kotlin-tv-development.md#choose-tests-by-risk).
 Set an explicit ADB serial for every install, test, screenshot, and remote command.
 Run instrumented tests on the emulator by default; the test runner can uninstall the tested app.
+For focused tests, select one class per invocation or use a verified package filter.
+Inspect XML test counts and class names before claiming coverage. Build success alone does not establish test selection.
 Test initial focus, directional navigation, scrolling, dialogs, empty lists, and focus after app return.
 Use actual directional input in navigation tests instead of forcing focus onto the destination.
 Keep presentation tests separate from timer, accessibility helper, playback, wake, and Cast evidence.
 For variable fonts, make sure that the configured weights render correctly in device captures.
 Keep launcher controls clear of the separate Clock overlay.
-Use the physical TV for hardware behavior and final visual review when it is available.
+Emulator coverage is sufficient for development and delivery by default.
+Do not routinely install or test changes on the physical TV.
+The user tests on the TV and reports issues.
+Use the physical TV only for an explicit user request or a user-reported issue.
+Hardware changes alone do not require physical tests.
+State the limits of emulator evidence without making untested hardware behavior an automatic delivery gate.
+Emulator results do not establish audio focus, playback, Cast, wake, accessibility, or audible quality on the physical TV.
+Use fresh capture filenames and make sure that each image belongs to the current build.
+Do not infer audible quality from MediaPlayer state or successful decoding.
 Requested development, testing, and installation take priority over TV viewing.
 Do not delay authorized TV work because playback is active or paused.
 Stop device input when the user explicitly asks you to stop.
-Report deferred physical tests without claiming that emulator tests prove them.
+Report any requested physical tests that remain unperformed. Do not infer their results from emulator tests.
 Preserve Google TV Home and `com.google.android.tungsten.setupwraith` for Cast credentials.
 
 ## Privacy
@@ -77,6 +98,7 @@ Attach review images directly in the conversation through the available file or 
 
 ## App installation and delivery
 
+Emulator-only delivery does not require a physical TV installation.
 After each successful app installation, commit the installed app changes and push them to `origin/main`.
 If the work is on a branch, push the branch and merge it into `main`.
 Use the shortest safe delivery path. A pull request is optional.

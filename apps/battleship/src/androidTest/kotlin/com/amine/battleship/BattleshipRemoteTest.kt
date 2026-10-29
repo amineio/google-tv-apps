@@ -29,6 +29,26 @@ import org.junit.runner.RunWith
 class BattleshipRemoteTest {
     @get:Rule val screen = createComposeRule()
 
+    @Test fun languageChangesWithTheRemoteAndKeepsTheLanguageControlFocused() {
+        var state by mutableStateOf(SessionState(loaded = true, screen = Screen.SETTINGS))
+        screen.setContent { BattleshipApp(state, { action ->
+            if (action == GameAction.CycleLanguage) state = state.copy(language = state.language.next())
+        }, {}) }
+        screen.onNodeWithText("Sound: On").assertIsFocused()
+        key(Key.DirectionDown)
+        screen.onNodeWithText("Language: English").assertIsFocused()
+        key(Key.DirectionCenter)
+        screen.onNodeWithText("Taal: Nederlands").assertIsFocused()
+        screen.onNodeWithText("INSTELLINGEN").assertIsDisplayed()
+        key(Key.DirectionCenter)
+        screen.onNodeWithText("Langue : Français").assertIsFocused()
+        screen.onNodeWithText("PARAMÈTRES").assertIsDisplayed()
+        key(Key.DirectionCenter)
+        screen.onNodeWithText("Language: English").assertIsFocused()
+        key(Key.DirectionDown)
+        screen.onNodeWithText("Back").assertIsFocused()
+    }
+
     @Test fun aimingKeepsLastShotFeedbackSeparateFromTheSelectedTarget() {
         val game = GameEngine.newGame(42)
         val hit = game.computerBoard.ships.first().cells.first()
@@ -111,6 +131,7 @@ class BattleshipRemoteTest {
         screen.onNodeWithText("Sound: On").assertIsFocused()
         key(Key.DirectionCenter)
         screen.onNodeWithText("Sound: Off").assertIsFocused()
+        key(Key.DirectionDown)
         key(Key.DirectionDown)
         key(Key.DirectionCenter)
         repeat(3) { key(Key.DirectionDown) }

@@ -21,6 +21,36 @@ import org.junit.rules.TemporaryFolder
 class GameSessionTest {
     @get:Rule val folder = TemporaryFolder()
 
+    @Test fun languageCyclesAndPersistsWithoutChangingThePausedMatch() = runTest {
+        val repository = GameSaveRepository(folder.newFile())
+        val session = GameSession(backgroundScope, repository, seedSource = { 42L }, ioDispatcher = StandardTestDispatcher(testScheduler))
+        runCurrent()
+        assertEquals("ENGLISH", session.state.value.language.name)
+        session.action(GameAction.Play)
+        session.action(GameAction.Move(2, 3))
+        session.action(GameAction.Pause)
+        session.action(GameAction.Settings)
+        val before = session.state.value
+        session.action(GameAction.CycleLanguage)
+        assertEquals("DUTCH", session.state.value.language.name)
+        assertEquals(before.copy(language = session.state.value.language), session.state.value)
+        session.action(GameAction.CycleLanguage)
+        assertEquals("FRENCH", session.state.value.language.name)
+        runCurrent()
+        assertEquals("FRENCH", repository.load()!!.language.name)
+        val restored = GameSession(backgroundScope, repository, ioDispatcher = StandardTestDispatcher(testScheduler))
+        runCurrent()
+        assertEquals("FRENCH", restored.state.value.language.name)
+        assertEquals(before.game, restored.state.value.game)
+        assertEquals(before.selected, restored.state.value.selected)
+        session.action(GameAction.Back)
+        assertEquals(Screen.GAME, session.state.value.screen)
+        assertTrue(session.state.value.paused)
+        assertEquals(before.game, session.state.value.game)
+        session.action(GameAction.CycleLanguage)
+        assertEquals("ENGLISH", session.state.value.language.name)
+    }
+
     @Test fun openingPlaysOnlyForAcceptedNewMatches() = runTest {
         val session = GameSession(backgroundScope, GameSaveRepository(folder.newFile()), ioDispatcher = StandardTestDispatcher(testScheduler))
         val cues = mutableListOf<String>()

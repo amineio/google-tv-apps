@@ -1,5 +1,6 @@
 package com.amine.battleship.persistence
 
+import com.amine.battleship.localization.AppLanguage
 import com.amine.battleship.game.engine.GameEngine
 import com.amine.battleship.game.model.Coordinate
 import com.amine.battleship.game.model.GameState
@@ -16,6 +17,7 @@ data class SavedSession(
     val game: GameState? = null,
     val selected: Coordinate = Coordinate(0, 0),
     val soundEnabled: Boolean = true,
+    val language: AppLanguage = AppLanguage.ENGLISH,
     val showHint: Boolean = true,
 )
 

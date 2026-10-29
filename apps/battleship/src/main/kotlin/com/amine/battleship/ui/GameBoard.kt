@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
@@ -30,6 +29,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.amine.battleship.R
+import com.amine.battleship.localization.gameText
 import com.amine.battleship.game.model.Coordinate
 import com.amine.battleship.game.model.Ship
 import com.amine.battleship.game.model.Shot
@@ -44,7 +45,6 @@ internal fun GameBoard(
     shots: List<Shot>,
     modifier: Modifier = Modifier,
     selected: Coordinate? = null,
-    lastShot: Shot? = null,
     canFire: Boolean = false,
     focusRequester: FocusRequester? = null,
     onAction: (GameAction) -> Unit = {},
@@ -61,11 +61,14 @@ internal fun GameBoard(
     val sunkCells = shots.flatMap { it.sunkCells }.toSet()
     val chosenShot = shots.firstOrNull { it.coordinate == selected }
     val selectedState = when {
-        selected in sunkCells -> "Sunk ship"
-        chosenShot?.outcome == ShotOutcome.MISS -> "Miss"
-        chosenShot != null -> "Hit"
-        else -> "Unexplored"
+        selected in sunkCells -> gameText(R.string.sunk_ship)
+        chosenShot?.outcome == ShotOutcome.MISS -> gameText(R.string.miss)
+        chosenShot != null -> gameText(R.string.hit)
+        else -> gameText(R.string.unexplored)
     }
+    val targetDescription = if (selected != null) gameText(R.string.board_target_description,
+        selected.label, gameText(if (canFire) R.string.your_turn_spoken else R.string.computer_turn_spoken), selectedState) else ""
+    val fleetDescription = gameText(R.string.friendly_board_description, shots.size)
     var inputModifier = modifier.aspectRatio(1f)
     if (selected != null && focusRequester != null) {
         inputModifier = inputModifier.focusRequester(focusRequester)
@@ -93,13 +96,13 @@ internal fun GameBoard(
                 }
             }
             .semantics {
-                contentDescription = "Target ${selected.label}. ${if (canFire) "Your turn" else "Computer turn"}. $selectedState."
+                contentDescription = targetDescription
                 stateDescription = selectedState
             }
             .testTag("targeting_board")
             .focusable()
     } else {
-        inputModifier = inputModifier.semantics { contentDescription = "Your fleet. ${shots.size} incoming shots." }
+        inputModifier = inputModifier.semantics { contentDescription = fleetDescription }
             .testTag("friendly_board")
     }
     Box(inputModifier) {
@@ -145,16 +148,7 @@ internal fun GameBoard(
                     drawLine(color, at + Offset(-radius, radius), at + Offset(radius, -radius), pitch * .085f)
                 }
             }
-            lastShot?.let { shot ->
-                val at = center(shot.coordinate)
-                val extent = pitch * .41f
-                val arm = pitch * .17f
-                for (x in listOf(-1f, 1f)) for (y in listOf(-1f, 1f)) {
-                    val corner = at + Offset(x * extent, y * extent)
-                    drawLine(Brass, corner, corner - Offset(x * arm, 0f), 1.4.dp.toPx())
-                    drawLine(Brass, corner, corner - Offset(0f, y * arm), 1.4.dp.toPx())
-                }
-            }
+
         }
         ImpactEffects(compact = selected == null, impact = impact.takeIf { time.enabled }, now = time.impactNanos)
         Canvas(Modifier.fillMaxSize().graphicsLayer()) {
@@ -163,16 +157,7 @@ internal fun GameBoard(
             val origin = Offset(geometry.originX, geometry.originY)
             fun center(coordinate: Coordinate): Offset = geometry.center(coordinate).let { Offset(it.x, it.y) }
             selected?.let { coordinate ->
-                val corner = origin + Offset(coordinate.column * pitch, coordinate.row * pitch)
-                drawRect(Cyan.copy(alpha = .08f), corner, Size(pitch, pitch))
-                drawRect(Cyan.copy(alpha = .15f), corner, Size(pitch, pitch), style = Stroke(8.dp.toPx()))
-                drawRect(Cyan, corner, Size(pitch, pitch), style = Stroke(2.5.dp.toPx()))
-                if (chosenShot == null) {
-                    val at = center(coordinate)
-                    val marker = pitch * .07f
-                    drawLine(Cyan, at - Offset(marker, 0f), at + Offset(marker, 0f), 1.5.dp.toPx())
-                    drawLine(Cyan, at - Offset(0f, marker), at + Offset(0f, marker), 1.5.dp.toPx())
-                }
+                drawTargetReticle(center(coordinate), pitch * .32f, Cyan, 1.6.dp.toPx())
             }
         }
     }
