@@ -8,6 +8,7 @@ import android.graphics.drawable.LayerDrawable
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
@@ -97,28 +98,88 @@ class HomePresentationTest {
         capture("home-child-profile-menu")
     }
 
-    @Test fun resumeRestoresAnAppBeyondTheFirstVisibleRow() {
-        var catalog by mutableStateOf((0..9).map { app("example.app$it", if (it == 9) "An application with a long title that must fit within the TV screen" else "App $it") })
-        var resume by mutableIntStateOf(0)
-        screen.setContent {
-            FamilyTheme {
-                var focused by remember { mutableStateOf<String?>(null) }
-                HomeScreen(Viewer.AMINE, null, catalog, focused, resume, { focused = it }, {}, {}, {})
-            }
-        }
-        repeat(9) { pressRemote(listOf(Key.DirectionRight)); screen.waitForIdle() }
-        screen.onNodeWithTag("app:example.app9").assertIsFocused()
+    @Test fun gridShowsTwoRowsAndArrowsRespectRowAndShortRowBoundaries() {
+        val catalog = (0..11).map { app("example.app$it", "App $it") }
+        screen.setContent { FamilyTheme {
+            var focused by remember { mutableStateOf<String?>(null) }
+            HomeScreen(Viewer.AMINE, null, catalog, focused, 0, { focused = it }, {}, {}, {}, displayName = "Parent")
+        } }
+        fun tile(index: Int) = screen.onNodeWithTag("app:example.app$index")
+        for (index in 0..9) tile(index).assertIsDisplayed()
+        val first = tile(0).fetchSemanticsNode().boundsInRoot
+        val fifth = tile(4).fetchSemanticsNode().boundsInRoot
+        val sixth = tile(5).fetchSemanticsNode().boundsInRoot
+        assertEquals(first.top, fifth.top, 1f)
+        assertTrue(sixth.top > first.bottom)
+        assertEquals(first.width, fifth.width, 1f)
+        assertEquals(first.width, sixth.width, 1f)
+        capture("home-grid-initial")
+        pressRemote(listOf(Key.DirectionLeft))
+        tile(0).assertIsFocused()
+        repeat(4) { pressRemote(listOf(Key.DirectionRight)) }
+        tile(4).assertIsFocused()
+        pressRemote(listOf(Key.DirectionRight))
+        tile(4).assertIsFocused()
+        pressRemote(listOf(Key.DirectionDown))
+        tile(9).assertIsFocused()
+        pressRemote(listOf(Key.DirectionDown))
+        tile(11).assertIsFocused().assertIsDisplayed()
+        pressRemote(listOf(Key.DirectionRight, Key.DirectionDown))
+        tile(11).assertIsFocused()
+        pressRemote(listOf(Key.DirectionLeft))
+        tile(10).assertIsFocused()
+        pressRemote(listOf(Key.DirectionLeft))
+        tile(10).assertIsFocused()
+        pressRemote(listOf(Key.DirectionUp))
+        tile(5).assertIsFocused()
+        pressRemote(listOf(Key.DirectionUp))
+        tile(0).assertIsFocused()
         pressRemote(listOf(Key.DirectionUp))
         screen.onNodeWithTag("home-profile").assertIsFocused()
         pressRemote(listOf(Key.DirectionDown))
-        screen.onNodeWithTag("app:example.app9").assertIsFocused()
-        pressRemote(listOf(Key.DirectionUp))
-        screen.onNodeWithTag("home-profile").assertIsFocused()
-        screen.runOnIdle { resume++ }
-        screen.waitUntil(10_000) { screen.onAllNodes(isFocused() and hasTestTag("app:example.app9")).fetchSemanticsNodes().isNotEmpty() }
-        screen.onNodeWithTag("app:example.app9").assertIsDisplayed()
+        tile(0).assertIsFocused()
+    }
+
+    @Test fun resumeRestoresAnAppBeyondTheFirstVisibleRow() {
+        var catalog by mutableStateOf((0..16).map { app("example.app$it", if (it == 16) "An application with a long title that must fit within the TV screen" else "App $it") })
+        var resume by mutableIntStateOf(0)
+        var showHome by mutableStateOf(true)
+        var focused by mutableStateOf<String?>(null)
+        screen.setContent { FamilyTheme {
+            if (showHome) HomeScreen(Viewer.AMINE, null, catalog, focused, resume, { focused = it }, {}, {}, {}, displayName = "Parent")
+        } }
+        repeat(3) { pressRemote(listOf(Key.DirectionDown)) }
+        pressRemote(listOf(Key.DirectionRight))
+        screen.onNodeWithTag("app:example.app16").assertIsFocused().assertIsDisplayed()
+        capture("home-grid-scrolled")
+        screen.runOnIdle { showHome = false }
+        screen.runOnIdle { showHome = true; resume++ }
+        screen.waitUntil(10_000) { screen.onAllNodes(isFocused() and hasTestTag("app:example.app16")).fetchSemanticsNodes().isNotEmpty() }
+        screen.onNodeWithTag("app:example.app16").assertIsDisplayed()
         screen.runOnIdle { catalog = catalog.take(1) }
         screen.waitUntil(10_000) { screen.onAllNodes(isFocused() and hasTestTag("app:example.app0")).fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    @Test fun catalogReplacementDuringQueuedNavigationKeepsAValidFocusedApp() {
+        val original = (0..24).map { app("example.app$it", "App $it") }
+        val replacement = listOf(app("example.replacement", "Replacement"))
+        var catalog by mutableStateOf(original)
+        var focused by mutableStateOf<String?>(null)
+        screen.setContent { FamilyTheme {
+            HomeScreen(Viewer.AMINE, null, catalog, focused, 0, { focused = it }, {}, {}, {}, displayName = "Parent")
+        } }
+        pressRemote(listOf(Key.DirectionDown))
+        screen.onNodeWithTag("app:example.app5").assertIsFocused()
+        screen.mainClock.autoAdvance = false
+        try {
+            screen.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+            screen.runOnIdle { catalog = replacement }
+            screen.mainClock.advanceTimeByFrame()
+            screen.mainClock.advanceTimeByFrame()
+        } finally { screen.mainClock.autoAdvance = true }
+        screen.waitForIdle()
+        screen.onNodeWithTag("app:example.replacement").assertIsFocused().assertIsDisplayed()
+        screen.onNodeWithTag("app:example.app10").assertDoesNotExist()
     }
 
     @Test fun bannerAndSquareTilesLaunchDirectly() {
@@ -150,16 +211,18 @@ class HomePresentationTest {
         var remaining by mutableLongStateOf(1_200_000L)
         screen.setContent {
             FamilyTheme {
-                HomeScreen(Viewer.ELIAS, remaining, listOf(app("example.tv")), null, 0, {}, {}, {}, {})
+                HomeScreen(Viewer.ELIAS, remaining, listOf(app("example.tv")), null, 0, {}, {}, {}, {}, displayName = "Child")
             }
         }
         val suffix = screen.onNodeWithText("left", substring = true, useUnmergedTree = true)
-        val profile = screen.onNodeWithContentDescription("Elias profile portrait", useUnmergedTree = true)
-        val name = screen.onNodeWithText("Elias")
+        val profile = screen.onNodeWithContentDescription("Child profile portrait", useUnmergedTree = true)
+        val name = screen.onNodeWithText("Child")
         val suffixBounds = suffix.fetchSemanticsNode().boundsInRoot
         val chipBounds = suffix.onParent().fetchSemanticsNode().boundsInRoot
         val profileBounds = profile.fetchSemanticsNode().boundsInRoot
+        profile.assertWidthIsEqualTo(48.dp).assertHeightIsEqualTo(48.dp)
         val nameBounds = name.fetchSemanticsNode().boundsInRoot
+        capture("home-grid-portrait")
         for (value in listOf(1_199_000L, 600_000L, 599_000L, 60_000L, 59_000L, 1_000L, 0L)) {
             screen.runOnIdle { remaining = value }
             assertEquals("Countdown suffix moved at $value ms", suffixBounds, suffix.fetchSemanticsNode().boundsInRoot)

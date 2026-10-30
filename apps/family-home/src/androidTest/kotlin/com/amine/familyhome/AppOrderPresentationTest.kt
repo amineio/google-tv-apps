@@ -40,7 +40,9 @@ class AppOrderPresentationTest {
     }
     private fun tile(index: Int) = screen.onNodeWithTag("app:com.example.app$index")
     private fun assertBefore(first: Int, second: Int) {
-        assertTrue(tile(first).fetchSemanticsNode().boundsInRoot.left < tile(second).fetchSemanticsNode().boundsInRoot.left)
+        val a = tile(first).fetchSemanticsNode().boundsInRoot
+        val b = tile(second).fetchSemanticsNode().boundsInRoot
+        assertTrue(a.top < b.top || (a.top == b.top && a.left < b.left))
     }
 
     @Test fun heldOkMovesWithoutLaunchAndShortOkSavesExactlyOnce() {
@@ -79,7 +81,10 @@ class AppOrderPresentationTest {
                 onSaveOrder = { writes++; true })
         } }
         holdOk()
-        repeat(18) { press(Key.DirectionRight); tile(0).assertIsFocused().assertIsDisplayed() }
+        repeat(3) { press(Key.DirectionDown); tile(0).assertIsFocused().assertIsDisplayed() }
+        press(Key.DirectionRight)
+        press(Key.DirectionDown)
+        tile(0).assertIsFocused().assertIsDisplayed()
         assertBefore(15, 0)
         assertEquals(0, writes)
         back()
@@ -87,6 +92,31 @@ class AppOrderPresentationTest {
         screen.onNodeWithTag("app-move-hint").assertDoesNotExist()
         assertBefore(0, 1)
         assertEquals(0, writes)
+    }
+
+    @Test fun moveModeUsesFourDirectionsAcrossRowsAndSavesTheGridOrder() {
+        val apps = (0..16).map(::app)
+        var focused by mutableStateOf(apps.first().pkg)
+        val saves = mutableListOf<List<String>>()
+        var launches = 0
+        screen.setContent { FamilyTheme {
+            HomeScreen(Viewer.AMINE, null, apps, focused, 0, { focused = it }, { launches++ }, {}, {},
+                displayName = "Parent", onSaveOrder = { saves += it; true })
+        } }
+        holdOk()
+        repeat(3) { press(Key.DirectionDown); tile(0).assertIsFocused().assertIsDisplayed() }
+        press(Key.DirectionRight)
+        tile(0).assertIsFocused().assertIsDisplayed()
+        press(Key.DirectionRight)
+        tile(0).assertIsFocused()
+        press(Key.DirectionUp)
+        press(Key.DirectionLeft)
+        tile(0).assertIsFocused().assertIsDisplayed()
+        press(Key.DirectionCenter)
+        val expected = apps.toMutableList().apply { add(10, removeAt(0)) }.map { it.pkg }
+        assertEquals(listOf(expected), saves)
+        assertEquals(0, launches)
+        screen.onNodeWithTag("app-move-hint").assertDoesNotExist()
     }
 
     @Test fun profileAndCatalogChangesCancelDraftAndFailedSaveKeepsOriginalOrder() {
