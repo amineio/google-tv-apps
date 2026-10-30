@@ -33,7 +33,13 @@ class LocalTwoPlayerRemoteTest {
     private lateinit var file: File
     @Volatile private var nowNanos = 0L
 
-    @After fun close() { scope.cancel(); if (::file.isInitialized) file.delete() }
+    @After fun close() {
+        scope.cancel()
+        if (::file.isInitialized) {
+            File(file.parentFile, "${file.name}.pending").deleteRecursively()
+            file.delete()
+        }
+    }
 
     private fun launch(saved: SavedSession? = null) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -158,6 +164,95 @@ class LocalTwoPlayerRemoteTest {
         assertBoardFocused("right_fleet_board")
         screen.onNodeWithText("Remember both fleets · 10").assertDoesNotExist()
         screen.onNodeWithTag("left_fleet_board").assertContentDescriptionEquals("Fox’s fleet. 0 public shots. Intact ships hidden.")
+    }
+
+    @Test fun failedShotSaveGivesTheRemoteAWorkingRetryAndNextNamedReady() {
+        val (game, finalTarget) = nearResult()
+        launch(SavedSession(game = game, selected = finalTarget))
+        key(Key.DirectionCenter)
+        screen.onNodeWithText("Resume").assertIsFocused(); key(Key.DirectionCenter)
+        screen.onNodeWithText("Fox, ready?").assertIsDisplayed(); key(Key.DirectionCenter)
+        assertBoardFocused("right_fleet_board")
+        val pending = File(file.parentFile, "${file.name}.pending")
+        screen.runOnIdle { assertTrue(pending.mkdir()) }
+        // Reach fresh water with real arrows, preserving the final intact enemy cell.
+        val miss = (0..9).flatMap { row -> (0..9).map { col -> Coordinate(row, col) } }
+            .first { it != finalTarget && game.computerBoard.shots.none { shot -> shot.coordinate == it } }
+        aimTo(miss); key(Key.DirectionCenter)
+        screen.waitUntil(5_000) { session.state.value.saveWarning != null }
+        expectFocused(hasText("Retry save"))
+        nativeBack()
+        expectFocused(hasText("Resume")); key(Key.DirectionCenter)
+        expectFocused(hasText("Retry save"))
+        screen.runOnIdle {
+            assertEquals(Screen.GAME, session.state.value.screen)
+            assertEquals(game, GameSaveRepository(file).load()!!.game)
+            assertTrue(pending.delete())
+        }
+        key(Key.DirectionCenter)
+        screen.waitUntil(6_000) { session.state.value.readySeat == Player.COMPUTER }
+        screen.onNodeWithText("Owl, ready?").assertIsDisplayed()
+        screen.runOnIdle { assertNull(session.state.value.saveWarning); assertEquals(17, GameSaveRepository(file).load()!!.game!!.computerBoard.shots.size) }
+    }
+
+    @Test fun failedFinalShotSaveRetriesThroughTheRemoteBeforeNamedResultsAndRematch() {
+        val (game, finalTarget) = nearResult()
+        launch(SavedSession(game = game, selected = finalTarget))
+        key(Key.DirectionCenter)
+        screen.onNodeWithText("Resume").assertIsFocused(); key(Key.DirectionCenter)
+        screen.onNodeWithText("Fox, ready?").assertIsDisplayed(); key(Key.DirectionCenter)
+        assertBoardFocused("right_fleet_board")
+        val pending = File(file.parentFile, "${file.name}.pending")
+        screen.runOnIdle { assertTrue(pending.mkdir()) }
+        // Move away and back so the winning shot also exercises directional targeting.
+        val away = if (finalTarget.column == 9) Key.DirectionLeft else Key.DirectionRight
+        key(away); key(if (away == Key.DirectionLeft) Key.DirectionRight else Key.DirectionLeft)
+        key(Key.DirectionCenter)
+        screen.waitUntil(5_000) { session.state.value.saveWarning != null }
+        expectFocused(hasText("Retry save"))
+        nativeBack()
+        expectFocused(hasText("Resume"))
+        repeat(3) { key(Key.DirectionDown) }
+        expectFocused(hasText("Return to Main Menu")); key(Key.DirectionCenter)
+        expectFocused(hasText("Continue Game")); key(Key.DirectionCenter)
+        screen.onNodeWithText("Fox wins!").assertDoesNotExist()
+        expectFocused(hasText("Resume")); key(Key.DirectionCenter)
+        expectFocused(hasText("Retry save"))
+        screen.runOnIdle {
+            assertEquals(Screen.GAME, session.state.value.screen)
+            assertEquals(GamePhase.GAME_OVER, session.state.value.game!!.phase)
+            assertEquals(game, GameSaveRepository(file).load()!!.game)
+            assertTrue(pending.delete())
+        }
+        key(Key.DirectionCenter)
+        screen.waitUntil(6_000) { session.state.value.screen == Screen.RESULTS }
+        screen.onNodeWithText("Fox wins!").assertIsDisplayed()
+        screen.onNodeWithText("Rematch").assertIsFocused()
+        screen.runOnIdle { assertEquals(Player.HUMAN, GameSaveRepository(file).load()!!.game!!.winner) }
+        key(Key.DirectionCenter)
+        screen.onNodeWithText("Keep Playing").assertIsFocused(); key(Key.DirectionRight); key(Key.DirectionCenter)
+        screen.onNodeWithText("Fox, ready?").assertIsDisplayed()
+    }
+
+    /** Valid public history leaves one enemy cell intact, without a production test hook. */
+    private fun nearResult(): Pair<GameState, Coordinate> {
+        var game = GameEngine.newGame(42).copy(mode = GameMode.LOCAL)
+        val targets = game.computerBoard.ships.flatMap { it.cells }
+        val occupied = game.playerBoard.ships.flatMap { it.cells }.toSet()
+        val water = (0..9).flatMap { row -> (0..9).map { col -> Coordinate(row, col) } }.filter { it !in occupied }
+        for (index in 0 until targets.lastIndex) {
+            game = GameEngine.attack(game, Player.HUMAN, targets[index]).state
+            game = GameEngine.attack(game, Player.COMPUTER, water[index]).state
+        }
+        assertTrue(GameEngine.isValid(game))
+        return game to targets.last()
+    }
+
+    private fun aimTo(coordinate: Coordinate) {
+        val selected = session.state.value.selected
+        repeat(kotlin.math.abs(coordinate.row - selected.row)) { key(if (coordinate.row < selected.row) Key.DirectionUp else Key.DirectionDown) }
+        repeat(kotlin.math.abs(coordinate.column - selected.column)) { key(if (coordinate.column < selected.column) Key.DirectionLeft else Key.DirectionRight) }
+        screen.runOnIdle { assertEquals(coordinate, session.state.value.selected) }
     }
 
     private fun assertBoardFocused(tag: String): SemanticsNodeInteraction {

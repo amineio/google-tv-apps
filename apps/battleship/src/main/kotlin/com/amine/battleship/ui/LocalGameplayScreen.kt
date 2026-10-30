@@ -27,14 +27,18 @@ internal fun LocalGameplayScreen(state: SessionState, onAction: (GameAction) -> 
     val game = state.game ?: return
     val frame = rememberBoardFrameTime(state, onAction)
     val focus = remember { FocusRequester() }
+    val retryFocus = remember { FocusRequester() }
     val active = if (game.phase == GamePhase.COMPUTER_TURN) Player.COMPUTER else Player.HUMAN
     val activeProfile = if (active == Player.HUMAN) game.leftProfile else game.rightProfile
     val revealing = state.revealRemainingMs != null && !state.paused && state.confirmation == null
     val showComplete = revealing || results
-    val aiming = !results && !revealing && !state.paused && state.readySeat == null
+    val recovering = state.saveWarning != null && state.resolving
+    val aiming = !results && !revealing && !state.paused && state.readySeat == null && !recovering
     val canFire = aiming && !state.resolving && !state.releaseRequired
-    LaunchedEffect(state.paused, state.readySeat, state.revealRemainingMs == null, results, active) {
-        if (aiming && state.confirmation == null) { withFrameNanos { }; focus.requestFocus() }
+    LaunchedEffect(state.paused, state.readySeat, state.revealRemainingMs == null, results, active, recovering, state.confirmation) {
+        if (!state.paused && state.confirmation == null && recovering) {
+            withFrameNanos { }; retryFocus.requestFocus()
+        } else if (aiming && state.confirmation == null) { withFrameNanos { }; focus.requestFocus() }
     }
     val resultFocus = remember { FocusRequester() }
     LaunchedEffect(results) { if (results) { withFrameNanos { }; resultFocus.requestFocus() } }
@@ -112,7 +116,7 @@ internal fun LocalGameplayScreen(state: SessionState, onAction: (GameAction) -> 
             } else if (state.saveWarning != null) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(gameText(R.string.save_failed), color = Impact, fontSize = 14.sp)
-                    NavalButton(gameText(R.string.retry_save)) { onAction(GameAction.RetrySave) }
+                    NavalButton(gameText(R.string.retry_save), Modifier.focusRequester(retryFocus)) { onAction(GameAction.RetrySave) }
                 }
             } else if (state.message == "Already targeted") Text(gameText(R.string.already_targeted), color = Impact, fontSize = 14.sp)
         }

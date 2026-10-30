@@ -247,6 +247,44 @@ class LocalGameSessionTest {
         assertEquals(1, session.state.value.game!!.computerBoard.shots.size)
     }
 
+    @Test fun failedFinalShotCannotBypassAcknowledgementThroughHomeAndContinue() = runTest {
+        var game = GameEngine.newGame(42).copy(mode = GameMode.LOCAL)
+        val targets = game.computerBoard.ships.flatMap { it.cells }
+        val occupied = game.playerBoard.ships.flatMap { it.cells }.toSet()
+        val water = (0..9).flatMap { row -> (0..9).map { col -> Coordinate(row, col) } }.filter { it !in occupied }
+        for (index in 0 until targets.lastIndex) {
+            game = GameEngine.attack(game, Player.HUMAN, targets[index]).state
+            game = GameEngine.attack(game, Player.COMPUTER, water[index]).state
+        }
+        assertTrue(GameEngine.isValid(game))
+        val file = folder.newFile(); val repository = GameSaveRepository(file)
+        repository.save(SavedSession(game = game, selected = targets.last()))
+        val session = session(repository); runCurrent()
+        session.action(GameAction.Continue); session.action(GameAction.Resume)
+        command(session, "Ready"); command(session, "ReleaseConfirm")
+        val pending = java.io.File(file.parentFile, "${file.name}.pending")
+        assertTrue(pending.mkdir())
+        session.action(GameAction.Fire); advanceTimeBy(3_000); runCurrent()
+        assertEquals(GamePhase.GAME_OVER, session.state.value.game!!.phase)
+        assertNotNull(session.state.value.saveWarning); assertEquals(game, repository.load()!!.game)
+        session.action(GameAction.Back); session.action(GameAction.Home); session.action(GameAction.Confirm)
+        assertEquals(Screen.HOME, session.state.value.screen)
+        session.action(GameAction.Continue)
+        assertNotEquals("Continue must keep an unacknowledged final shot behind recovery", Screen.RESULTS, session.state.value.screen)
+        assertTrue(session.state.value.resolving)
+        assertNotNull(session.state.value.saveWarning)
+        session.action(GameAction.Resume)
+        assertNotEquals(Screen.RESULTS, session.state.value.screen)
+        assertTrue(pending.delete())
+        command(session, "RetrySave"); runCurrent()
+        assertEquals(Screen.RESULTS, session.state.value.screen)
+        assertEquals(Player.HUMAN, repository.load()!!.game!!.winner)
+        session.action(GameAction.Restart); session.action(GameAction.Confirm)
+        assertEquals(Player.HUMAN, ready(session.state.value))
+        readyBoth(session); runCurrent()
+        assertEquals(10_000L, reveal(session.state.value))
+    }
+
     private class QueuedDispatcher : CoroutineDispatcher() {
         private val tasks = ArrayDeque<Runnable>()
         override fun dispatch(context: CoroutineContext, block: Runnable) { tasks.add(block) }

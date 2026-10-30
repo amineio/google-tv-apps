@@ -91,8 +91,9 @@ class GameSession(
             GameAction.Continue -> if (state.value.game != null) {
                 val game = state.value.game!!
                 if (game.mode == GameMode.LOCAL) {
-                    update { copy(screen = if (game.phase == GamePhase.GAME_OVER) Screen.RESULTS else Screen.GAME,
-                        paused = game.phase != GamePhase.GAME_OVER, confirmation = null, resolving = false,
+                    val awaitingSave = criticalWrite != null
+                    update { copy(screen = if (game.phase == GamePhase.GAME_OVER && !awaitingSave) Screen.RESULTS else Screen.GAME,
+                        paused = game.phase != GamePhase.GAME_OVER || awaitingSave, confirmation = null, resolving = awaitingSave,
                         message = "", activeImpact = null, revealRemainingMs = null, readySeat = null) }
                 } else {
                     update { copy(screen = Screen.GAME, paused = false, confirmation = null, resolving = false, message = "", activeImpact = null) }
