@@ -2,6 +2,8 @@ package com.amine.asktv.phoneauth
 
 import java.io.IOException
 import java.security.MessageDigest
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -13,6 +15,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 enum class PhoneAuthPhase { IDLE, STARTING, READY_FOR_BROWSER, WAITING_FOR_CALLBACK, VERIFYING, FINISHED }
 
@@ -29,7 +33,8 @@ class PhoneAuthSession(
     private val listenerFactory: ((String) -> Unit, (String) -> Unit) -> PhoneLoopbackListener,
     private val monotonicMs: () -> Long,
 ) : AutoCloseable {
-    private class Attempt(val generation: Long, val link: PhonePairingLink, val localDeadline: Long) {
+    private class Attempt(val generation: Long, val link: PhonePairingLink, val localDeadline: Long, val previousRelease: Deferred<Unit>?) {
+        val released = CompletableDeferred<Unit>()
         var listener: PhoneLoopbackListener? = null
         var client: PhoneRelayTransport? = null
         var token: String? = null
@@ -41,6 +46,8 @@ class PhoneAuthSession(
         var expiry: Job? = null
     }
     private val lock = Any()
+    private val listenerHandoff = Mutex()
+    private var lastLocalRelease: Deferred<Unit>? = null
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO.limitedParallelism(4))
     private val state = MutableStateFlow(PhoneAuthUi())
     val snapshot: StateFlow<PhoneAuthUi> = state.asStateFlow()
@@ -53,7 +60,8 @@ class PhoneAuthSession(
         val (attempt, previous) = synchronized(lock) {
             if (closed) return
             val previous = current
-            val next = Attempt(++generation, link, monotonicMs() + 600_000)
+            val next = Attempt(++generation, link, monotonicMs() + 600_000, lastLocalRelease)
+            lastLocalRelease = next.released
             current = next
             state.value = PhoneAuthUi(PhoneAuthPhase.STARTING, "Connecting to your TV…", next.deadline)
             next to previous
@@ -61,10 +69,14 @@ class PhoneAuthSession(
         previous?.let { retire(it, cancelRemote = true) }
         attempt.worker = scope.launch {
             try {
-                if (!owns(attempt)) return@launch
-                val listener = listenerFactory({ target -> acceptCallback(attempt, target) }, { _ -> fail(attempt, "The phone listener stopped. Start a new code on your TV.") })
-                if (!installListener(attempt, listener)) { listener.close(); return@launch }
-                listener.start()
+                attempt.previousRelease?.await()
+                val listener = listenerHandoff.withLock {
+                    if (!owns(attempt)) return@withLock null
+                    val created = listenerFactory({ target -> acceptCallback(attempt, target) }, { _ -> fail(attempt, "The phone listener stopped. Start a new code on your TV.") })
+                    if (!installListener(attempt, created)) { created.close(); return@withLock null }
+                    created.start()
+                    created
+                } ?: return@launch
                 if (!owns(attempt)) return@launch
                 val client = clientFactory(link)
                 if (!installClient(attempt, client)) { client.close(); return@launch }
@@ -186,8 +198,14 @@ class PhoneAuthSession(
         attempt.expiry?.cancel()
         attempt.worker?.cancel()
         scope.launch {
-            // Closing first also unblocks a claim or callback currently inside a blocking socket call.
-            runCatching { attempt.listener?.close() }
+            // The release chain also survives cancel(); start(), when current is already null.
+            // Start and close share this background-only handoff to cover cancellation during bind.
+            attempt.previousRelease?.await()
+            listenerHandoff.withLock {
+                try { runCatching { attempt.listener?.close() } }
+                finally { attempt.released.complete(Unit) }
+            }
+            // Remote cleanup cannot hold the exclusive local-port handoff.
             runCatching { attempt.client?.close() }
             val token = synchronized(lock) { attempt.token.also { attempt.token = null; attempt.authorization = null } }
             val remaining = attempt.deadline - monotonicMs()

@@ -36,9 +36,35 @@ internal class PhoneHelperMemory : ViewModel() {
     var paste by mutableStateOf("")
     var message by mutableStateOf<String?>(null)
     var inProgress by mutableStateOf(false)
-    var continueRequested = false
+    var continueRequested by mutableStateOf(false)
     var permissionsReady = false
     var notificationsRequested = false
+    private var confirmedCandidate by mutableStateOf<PhonePairingLink?>(null)
+    val hasActiveFlow: Boolean get() = inProgress || confirmedCandidate != null
+    fun offerCandidate(link: PhonePairingLink): Boolean {
+        if (hasActiveFlow) return false
+        candidate = link
+        return true
+    }
+    fun confirmCandidate(): Boolean {
+        if (hasActiveFlow) return false
+        confirmedCandidate = candidate ?: return false
+        continueRequested = true
+        permissionsReady = false
+        return true
+    }
+    fun consumeConfirmedCandidate(): PhonePairingLink? {
+        val confirmed = confirmedCandidate
+        confirmedCandidate = null
+        continueRequested = false
+        permissionsReady = false
+        return confirmed
+    }
+    fun cancelConfirmation() {
+        confirmedCandidate = null
+        continueRequested = false
+        permissionsReady = false
+    }
     var photo: File? = null
     fun discardPhoto() {
         val previous = photo
@@ -67,14 +93,14 @@ class PhoneAuthActivity : ComponentActivity() {
         override fun onServiceDisconnected(name: ComponentName) {
             binder = null
             memory.inProgress = false
-            memory.continueRequested = false
+            memory.cancelConfirmation()
             ui = PhoneAuthUi(PhoneAuthPhase.FINISHED, "The phone helper stopped. Get a new code on your TV.")
         }
     }
     private val networkPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) requestNotifications()
         else {
-            memory.continueRequested = false
+            memory.cancelConfirmation()
             memory.message = "Local network access is needed to reach your TV. Select Continue to try again."
         }
     }
@@ -94,8 +120,7 @@ class PhoneAuthActivity : ComponentActivity() {
             if (success) {
                 val link = decoded?.getOrNull()
                 if (link == null) memory.message = "Could not read the TV code. Photograph the complete code again, or paste the link."
-                else if (!memory.inProgress) {
-                    memory.candidate = link
+                else if (memory.offerCandidate(link)) {
                     memory.paste = ""
                     memory.message = null
                 }
@@ -113,19 +138,20 @@ class PhoneAuthActivity : ComponentActivity() {
         }
         setContent {
             PhoneAuthScreen(
-                ui = ui,
+                ui = if (memory.continueRequested) PhoneAuthUi(PhoneAuthPhase.STARTING, "Allow the requested permissions to continue.") else ui,
                 hasPairingLink = memory.candidate != null,
                 paste = memory.paste,
                 message = memory.message,
-                inProgress = memory.inProgress,
+                inProgress = memory.hasActiveFlow,
                 onPaste = { value ->
                     memory.paste = value.take(2049)
                     memory.candidate = null
                     memory.message = null
                 },
                 onUsePaste = {
-                    memory.candidate = runCatching { PhonePairingLink.parse(memory.paste.trim()) }.getOrNull()
-                    memory.message = if (memory.candidate == null) "This is not a valid AI Chat TV code. Get a new code on your TV." else null
+                    val parsed = runCatching { PhonePairingLink.parse(memory.paste.trim()) }.getOrNull()
+                    if (parsed != null) memory.offerCandidate(parsed)
+                    memory.message = if (parsed == null) "This is not a valid AI Chat TV code. Get a new code on your TV." else null
                     memory.paste = ""
                 },
                 onPhotograph = ::takePhotograph,
@@ -136,7 +162,8 @@ class PhoneAuthActivity : ComponentActivity() {
     }
     override fun onStart() {
         super.onStart()
-        bound = bindService(Intent(this, PhoneAuthService::class.java), connection, Context.BIND_AUTO_CREATE)
+        if (!bound) bound = bindService(Intent(this, PhoneAuthService::class.java), connection, Context.BIND_AUTO_CREATE)
+        if (binder != null) collectSession()
         if (!bound) memory.message = "The phone helper could not start. Reopen AI Chat and try a new TV code."
     }
     override fun onResume() {
@@ -145,11 +172,16 @@ class PhoneAuthActivity : ComponentActivity() {
     }
     override fun onStop() {
         collector?.cancel(); collector = null
+        // Keep the actual binding while the browser is visible. After foreground completion,
+        // the bound service retains only its safe result until this activity is destroyed.
+        super.onStop()
+    }
+    override fun onDestroy() {
+        collector?.cancel(); collector = null
         if (bound) unbindService(connection)
         bound = false
         binder = null
-        // The foreground service retains the listener while the browser is visible.
-        super.onStop()
+        super.onDestroy()
     }
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
@@ -163,10 +195,10 @@ class PhoneAuthActivity : ComponentActivity() {
         setIntent(Intent(this, PhoneAuthActivity::class.java))
         if (raw == null) return
         val parsed = runCatching { PhonePairingLink.parse(raw) }.getOrNull()
-        if (memory.inProgress) {
+        if (memory.hasActiveFlow) {
             memory.message = "Sign-in is already active. Cancel it before opening another TV code."
         } else {
-            memory.candidate = parsed
+            if (parsed != null) memory.offerCandidate(parsed) else memory.candidate = null
             memory.paste = ""
             memory.message = if (parsed == null) "This is not a valid AI Chat TV code. Get a new code on your TV." else null
         }
@@ -198,10 +230,8 @@ class PhoneAuthActivity : ComponentActivity() {
         }
     }
     private fun continueFromVisibleUi() {
-        if (memory.candidate == null || memory.inProgress || !lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) return
+        if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) || !memory.confirmCandidate()) return
         memory.message = null
-        memory.continueRequested = true
-        memory.permissionsReady = false
         if (!hasLocalNetworkPermission()) networkPermission.launch(LOCAL_NETWORK_PERMISSION)
         else requestNotifications()
     }
@@ -221,13 +251,12 @@ class PhoneAuthActivity : ComponentActivity() {
         val service = binder
         if (service == null) {
             if (!bound) {
-                memory.continueRequested = false
+                memory.cancelConfirmation()
                 memory.message = "The phone helper could not start. Reopen AI Chat and try a new TV code."
             }
             return
         }
-        val link = memory.candidate ?: return
-        memory.continueRequested = false
+        val link = memory.consumeConfirmedCandidate() ?: return
         try {
             checkNotNull(startForegroundService(Intent(this, PhoneAuthService::class.java)))
             service.start(link)
@@ -244,7 +273,7 @@ class PhoneAuthActivity : ComponentActivity() {
     private fun hasLocalNetworkPermission(): Boolean = Build.VERSION.SDK_INT < 37 ||
         checkSelfPermission(LOCAL_NETWORK_PERMISSION) == PackageManager.PERMISSION_GRANTED
     private fun cancelFlow() {
-        memory.continueRequested = false
+        memory.cancelConfirmation()
         memory.candidate = null
         memory.paste = ""
         memory.message = null
@@ -253,7 +282,7 @@ class PhoneAuthActivity : ComponentActivity() {
         binder?.cancel()
     }
     private fun takePhotograph() {
-        if (memory.inProgress) return
+        if (memory.hasActiveFlow) return
         memory.discardPhoto()
         lifecycleScope.launch {
             var file: File? = null

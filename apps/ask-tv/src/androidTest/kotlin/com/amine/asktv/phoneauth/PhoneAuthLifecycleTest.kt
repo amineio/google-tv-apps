@@ -17,11 +17,15 @@ import com.amine.asktv.OAuthProtocol
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.Rule
-import org.junit.Assume.assumeTrue
+import androidx.test.filters.SdkSuppress
 import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.test.espresso.intent.Intents
+import androidx.test.espresso.intent.matcher.IntentMatchers
+import android.app.Activity
+import android.app.Instrumentation
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.assertIsDisplayed
@@ -153,7 +157,16 @@ class PhoneAuthLifecycleTest {
         context.packageManager.setComponentEnabledSetting(component, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP)
         try {
             withRelay { link, _, _ ->
-                ActivityScenario.launch<PhoneAuthActivity>(Intent(context, PhoneAuthActivity::class.java).apply { action = Intent.ACTION_VIEW; data = Uri.parse(link.encode()) }).use {
+                ActivityScenario.launch<PhoneAuthActivity>(Intent(context, PhoneAuthActivity::class.java)).use { scenario ->
+                    scenario.onActivity { activity ->
+                        activity.startActivity(Intent(activity, PhoneAuthActivity::class.java).apply {
+                            action = Intent.ACTION_VIEW
+                            data = Uri.parse(link.encode())
+                            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        })
+                    }
+                    compose.onNodeWithText("TV code ready").performScrollTo().assertIsDisplayed()
+                    scenario.onActivity { assertNull(it.intent.data) }
                     compose.onNodeWithText("Continue with ChatGPT").performScrollTo().performClick()
                     compose.onNodeWithText("The phone helper could not start. Reopen AI Chat and try a new TV code.").performScrollTo().assertIsDisplayed()
                     // A fresh claim proves that the failed helper never consumed this TV code.
@@ -162,8 +175,9 @@ class PhoneAuthLifecycleTest {
             }
         } finally { context.packageManager.setComponentEnabledSetting(component, PackageManager.COMPONENT_ENABLED_STATE_DEFAULT, PackageManager.DONT_KILL_APP) }
     }
-    @Test fun deniedLocalNetworkPermissionPreventsForegroundLanWorkOnApi37() {
-        assumeTrue("ACCESS_LOCAL_NETWORK runtime permission begins on API 37", Build.VERSION.SDK_INT >= 37)
+    @Test
+    @SdkSuppress(minSdkVersion = 37)
+    fun deniedLocalNetworkPermissionPreventsForegroundLanWorkOnApi37() {
         permission("android.permission.ACCESS_LOCAL_NETWORK", false)
         fun flags(operation: String) {
             InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("pm $operation ${context.packageName} android.permission.ACCESS_LOCAL_NETWORK user-fixed").use {
@@ -173,12 +187,58 @@ class PhoneAuthLifecycleTest {
         flags("set-permission-flags")
         try {
             val link = PhonePairingLink("192.168.1.2", 8443, "ab".repeat(32), "a".repeat(43))
-            ActivityScenario.launch<PhoneAuthActivity>(Intent(context, PhoneAuthActivity::class.java).apply { action = Intent.ACTION_VIEW; data = Uri.parse(link.encode()) }).use {
+            ActivityScenario.launch<PhoneAuthActivity>(Intent(context, PhoneAuthActivity::class.java)).use { scenario ->
+                scenario.onActivity { activity ->
+                    activity.startActivity(Intent(activity, PhoneAuthActivity::class.java).apply {
+                        action = Intent.ACTION_VIEW
+                        data = Uri.parse(link.encode())
+                        addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    })
+                }
+                compose.onNodeWithText("TV code ready").performScrollTo().assertIsDisplayed()
                 compose.onNodeWithText("Continue with ChatGPT").performScrollTo().performClick()
                 compose.onNodeWithText("Local network access is needed to reach your TV. Select Continue to try again.").performScrollTo().assertIsDisplayed()
                 assertTrue(context.getSystemService(NotificationManager::class.java).activeNotifications.isEmpty())
             }
         } finally { flags("clear-permission-flags"); permission("android.permission.ACCESS_LOCAL_NETWORK", true) }
+    }
+    @Test fun browserBackgroundTerminalAndReturnRetainTheResultWithoutAnExtraBinding() {
+        permission("android.permission.POST_NOTIFICATIONS", true)
+        if (Build.VERSION.SDK_INT >= 37) permission("android.permission.ACCESS_LOCAL_NETWORK", true)
+        withRelay { link, oauth, dispatches ->
+            val url = oauth.authorizationUrl()
+            Intents.init()
+            try {
+                Intents.intending(IntentMatchers.hasData(Uri.parse(url)))
+                    .respondWith(Instrumentation.ActivityResult(Activity.RESULT_CANCELED, null))
+                ActivityScenario.launch<PhoneAuthActivity>(Intent(context, PhoneAuthActivity::class.java)).use { activity ->
+                    activity.onActivity { helper ->
+                        helper.startActivity(Intent(helper, PhoneAuthActivity::class.java).apply {
+                            action = Intent.ACTION_VIEW
+                            data = Uri.parse(link.encode())
+                            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        })
+                    }
+                    compose.onNodeWithText("TV code ready").performScrollTo().assertIsDisplayed()
+                    compose.onNodeWithText("Continue with ChatGPT").performScrollTo().performClick()
+                    compose.waitUntil(8_000) { Intents.getIntents().any { it.dataString == url } }
+                    // Only the real activity owns a binding. No test binding pins the service.
+                    activity.moveToState(Lifecycle.State.CREATED)
+                    val target = "/auth/callback?state=${oauth.pending!!.state}&code=synthetic&client_id=issued"
+                    Socket("127.0.0.1", 1455).use { peer ->
+                        peer.soTimeout = 5_000
+                        peer.outputStream.write("GET $target HTTP/1.1\r\nHost: 127.0.0.1:1455\r\n\r\n".toByteArray())
+                        peer.outputStream.flush()
+                        assertTrue(peer.inputStream.bufferedReader().readLine().contains("200"))
+                    }
+                    await { dispatches.get() == 1 }
+                    await { context.getSystemService(NotificationManager::class.java).activeNotifications.isEmpty() }
+                    activity.moveToState(Lifecycle.State.RESUMED)
+                    compose.onNodeWithText("Your TV is connected. You can close this helper.").performScrollTo().assertIsDisplayed()
+                    assertEquals(1, Intents.getIntents().count { it.dataString == url })
+                }
+            } finally { Intents.release() }
+        }
     }
     @Test fun freshServiceRequiresFreshQrInsteadOfRestoringSecrets() {
         withBoundService { binder, activity ->

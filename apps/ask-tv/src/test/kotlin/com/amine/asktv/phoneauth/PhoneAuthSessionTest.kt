@@ -138,6 +138,43 @@ class PhoneAuthSessionTest {
             assertTrue(first.closed)
         }
     }
+    @Test fun replacementWaitsUntilOldExclusiveListenerCloseCompletes() {
+        for (cancelFirst in listOf(false, true)) {
+            val events = CopyOnWriteArrayList<String>()
+            val closeEntered = CountDownLatch(1)
+            val releaseClose = CountDownLatch(1)
+            val replacementBind = CountDownLatch(1)
+            val created = AtomicInteger()
+            val portOwned = java.util.concurrent.atomic.AtomicBoolean(false)
+            val session = PhoneAuthSession({ Relay(events) }, { _, _ ->
+                val first = created.getAndIncrement() == 0
+                object : PhoneLoopbackListener {
+                    override fun start() {
+                        if (!first) replacementBind.countDown()
+                        if (!portOwned.compareAndSet(false, true)) throw IOException("Port still owned by old listener")
+                    }
+                    override fun expectState(value: String) { }
+                    override fun close() {
+                        if (first) {
+                            closeEntered.countDown()
+                            assertTrue("Test released the old close", releaseClose.await(5, TimeUnit.SECONDS))
+                        }
+                        portOwned.set(false)
+                    }
+                }
+            }, { 0L })
+            try {
+                session.start(link); await("first ready") { session.snapshot.value.canOpenBrowser }
+                if (cancelFirst) session.cancel()
+                session.start(link)
+                assertTrue("Old close reached its blocking point", closeEntered.await(2, TimeUnit.SECONDS))
+                assertFalse("Replacement must wait for exclusive port release", replacementBind.await(300, TimeUnit.MILLISECONDS))
+                releaseClose.countDown()
+                await("replacement ready after release") { session.snapshot.value.canOpenBrowser }
+                assertEquals(0L, replacementBind.count)
+            } finally { releaseClose.countDown(); session.close() }
+        }
+    }
     @Test fun cancellationPreservesAlreadyCommittedTvResult() {
         val events = CopyOnWriteArrayList<String>(); val relay = Relay(events).apply { result = RelayState.CONNECTED }
         PhoneAuthSession({ relay }, { cb, fail -> Listener(cb, fail, events) }, { 0L }).use { session ->

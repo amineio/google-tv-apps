@@ -22,6 +22,13 @@ import androidx.compose.ui.graphics.toPixelMap
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.runner.lifecycle.ActivityLifecycleCallback
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import org.junit.Assert.*
@@ -35,6 +42,32 @@ class PhonePairingUiTest {
     @get:Rule val compose = createEmptyComposeRule()
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val link = PhonePairingLink("192.168.1.2", 8443, "ab".repeat(32), "a".repeat(43))
+    /** Cold deep links clear their Intent in onCreate, so matching by Intent is unsuitable here. */
+    private fun withColdDeepLink(value: String, block: (PhoneAuthActivity) -> Unit) {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val monitor = ActivityLifecycleMonitorRegistry.getInstance()
+        val resumed = CountDownLatch(1)
+        val current = AtomicReference<PhoneAuthActivity?>()
+        val observer = ActivityLifecycleCallback { activity, stage ->
+            if (activity is PhoneAuthActivity && stage == Stage.RESUMED) {
+                current.set(activity)
+                resumed.countDown()
+            }
+        }
+        monitor.addLifecycleCallback(observer)
+        try {
+            context.startActivity(Intent(context, PhoneAuthActivity::class.java).apply {
+                action = Intent.ACTION_VIEW
+                data = Uri.parse(value)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            })
+            assertTrue("Cold helper reached RESUMED", resumed.await(8, TimeUnit.SECONDS))
+            block(requireNotNull(current.get()))
+        } finally {
+            instrumentation.runOnMainSync { current.get()?.finish() }
+            monitor.removeLifecycleCallback(observer)
+        }
+    }
     private fun photo(content: String): File {
         val file = File(context.cacheDir, "phone_pairing").apply { mkdirs() }.resolve("fixture-${System.nanoTime()}.png")
         val matrix = MultiFormatWriter().encode(content, BarcodeFormat.QR_CODE, 900, 900)
@@ -57,16 +90,16 @@ class PhonePairingUiTest {
         }
     }
     @Test fun validDeepLinkIsClearedAndRequiresVisibleContinueBeforeNetwork() {
-        ActivityScenario.launch<PhoneAuthActivity>(Intent(context, PhoneAuthActivity::class.java).apply { action = Intent.ACTION_VIEW; data = Uri.parse(link.encode()) }).use { scenario ->
+        withColdDeepLink(link.encode()) { activity ->
             compose.onNodeWithText("Continue with ChatGPT").performScrollTo().assertIsDisplayed()
-            scenario.onActivity { assertNull(it.intent.data) }
+            InstrumentationRegistry.getInstrumentation().runOnMainSync { assertNull(activity.intent.data) }
             compose.onNodeWithText("Cancel").performScrollTo().assertIsDisplayed()
             // No claim occurred: the unreachable fixture leaves the visible confirmation screen usable.
             compose.onNodeWithText("TV code ready").performScrollTo().assertIsDisplayed()
         }
     }
     @Test fun malformedDeepLinkCannotContinue() {
-        ActivityScenario.launch<PhoneAuthActivity>(Intent(context, PhoneAuthActivity::class.java).apply { action = Intent.ACTION_VIEW; data = Uri.parse("aichat://pair?token=bad") }).use {
+        withColdDeepLink("aichat://pair?token=bad") {
             compose.onNodeWithText("Continue with ChatGPT").assertIsNotEnabled()
             compose.onNodeWithText("Photograph TV code").assertIsDisplayed()
         }
