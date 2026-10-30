@@ -15,9 +15,12 @@ All three launcher resources belong to AI Chat. The launcher controls title cont
 
 - Icon: original Android vector chat symbol, 512 × 512 viewport. Source: `ask_icon.xml`. Repository MIT license.
 - Banner: separate 640 × 360 WebP, rendered in code with two outlined chat boxes and the native title “AI Chat”. No generated interface text.
-- Code-render brief: near-black 640 × 360 field; small gold double-chat outline at left; ivory AI Chat title at right; generous safe margins; no focus ring.
-- Render source: [`render-banner.sh`](render-banner.sh). It changes only the title for version 0.2.
-- Banner render: ImageMagick `-size 640x360 xc:#0D0E12`, gold stroke chat outlines, Outfit at 72 px, ivory title at `+258+207`; `cwebp -q 90`.
+- Code-render brief: near-black 640 × 360 field; small gold double-chat outline at left; white AI Chat title at right; generous safe margins; no focus ring.
+- Render source: [`render-banner.sh`](render-banner.sh). The version 0.2 correction keeps the composition and uses a brighter semibold title.
+- Banner render: ImageMagick `-size 640x360 xc:#0D0E12`, unchanged gold chat outlines, Outfit Semibold (`wght=600`) at 72 px, white `#FFFFFF` title at `+258+207`; `cwebp -q 90`.
+- Variable font handling: ImageMagick `-weight 600` produced the same thin glyphs as the default font. FontTools therefore creates a static semibold instance in a temporary directory. The script deletes that instance after rendering. No extra font or dependency is bundled in the app.
+- Render prerequisites: ImageMagick (`magick`), WebP tools (`cwebp`), and Python 3 with FontTools. The command below uses `uv` to supply the pinned build-time package.
+- Reproduce with the render-time tool: `uv run --no-project --with fonttools==4.68.0 bash docs/ask-tv/render-banner.sh`.
 - Font: Outfit copied from Family Home. Its SIL Open Font License is preserved in `apps/ask-tv/FONT-LICENSE-OFL.txt`. The app sets explicit variable font weights.
 
 ## Hashes
@@ -25,7 +28,7 @@ All three launcher resources belong to AI Chat. The launcher controls title cont
 | File | Bytes | SHA-256 |
 | --- | ---: | --- |
 | `ask_hero.webp` | 16552 | `ab80756b1b5f5d9f374108ee60f397683ba9075df62daf21fda2b16ea0317c6a` |
-| `ask_banner.webp` | 4198 | `f8936cd7e528f03fe94fe401edbadadbebad7af177a4cd01085386fefc1cd704` |
+| `ask_banner.webp` | 4434 | `ef61438d1bf9245e63bd6d1ef2f4fb0a81e5860dbe05e3694e8f498012261528` |
 | `ask_icon.xml` | 839 | `c55cf3ecbc8b5674b4d594d1cbdc3064c3f04ae64a69240f3ad2992a47a4e828` |
 | `outfit.ttf` | 110884 | `fc7287273e66929776e2ba54f144fe699080bec29f61bf649d70d871468aeade` |
 

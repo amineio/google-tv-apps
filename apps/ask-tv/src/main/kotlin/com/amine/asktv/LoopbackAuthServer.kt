@@ -13,7 +13,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /** Only the ADB tunnel exposes this Android loopback listener to the Mac browser. */
 class LoopbackAuthServer(private val protocol: OAuthProtocol, private val onGrant: (AuthGrant) -> Unit,
-    private val onFailure: (String) -> Unit) : AutoCloseable {
+    private val onFailure: (String) -> Unit,
+    private val diagnostic: (String, String) -> Unit = { stage, exceptionClass ->
+        Log.w("AIChatAuth", "stage=$stage exception=$exceptionClass")
+    }) : AutoCloseable {
     private val closed=AtomicBoolean(false)
     private val workers=Executors.newFixedThreadPool(2)
     private var server: ServerSocket?=null
@@ -34,11 +37,12 @@ class LoopbackAuthServer(private val protocol: OAuthProtocol, private val onGran
     }
     private fun handle(client:Socket) {
         client.use { s ->
-            var stage = "READ_HEADERS"
+            var stage = "READ_REQUEST"
             try {
                 s.soTimeout=5000
                 val reader=s.getInputStream().bufferedReader(Charsets.US_ASCII)
                 val request=reader.readLine()?.takeIf { it.length <= 8192 } ?: return
+                stage = "READ_HEADERS"
                 var count=0
                 while(true) { val line=reader.readLine() ?: return; count+=line.length; if(count>16384) return; if(line.isEmpty()) break }
                 val parts=request.split(' ')
@@ -69,9 +73,12 @@ class LoopbackAuthServer(private val protocol: OAuthProtocol, private val onGran
                     }
                     else -> respond(s,404,"Not found.")
                 }
+            } catch(e:SocketTimeoutException) {
+                // Close timed-out browser sockets without an unsolicited HTTP response.
+                diagnostic(stage, e.javaClass.name)
             } catch(e:AuthFailure) { runCatching { respond(s,400,"Sign-in could not be completed. Check AI Chat.") }; protocol.cancel(); onFailure(e.safeMessage); close() }
             catch (e:Exception) {
-                Log.w("AIChatAuth", "stage=$stage exception=${e.javaClass.name}")
+                diagnostic(stage, e.javaClass.name)
                 runCatching { respond(s,400,"This request could not be read.") }
             }
         }
