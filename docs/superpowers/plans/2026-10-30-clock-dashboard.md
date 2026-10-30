@@ -50,4 +50,4 @@ env JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home AND
 - [x] Run the relevant existing instrumented regression suite on `emulator-5582`. Record the tested revision, exact commands, test counts, and results.
 - [x] Install the validated build on the emulator. Capture fresh dashboard, appearance, and dialog images. Check initial focus, actual directional navigation, permission actions, cancelled edits, and focus after return.
 - [x] Have one fresh reviewer inspect the final diff and native captures. Resolve material findings and repeat only affected checks.
-- [ ] Fetch `origin` again, integrate concurrent changes if needed, and repeat affected checks. Commit only this app and its related documentation. Push the task branch and safely merge to `origin/main`; confirm the resulting remote SHA. Report installation and merge separately.
+- [x] Fetch `origin` again, integrate concurrent changes if needed, and repeat affected checks. Commit only this app and its related documentation. Push the task branch and safely merge to `origin/main`; confirm the resulting remote SHA. Report installation and merge separately.
