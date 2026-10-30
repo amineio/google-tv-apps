@@ -1,8 +1,8 @@
-# TV Clock
+# Clock
 
-TV Clock shows white `HH:mm` text in the top-right corner over other apps.
+Clock shows white `HH:mm` text in the top-right corner over other apps.
 The background is transparent. The clock uses the TV time and time zone.
-Open TV Clock from the app grid. Select Clock appearance to turn Show clock on or off.
+Open Clock from the app grid. Select Clock appearance to turn Show clock on or off.
 The clock remembers this choice and starts after boot when enabled.
 Focus Position, then use Left or Right to move the clock along the right edge.
 Focus Text size, then use Left or Right to change the text size.
@@ -17,8 +17,10 @@ Some apps and protected system screens can hide overlays.
 
 ## Viewing limits
 
-The main page contains a session timer and a daily bedtime.
-Select Timer duration, then set the hours and minutes with the remote.
+The dashboard shows a live analog clock, the current time, and the date.
+The right cards contain a session timer and a daily bedtime.
+Clock appearance and At the limit remain below the cards.
+Select Set duration, then set the hours and minutes with the remote.
 Use Left and Right to select a field. Use Up and Down to change its value.
 Press OK to save, then select Start timer. Press Back to cancel.
 The timer counts elapsed time, including standby. It does not measure playback.
@@ -93,13 +95,13 @@ TV_SERIAL=192.168.1.121:34927 python3 apps/clock/tests/device_test.py
 The clock uses a foreground service, an Android task with a persistent notification.
 It updates once per minute and pauses updates while the screen is off.
 The app uses native Android controls and no additional runtime libraries.
-Android can stop the app. Open TV Clock to start it again.
+Android can stop the app. Open Clock to start it again.
 Reinstalling the app preserves its on/off choice. Force stop prevents automatic startup until you open the app again.
 
 ## Remove
 
 To hide the clock, turn Show clock off.
-To remove the app, use Settings > Apps > TV Clock > Uninstall.
+To remove the app, use Settings > Apps > Clock > Uninstall.
 You can also operate this command on the connected computer:
 
 ```sh
@@ -107,3 +109,12 @@ adb -s 192.168.1.121:34927 uninstall com.amine.tvclock
 ```
 
 Removal also removes overlay permission. The existing home screen stays active.
+
+## Dashboard artwork
+
+The square icon and 16:9 banner use native vector geometry.
+The separate text-free launcher background is a 1920 by 1080 WebP export of original SVG geometry.
+The background uses `com.amine.familyhome.HERO_IMAGE` application metadata.
+The clock hands have flat ends. No external images or fonts are bundled.
+The artwork uses the repository MIT license. The approved ImageGen reference is documented in
+[the dashboard design](../../docs/superpowers/specs/2026-10-30-clock-dashboard-design.md).

@@ -82,7 +82,7 @@ public final class ClockService extends Service {
                 new Intent(this, ClockService.class).setAction(STOP),
                 PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         Notification notification = new Notification.Builder(this, CHANNEL)
-                .setSmallIcon(R.drawable.clock_icon).setContentTitle("TV Clock")
+                .setSmallIcon(R.drawable.clock_icon).setContentTitle("Clock")
                 .setContentText(LimitsController.read(this).active() ? "Time limits are active." : "The clock is on.").setContentIntent(open)
                 .setOngoing(true).setShowWhen(false)
                 .addAction(new Notification.Action.Builder(null, "Hide clock", stop).build()).build();
@@ -146,7 +146,7 @@ public final class ClockService extends Service {
         float density = getResources().getDisplayMetrics().density;
         position.x = Math.round(24 * density);
         position.y = Math.round(18 * density);
-        position.setTitle("TV Clock overlay");
+        position.setTitle("Clock overlay");
         windows.addView(view, position);
         clock = view;
     }
@@ -178,7 +178,7 @@ public final class ClockService extends Service {
         if (clock != null && ClockPreferences.position(this) <= 5) {
             p.y = ((WindowManager.LayoutParams) clock.getLayoutParams()).y + clock.getMeasuredHeight() + TvUi.dp(this, 12);
         }
-        p.setTitle("TV Clock warning");
+        p.setTitle("Clock warning");
         windows.addView(warning, p);
         handler.postDelayed(hideWarning, 8_000);
     }

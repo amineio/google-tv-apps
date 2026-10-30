@@ -32,9 +32,9 @@ public final class StopActivity extends Activity {
         TimeLimits s = LimitsController.read(this);
         if (!s.stopPending || s.stopVersion != version) { finish(); return; }
         shownAt = SystemClock.uptimeMillis(); ready = false;
-        getWindow().setTitle("TV Clock stop");
+        getWindow().setTitle("Clock stop");
         LinearLayout page = TvUi.page(this);
-        page.addView(TvUi.text(this, "TV Clock", 16, true)); TvUi.gap(page, 44);
+        page.addView(TvUi.text(this, "Clock", 16, true)); TvUi.gap(page, 44);
         page.addView(TvUi.text(this, s.stopBedtime ? "Time for bed" : "Time to stop", 44, false));
         TvUi.gap(page, 12); page.addView(TvUi.text(this, LimitsController.time(System.currentTimeMillis()), 32, false));
         TvUi.gap(page, 16); page.addView(TvUi.text(this, s.stopBedtime ? "Your bedtime has arrived." : "Your timer has ended.", 20, true));

@@ -16,6 +16,7 @@ final class SettingRow extends LinearLayout {
     private final TextView title, detail, value;
     private final ImageView icon;
     private Runnable less, more;
+    private boolean compact;
 
     SettingRow(Context context, String label, String description, int iconId, int id, Runnable action) {
         super(context);
@@ -54,10 +55,19 @@ final class SettingRow extends LinearLayout {
         colors();
     }
 
+    void dashboardAction() {
+        compact = true;
+        setMinimumHeight(TvUi.dp(getContext(), 44));
+        setPadding(TvUi.dp(getContext(), 12), TvUi.dp(getContext(), 8), TvUi.dp(getContext(), 12), TvUi.dp(getContext(), 8));
+        title.setTextSize(16);
+        value.setTextSize(16);
+        detail.setVisibility(GONE);
+        setBackground(TvUi.actionBackground(getContext()));
+    }
     void setTitle(String label) { title.setText(label); description(); }
     void setDetail(String text) {
         detail.setText(text);
-        detail.setVisibility(text.isEmpty() ? GONE : VISIBLE);
+        detail.setVisibility(compact || text.isEmpty() ? GONE : VISIBLE);
         description();
     }
     void setValue(String text) {
@@ -72,7 +82,7 @@ final class SettingRow extends LinearLayout {
         setContentDescription(title.getText() + (detail.getText().length() == 0 ? "" : ". " + detail.getText()));
     }
     private void colors() {
-        int foreground = isFocused() ? TvUi.BACKGROUND : TvUi.TEXT;
+        int foreground = isFocused() && !compact ? TvUi.BACKGROUND : TvUi.TEXT;
         title.setTextColor(foreground);
         value.setTextColor(foreground);
         detail.setTextColor(isFocused() ? TvUi.FOCUSED_DETAIL : TvUi.MUTED);
