@@ -1,0 +1,830 @@
+{
+  "created": "2026-10-30",
+  "tool": "image_gen.imagegen",
+  "creator": "ImageGen",
+  "rights": "Generated with OpenAI ImageGen from user-approved project concept references. No exclusive copyright, trademark, or clearance claim is made. No third-party stock assets or fonts were added.",
+  "records": [
+    {
+      "id": "fox",
+      "set": "chess",
+      "args": {
+        "prompt": "Use case: stylized-concept. Generate ONE standalone 1024x1024 square player portrait of red fox, amber eyes, white cheeks, pointed ears. Use the fox portrait in the reference only as identity and mature painterly-realistic style guidance; do not reproduce its UI. Head and shoulders, centered near frontal view, welcoming quiet expression, head about 65 percent of image, all ears inside central 80 percent. Natural animal, no clothing. Chess palette: textured dark forest-green backdrop, warm ivory light, subtle honey highlights. Single character only. No text, badges, borders, circle, focus treatment, UI, uniform, cap, naval props, logos, flags or weapons. Full square image; native app supplies circular clipping.",
+        "referenced_image_paths": [
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/docs/two-player-games/concepts/chess-portrait-chooser-concept.png"
+        ],
+        "transparent_background": false
+      },
+      "reference": {
+        "path": "docs/two-player-games/concepts/chess-portrait-chooser-concept.png",
+        "sha256": "6664916b6a082c7bc7a21e736b1947844f61415413388c764653bce6cd3572fc",
+        "role": "Identity and style reference, not extracted"
+      },
+      "original": {
+        "path": "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-355f10a9-b540-4de3-b002-b37895fc39d6.png",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "sha256": "3792f061395c118c1532c89475920a8367012b52b28afab19dbac44b56da8f2a"
+      },
+      "bundled": {
+        "path": "apps/chess-math/src/main/res/drawable-nodpi/profile_fox.webp",
+        "dimensions": [
+          512,
+          512
+        ],
+        "format": "WebP",
+        "quality": 86,
+        "sha256": "cd37d8d1b717d4ecd1863a291277e45a1fceb61bb0d4d6800ed0a89ab357747b",
+        "bytes": 64128
+      },
+      "inspection": "Single correct character, square composition, no text or UI frame; facial identity, palette, costume and signature props checked visually. Native circular clipping still requires app capture review.",
+      "preparation": {
+        "tool": "cwebp",
+        "arguments": [
+          "-quiet",
+          "-q",
+          "86",
+          "-resize",
+          "512",
+          "512",
+          "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-355f10a9-b540-4de3-b002-b37895fc39d6.png",
+          "-o",
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/apps/chess-math/src/main/res/drawable-nodpi/profile_fox.webp"
+        ],
+        "semantic_edits": false
+      }
+    },
+    {
+      "id": "owl",
+      "set": "chess",
+      "args": {
+        "prompt": "Use case: stylized-concept. Generate ONE standalone 1024x1024 square player portrait of snowy white owl, yellow eyes, soft black feather markings. Use the owl portrait in the reference only as identity and mature painterly-realistic style guidance; do not reproduce its UI. Head and shoulders, centered near frontal view, welcoming quiet expression, head about 65 percent of image, all ears inside central 80 percent. Natural animal, no clothing. Chess palette: textured dark forest-green backdrop, warm ivory light, subtle honey highlights. Single character only. No text, badges, borders, circle, focus treatment, UI, uniform, cap, naval props, logos, flags or weapons. Full square image; native app supplies circular clipping.",
+        "referenced_image_paths": [
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/docs/two-player-games/concepts/chess-portrait-chooser-concept.png"
+        ],
+        "transparent_background": false
+      },
+      "reference": {
+        "path": "docs/two-player-games/concepts/chess-portrait-chooser-concept.png",
+        "sha256": "6664916b6a082c7bc7a21e736b1947844f61415413388c764653bce6cd3572fc",
+        "role": "Identity and style reference, not extracted"
+      },
+      "original": {
+        "path": "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-2e5da332-d42a-44e6-9b05-9cd9b4eb9e71.png",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "sha256": "f43d8f547d95caec1aac9ab73a9d662fcca06b7e40d98e26be412b887f1f7447"
+      },
+      "bundled": {
+        "path": "apps/chess-math/src/main/res/drawable-nodpi/profile_owl.webp",
+        "dimensions": [
+          512,
+          512
+        ],
+        "format": "WebP",
+        "quality": 86,
+        "sha256": "2a7fdbd82172a8b598f68bb7309728d2f5ba4343e2381c42a5af16b273d49ed8",
+        "bytes": 55244
+      },
+      "inspection": "Single correct character, square composition, no text or UI frame; facial identity, palette, costume and signature props checked visually. Native circular clipping still requires app capture review.",
+      "preparation": {
+        "tool": "cwebp",
+        "arguments": [
+          "-quiet",
+          "-q",
+          "86",
+          "-resize",
+          "512",
+          "512",
+          "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-2e5da332-d42a-44e6-9b05-9cd9b4eb9e71.png",
+          "-o",
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/apps/chess-math/src/main/res/drawable-nodpi/profile_owl.webp"
+        ],
+        "semantic_edits": false
+      }
+    },
+    {
+      "id": "bear",
+      "set": "chess",
+      "args": {
+        "prompt": "Use case: stylized-concept. Generate ONE standalone 1024x1024 square player portrait of brown bear, round ears, kind alert dark eyes. Use the bear portrait in the reference only as identity and mature painterly-realistic style guidance; do not reproduce its UI. Head and shoulders, centered near frontal view, welcoming quiet expression, head about 65 percent of image, all ears inside central 80 percent. Natural animal, no clothing. Chess palette: textured dark forest-green backdrop, warm ivory light, subtle honey highlights. Single character only. No text, badges, borders, circle, focus treatment, UI, uniform, cap, naval props, logos, flags or weapons. Full square image; native app supplies circular clipping.",
+        "referenced_image_paths": [
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/docs/two-player-games/concepts/chess-portrait-chooser-concept.png"
+        ],
+        "transparent_background": false
+      },
+      "reference": {
+        "path": "docs/two-player-games/concepts/chess-portrait-chooser-concept.png",
+        "sha256": "6664916b6a082c7bc7a21e736b1947844f61415413388c764653bce6cd3572fc",
+        "role": "Identity and style reference, not extracted"
+      },
+      "original": {
+        "path": "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-68a7923c-38f7-429d-88fe-6e5c9f9c20e4.png",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "sha256": "353bef5fd2a492bdbfff6d2645370aa1ae28d1d89836b579254a9212c1f6554a"
+      },
+      "bundled": {
+        "path": "apps/chess-math/src/main/res/drawable-nodpi/profile_bear.webp",
+        "dimensions": [
+          512,
+          512
+        ],
+        "format": "WebP",
+        "quality": 86,
+        "sha256": "054818f78249b58a0bc82a3c95488742f5dbb8e28fcbfd70d0555b32aaa8394e",
+        "bytes": 69876
+      },
+      "inspection": "Single correct character, square composition, no text or UI frame; facial identity, palette, costume and signature props checked visually. Native circular clipping still requires app capture review.",
+      "preparation": {
+        "tool": "cwebp",
+        "arguments": [
+          "-quiet",
+          "-q",
+          "86",
+          "-resize",
+          "512",
+          "512",
+          "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-68a7923c-38f7-429d-88fe-6e5c9f9c20e4.png",
+          "-o",
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/apps/chess-math/src/main/res/drawable-nodpi/profile_bear.webp"
+        ],
+        "semantic_edits": false
+      }
+    },
+    {
+      "id": "cat",
+      "set": "chess",
+      "args": {
+        "prompt": "Use case: stylized-concept. Generate ONE standalone 1024x1024 square player portrait of orange tabby cat, green-gold eyes, white muzzle. Use the cat portrait in the reference only as identity and mature painterly-realistic style guidance; do not reproduce its UI. Head and shoulders, centered near frontal view, welcoming quiet expression, head about 65 percent of image, all ears inside central 80 percent. Natural animal, no clothing. Chess palette: textured dark forest-green backdrop, warm ivory light, subtle honey highlights. Single character only. No text, badges, borders, circle, focus treatment, UI, uniform, cap, naval props, logos, flags or weapons. Full square image; native app supplies circular clipping.",
+        "referenced_image_paths": [
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/docs/two-player-games/concepts/chess-portrait-chooser-concept.png"
+        ],
+        "transparent_background": false
+      },
+      "reference": {
+        "path": "docs/two-player-games/concepts/chess-portrait-chooser-concept.png",
+        "sha256": "6664916b6a082c7bc7a21e736b1947844f61415413388c764653bce6cd3572fc",
+        "role": "Identity and style reference, not extracted"
+      },
+      "original": {
+        "path": "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-76c0ded5-8894-48a9-9a8d-a22f85c4c70d.png",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "sha256": "d69bb69d61c76582583d3f0ce04f30d597032232deec2690eb820e9dd75ef0e3"
+      },
+      "bundled": {
+        "path": "apps/chess-math/src/main/res/drawable-nodpi/profile_cat.webp",
+        "dimensions": [
+          512,
+          512
+        ],
+        "format": "WebP",
+        "quality": 86,
+        "sha256": "511a640b0596aecd1956f6a549f4566500a60f7dcc109ddd9cb24d14615d9ce0",
+        "bytes": 59616
+      },
+      "inspection": "Single correct character, square composition, no text or UI frame; facial identity, palette, costume and signature props checked visually. Native circular clipping still requires app capture review.",
+      "preparation": {
+        "tool": "cwebp",
+        "arguments": [
+          "-quiet",
+          "-q",
+          "86",
+          "-resize",
+          "512",
+          "512",
+          "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-76c0ded5-8894-48a9-9a8d-a22f85c4c70d.png",
+          "-o",
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/apps/chess-math/src/main/res/drawable-nodpi/profile_cat.webp"
+        ],
+        "semantic_edits": false
+      }
+    },
+    {
+      "id": "panda",
+      "set": "chess",
+      "args": {
+        "prompt": "Use case: stylized-concept. Generate ONE standalone 1024x1024 square player portrait of giant panda, black round ears and eye patches, ivory fur. Use the panda portrait in the reference only as identity and mature painterly-realistic style guidance; do not reproduce its UI. Head and shoulders, centered near frontal view, welcoming quiet expression, head about 65 percent of image, all ears or horns inside central 80 percent with generous headroom. Natural creature, no clothing. Chess palette: textured dark forest-green backdrop, warm ivory light, subtle honey highlights. Single character only. No text, badges, borders, circle, focus treatment, UI, uniform, cap, naval props, logos, flags or weapons. Full square image; native app supplies circular clipping.",
+        "referenced_image_paths": [
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/docs/two-player-games/concepts/chess-portrait-chooser-concept.png"
+        ],
+        "transparent_background": false
+      },
+      "reference": {
+        "path": "docs/two-player-games/concepts/chess-portrait-chooser-concept.png",
+        "sha256": "6664916b6a082c7bc7a21e736b1947844f61415413388c764653bce6cd3572fc",
+        "role": "Identity and style reference, not extracted"
+      },
+      "original": {
+        "path": "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-c370ecd4-090a-4a9b-8135-2c47a347811d.png",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "sha256": "4bf3495c2b7e5a5700d08a41a96bf2ba02b1ffdb071c2caa0fb8c4a2b201c29e"
+      },
+      "bundled": {
+        "path": "apps/chess-math/src/main/res/drawable-nodpi/profile_panda.webp",
+        "dimensions": [
+          512,
+          512
+        ],
+        "format": "WebP",
+        "quality": 86,
+        "sha256": "5fd098ebd8304475a5dd31d1e7259591ccd66288e0237c9ef55f8224eaf73331",
+        "bytes": 60328
+      },
+      "inspection": "Single correct character, square composition, no text or UI frame; facial identity, palette, costume and signature props checked visually. Native circular clipping still requires app capture review.",
+      "preparation": {
+        "tool": "cwebp",
+        "arguments": [
+          "-quiet",
+          "-q",
+          "86",
+          "-resize",
+          "512",
+          "512",
+          "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-c370ecd4-090a-4a9b-8135-2c47a347811d.png",
+          "-o",
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/apps/chess-math/src/main/res/drawable-nodpi/profile_panda.webp"
+        ],
+        "semantic_edits": false
+      }
+    },
+    {
+      "id": "rabbit",
+      "set": "chess",
+      "args": {
+        "prompt": "Use case: stylized-concept. Generate ONE standalone 1024x1024 square player portrait of brown rabbit, tall upright ears, warm dark eyes. Use the rabbit portrait in the reference only as identity and mature painterly-realistic style guidance; do not reproduce its UI. Head and shoulders, centered near frontal view, welcoming quiet expression, head about 65 percent of image, all ears or horns inside central 80 percent with generous headroom. Natural creature, no clothing. Chess palette: textured dark forest-green backdrop, warm ivory light, subtle honey highlights. Single character only. No text, badges, borders, circle, focus treatment, UI, uniform, cap, naval props, logos, flags or weapons. Full square image; native app supplies circular clipping.",
+        "referenced_image_paths": [
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/docs/two-player-games/concepts/chess-portrait-chooser-concept.png"
+        ],
+        "transparent_background": false
+      },
+      "reference": {
+        "path": "docs/two-player-games/concepts/chess-portrait-chooser-concept.png",
+        "sha256": "6664916b6a082c7bc7a21e736b1947844f61415413388c764653bce6cd3572fc",
+        "role": "Identity and style reference, not extracted"
+      },
+      "original": {
+        "path": "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-ef55e2e7-3cdd-430f-bce5-8620bc919ad8.png",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "sha256": "17e7c1b4800c54c0feb684246df83bfeeb5c1a352480ef1c00c12b50ed1dce96"
+      },
+      "bundled": {
+        "path": "apps/chess-math/src/main/res/drawable-nodpi/profile_rabbit.webp",
+        "dimensions": [
+          512,
+          512
+        ],
+        "format": "WebP",
+        "quality": 86,
+        "sha256": "861322710d0af83d13dcf498e4409e482f55941c8b3db7939f3387a9bb35cbb1",
+        "bytes": 55238
+      },
+      "inspection": "Single correct character, square composition, no text or UI frame; facial identity, palette, costume and signature props checked visually. Native circular clipping still requires app capture review.",
+      "preparation": {
+        "tool": "cwebp",
+        "arguments": [
+          "-quiet",
+          "-q",
+          "86",
+          "-resize",
+          "512",
+          "512",
+          "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-ef55e2e7-3cdd-430f-bce5-8620bc919ad8.png",
+          "-o",
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/apps/chess-math/src/main/res/drawable-nodpi/profile_rabbit.webp"
+        ],
+        "semantic_edits": false
+      }
+    },
+    {
+      "id": "turtle",
+      "set": "chess",
+      "args": {
+        "prompt": "Use case: stylized-concept. Generate ONE standalone 1024x1024 square player portrait of olive-green turtle, friendly golden eyes, natural brown shell. Use the turtle portrait in the reference only as identity and mature painterly-realistic style guidance; do not reproduce its UI. Head and shoulders, centered near frontal view, welcoming quiet expression, head about 65 percent of image, all ears or horns inside central 80 percent with generous headroom. Natural creature, no clothing. Chess palette: textured dark forest-green backdrop, warm ivory light, subtle honey highlights. Single character only. No text, badges, borders, circle, focus treatment, UI, uniform, cap, naval props, logos, flags or weapons. Full square image; native app supplies circular clipping.",
+        "referenced_image_paths": [
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/docs/two-player-games/concepts/chess-portrait-chooser-concept.png"
+        ],
+        "transparent_background": false
+      },
+      "reference": {
+        "path": "docs/two-player-games/concepts/chess-portrait-chooser-concept.png",
+        "sha256": "6664916b6a082c7bc7a21e736b1947844f61415413388c764653bce6cd3572fc",
+        "role": "Identity and style reference, not extracted"
+      },
+      "original": {
+        "path": "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-09756c52-4a86-46e3-8298-ed3b142bc84f.png",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "sha256": "8507308321e0b387435ec2926a856a5c6d00fab5a5e296149b9caec6e35c9c3b"
+      },
+      "bundled": {
+        "path": "apps/chess-math/src/main/res/drawable-nodpi/profile_turtle.webp",
+        "dimensions": [
+          512,
+          512
+        ],
+        "format": "WebP",
+        "quality": 86,
+        "sha256": "8dc0c984eac4868746032d241169b968c807dcdf8b857edcd89761eac9a120f6",
+        "bytes": 57198
+      },
+      "inspection": "Single correct character, square composition, no text or UI frame; facial identity, palette, costume and signature props checked visually. Native circular clipping still requires app capture review.",
+      "preparation": {
+        "tool": "cwebp",
+        "arguments": [
+          "-quiet",
+          "-q",
+          "86",
+          "-resize",
+          "512",
+          "512",
+          "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-09756c52-4a86-46e3-8298-ed3b142bc84f.png",
+          "-o",
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/apps/chess-math/src/main/res/drawable-nodpi/profile_turtle.webp"
+        ],
+        "semantic_edits": false
+      }
+    },
+    {
+      "id": "dragon",
+      "set": "chess",
+      "args": {
+        "prompt": "Use case: stylized-concept. Generate ONE standalone 1024x1024 square player portrait of friendly red-orange small dragon, amber eyes, two curved horns, ivory throat scales, matching the reference dragon. Use the dragon portrait in the reference only as identity and mature painterly-realistic style guidance; do not reproduce its UI. Head and shoulders, centered near frontal view, welcoming quiet expression, head about 65 percent of image, all ears or horns inside central 80 percent with generous headroom. Natural creature, no clothing. Chess palette: textured dark forest-green backdrop, warm ivory light, subtle honey highlights. Single character only. No text, badges, borders, circle, focus treatment, UI, uniform, cap, naval props, logos, flags or weapons. Full square image; native app supplies circular clipping.",
+        "referenced_image_paths": [
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/docs/two-player-games/concepts/chess-portrait-chooser-concept.png"
+        ],
+        "transparent_background": false
+      },
+      "reference": {
+        "path": "docs/two-player-games/concepts/chess-portrait-chooser-concept.png",
+        "sha256": "6664916b6a082c7bc7a21e736b1947844f61415413388c764653bce6cd3572fc",
+        "role": "Identity and style reference, not extracted"
+      },
+      "original": {
+        "path": "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-c01169f7-d88e-4fe2-8889-376184a531a6.png",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "sha256": "49e2b3de4c2dbb9af23c4b4a4dbbca1adf6729bfc840709a82dad8a31c6be3a5"
+      },
+      "bundled": {
+        "path": "apps/chess-math/src/main/res/drawable-nodpi/profile_dragon.webp",
+        "dimensions": [
+          512,
+          512
+        ],
+        "format": "WebP",
+        "quality": 86,
+        "sha256": "60083f182e16ede5020cf95f10b94a179cdc6349f31cde1e3690e1cceddf97c7",
+        "bytes": 58192
+      },
+      "inspection": "Single correct character, square composition, no text or UI frame; facial identity, palette, costume and signature props checked visually. Native circular clipping still requires app capture review.",
+      "preparation": {
+        "tool": "cwebp",
+        "arguments": [
+          "-quiet",
+          "-q",
+          "86",
+          "-resize",
+          "512",
+          "512",
+          "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-c01169f7-d88e-4fe2-8889-376184a531a6.png",
+          "-o",
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/apps/chess-math/src/main/res/drawable-nodpi/profile_dragon.webp"
+        ],
+        "semantic_edits": false
+      }
+    },
+    {
+      "id": "fox",
+      "set": "battle",
+      "args": {
+        "prompt": "Use case: stylized-concept. Create ONE individual standalone 1024x1024 SQUARE player portrait. Subject: The Strategist: red fox, clever welcoming amber eyes, white captain cap with plain dark band and brass trim, navy coat and burgundy scarf. Reference image is identity and mature painterly-realistic style guidance ONLY; recreate this one character, not the sheet. Match original face, expression and signature props. Head and shoulders centered near frontal or gentle three-quarter view. Head about 65 percent of image; ears, cap and accessories completely within central 80 percent, generous clear headroom. Midnight-navy and teal lightly textured backdrop, warm brass light, adventurous welcoming naval mood. No text, labels, logos, emblems, anchor insignia, flags, weapons, borders, circles, focus effects or UI. Native app supplies labels and circular clipping. Render complete square, one character only.",
+        "referenced_image_paths": [
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/docs/two-player-games/concepts/battleship-captain-directions.png"
+        ],
+        "transparent_background": false
+      },
+      "reference": {
+        "path": "docs/two-player-games/concepts/battleship-captain-directions.png",
+        "sha256": "f06e0438438681b9257c3ea3f20473fa623ffe3c59d2361ece9619e27082cf0d",
+        "role": "Identity and style reference, not extracted"
+      },
+      "original": {
+        "path": "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-08dd451d-502e-4d93-9a0b-b02c96015b0f.png",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "sha256": "23dadc49436dbceb0e838292f828dacd646873333ef5ef995a0bb736799c4f5f"
+      },
+      "bundled": {
+        "path": "apps/battleship/src/main/res/drawable-nodpi/profile_fox.webp",
+        "dimensions": [
+          512,
+          512
+        ],
+        "format": "WebP",
+        "quality": 86,
+        "sha256": "f441ed110df32f0eea0565a122ca5685543d4024d9655e82811d19d529824b29",
+        "bytes": 51836
+      },
+      "inspection": "Single correct character, square composition, no text or UI frame; facial identity, palette, costume and signature props checked visually. Native circular clipping still requires app capture review.",
+      "preparation": {
+        "tool": "cwebp",
+        "arguments": [
+          "-quiet",
+          "-q",
+          "86",
+          "-resize",
+          "512",
+          "512",
+          "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-08dd451d-502e-4d93-9a0b-b02c96015b0f.png",
+          "-o",
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/apps/battleship/src/main/res/drawable-nodpi/profile_fox.webp"
+        ],
+        "semantic_edits": false
+      }
+    },
+    {
+      "id": "owl",
+      "set": "battle",
+      "args": {
+        "prompt": "Use case: stylized-concept. Create ONE individual standalone 1024x1024 SQUARE player portrait. Subject: The Navigator: snowy white owl, yellow eyes, round brass spectacles, navy coat and round brass compass pendant. Reference image is identity and mature painterly-realistic style guidance ONLY; recreate this one character, not the sheet. Match original face, expression and signature props. Head and shoulders centered near frontal or gentle three-quarter view. Head about 65 percent of image; ears, cap and accessories completely within central 80 percent, generous clear headroom. Midnight-navy and teal lightly textured backdrop, warm brass light, adventurous welcoming naval mood. No text, labels, logos, emblems, anchor insignia, flags, weapons, borders, circles, focus effects or UI. Native app supplies labels and circular clipping. Render complete square, one character only.",
+        "referenced_image_paths": [
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/docs/two-player-games/concepts/battleship-captain-directions.png"
+        ],
+        "transparent_background": false
+      },
+      "reference": {
+        "path": "docs/two-player-games/concepts/battleship-captain-directions.png",
+        "sha256": "f06e0438438681b9257c3ea3f20473fa623ffe3c59d2361ece9619e27082cf0d",
+        "role": "Identity and style reference, not extracted"
+      },
+      "original": {
+        "path": "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-f12f3497-0bbd-4d5f-ac65-c8b5121b8bb0.png",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "sha256": "52cab857bfe5506021ba12d421d0c0c400a0ca1958445675544b83b5be745ca2"
+      },
+      "bundled": {
+        "path": "apps/battleship/src/main/res/drawable-nodpi/profile_owl.webp",
+        "dimensions": [
+          512,
+          512
+        ],
+        "format": "WebP",
+        "quality": 86,
+        "sha256": "ea0d4e13d2888a0b52617fc866d6876060389712137a120a8e0fc1888d0364d9",
+        "bytes": 61982
+      },
+      "inspection": "Single correct character, square composition, no text or UI frame; facial identity, palette, costume and signature props checked visually. Native circular clipping still requires app capture review.",
+      "preparation": {
+        "tool": "cwebp",
+        "arguments": [
+          "-quiet",
+          "-q",
+          "86",
+          "-resize",
+          "512",
+          "512",
+          "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-f12f3497-0bbd-4d5f-ac65-c8b5121b8bb0.png",
+          "-o",
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/apps/battleship/src/main/res/drawable-nodpi/profile_owl.webp"
+        ],
+        "semantic_edits": false
+      }
+    },
+    {
+      "id": "bear",
+      "set": "battle",
+      "args": {
+        "prompt": "Use case: stylized-concept. Create ONE individual standalone 1024x1024 SQUARE player portrait. Subject: The Engineer: brown bear, calm capable friendly expression, navy engineer coat, shoulder strap and small brass wrench secured to lapel. Reference image is identity and mature painterly-realistic style guidance ONLY; recreate this one character, not the sheet. Match original face, expression and signature props. Head and shoulders centered near frontal or gentle three-quarter view. Head about 65 percent of image; ears, cap and accessories completely within central 80 percent, generous clear headroom. Midnight-navy and teal lightly textured backdrop, warm brass light, adventurous welcoming naval mood. No text, labels, logos, emblems, anchor insignia, flags, weapons, borders, circles, focus effects or UI. Native app supplies labels and circular clipping. Render complete square, one character only.",
+        "referenced_image_paths": [
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/docs/two-player-games/concepts/battleship-captain-directions.png"
+        ],
+        "transparent_background": false
+      },
+      "reference": {
+        "path": "docs/two-player-games/concepts/battleship-captain-directions.png",
+        "sha256": "f06e0438438681b9257c3ea3f20473fa623ffe3c59d2361ece9619e27082cf0d",
+        "role": "Identity and style reference, not extracted"
+      },
+      "original": {
+        "path": "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-64ed47bd-5f93-46a6-96ff-6ce7cefbf9a3.png",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "sha256": "6f755a4cfba33bacee19c23604a675baf3b81893829d81af52ef5335d33ab243"
+      },
+      "bundled": {
+        "path": "apps/battleship/src/main/res/drawable-nodpi/profile_bear.webp",
+        "dimensions": [
+          512,
+          512
+        ],
+        "format": "WebP",
+        "quality": 86,
+        "sha256": "3575a0d545a016e1b699716172c7b9044ab4574ab22e930374a160f8d4b82f10",
+        "bytes": 60980
+      },
+      "inspection": "Single correct character, square composition, no text or UI frame; facial identity, palette, costume and signature props checked visually. Native circular clipping still requires app capture review.",
+      "preparation": {
+        "tool": "cwebp",
+        "arguments": [
+          "-quiet",
+          "-q",
+          "86",
+          "-resize",
+          "512",
+          "512",
+          "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-64ed47bd-5f93-46a6-96ff-6ce7cefbf9a3.png",
+          "-o",
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/apps/battleship/src/main/res/drawable-nodpi/profile_bear.webp"
+        ],
+        "semantic_edits": false
+      }
+    },
+    {
+      "id": "cat",
+      "set": "battle",
+      "args": {
+        "prompt": "Use case: stylized-concept. Create ONE individual standalone 1024x1024 SQUARE player portrait. Subject: The Scout: orange tabby cat, curious green-gold eyes, navy beret, teal scarf, navy coat. Reference image is identity and mature painterly-realistic style guidance ONLY; recreate this one character, not the sheet. Match original face, expression and signature props. Head and shoulders centered near frontal or gentle three-quarter view. Head about 65 percent of image; ears, cap and accessories completely within central 80 percent, generous clear headroom. Midnight-navy and teal lightly textured backdrop, warm brass light, adventurous welcoming naval mood. No text, labels, logos, emblems, anchor insignia, flags, weapons, borders, circles, focus effects or UI. Native app supplies labels and circular clipping. Render complete square, one character only.",
+        "referenced_image_paths": [
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/docs/two-player-games/concepts/battleship-captain-directions.png"
+        ],
+        "transparent_background": false
+      },
+      "reference": {
+        "path": "docs/two-player-games/concepts/battleship-captain-directions.png",
+        "sha256": "f06e0438438681b9257c3ea3f20473fa623ffe3c59d2361ece9619e27082cf0d",
+        "role": "Identity and style reference, not extracted"
+      },
+      "original": {
+        "path": "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-43b4f191-3b53-48c6-a9ca-34675edaadab.png",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "sha256": "7a8046b7645cefecbb03df17ac1351956a42df1f8fb0ee5acd1a55ba4e471d94"
+      },
+      "bundled": {
+        "path": "apps/battleship/src/main/res/drawable-nodpi/profile_cat.webp",
+        "dimensions": [
+          512,
+          512
+        ],
+        "format": "WebP",
+        "quality": 86,
+        "sha256": "4c6bbb00713990a48a33f763bccc55b27fef71a7e746cbad0f1e35c8667fba5a",
+        "bytes": 59918
+      },
+      "inspection": "Single correct character, square composition, no text or UI frame; facial identity, palette, costume and signature props checked visually. Native circular clipping still requires app capture review.",
+      "preparation": {
+        "tool": "cwebp",
+        "arguments": [
+          "-quiet",
+          "-q",
+          "86",
+          "-resize",
+          "512",
+          "512",
+          "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-43b4f191-3b53-48c6-a9ca-34675edaadab.png",
+          "-o",
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/apps/battleship/src/main/res/drawable-nodpi/profile_cat.webp"
+        ],
+        "semantic_edits": false
+      }
+    },
+    {
+      "id": "storm",
+      "set": "battle",
+      "args": {
+        "prompt": "Use case: stylized-concept. Create ONE individual standalone 1024x1024 SQUARE player portrait. Subject: Captain Storm: older weathered white man with silver hair, thick silver beard and moustache, calm experienced expression, white captain cap with dark plain band and brass trim, navy captain coat. Reference image is identity and mature painterly-realistic style guidance ONLY; recreate this one character, not the sheet. Match original face, expression, age and signature props. Head and shoulders centered near frontal or gentle three-quarter view. Head about 65 percent of image; hair, cap or goggles completely within central 80 percent, generous clear headroom. Midnight-navy and teal lightly textured backdrop, warm brass light, adventurous welcoming naval mood. No text, labels, logos, emblems, anchor insignia, flags, weapons, borders, circles, focus effects or UI. Native app supplies labels and circular clipping. Render complete square, one character only.",
+        "referenced_image_paths": [
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/docs/two-player-games/concepts/battleship-captain-directions.png"
+        ],
+        "transparent_background": false
+      },
+      "reference": {
+        "path": "docs/two-player-games/concepts/battleship-captain-directions.png",
+        "sha256": "f06e0438438681b9257c3ea3f20473fa623ffe3c59d2361ece9619e27082cf0d",
+        "role": "Identity and style reference, not extracted"
+      },
+      "original": {
+        "path": "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-2d655b04-bb45-41ef-bcaf-e15294d982db.png",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "sha256": "c59a45644b82c845d9ed86a024e6b8d9172d975c3fa291044da395f34c84dce4"
+      },
+      "bundled": {
+        "path": "apps/battleship/src/main/res/drawable-nodpi/profile_storm.webp",
+        "dimensions": [
+          512,
+          512
+        ],
+        "format": "WebP",
+        "quality": 86,
+        "sha256": "495338e6172982a2fd65d752d4da56706d77a623aa504c30b842177c92d2805a",
+        "bytes": 47566
+      },
+      "inspection": "Single correct character, square composition, no text or UI frame; facial identity, palette, costume and signature props checked visually. Native circular clipping still requires app capture review.",
+      "preparation": {
+        "tool": "cwebp",
+        "arguments": [
+          "-quiet",
+          "-q",
+          "86",
+          "-resize",
+          "512",
+          "512",
+          "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-2d655b04-bb45-41ef-bcaf-e15294d982db.png",
+          "-o",
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/apps/battleship/src/main/res/drawable-nodpi/profile_storm.webp"
+        ],
+        "semantic_edits": false
+      }
+    },
+    {
+      "id": "reed",
+      "set": "battle",
+      "args": {
+        "prompt": "Use case: stylized-concept. Create ONE individual standalone 1024x1024 SQUARE player portrait. Subject: Commander Reed: Black woman with short tight curly hair, confident warm expression, navy captain cap with brass trim, navy officer coat and teal scarf. Reference image is identity and mature painterly-realistic style guidance ONLY; recreate this one character, not the sheet. Match original face, expression, age and signature props. Head and shoulders centered near frontal or gentle three-quarter view. Head about 65 percent of image; hair, cap or goggles completely within central 80 percent, generous clear headroom. Midnight-navy and teal lightly textured backdrop, warm brass light, adventurous welcoming naval mood. No text, labels, logos, emblems, anchor insignia, flags, weapons, borders, circles, focus effects or UI. Native app supplies labels and circular clipping. Render complete square, one character only.",
+        "referenced_image_paths": [
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/docs/two-player-games/concepts/battleship-captain-directions.png"
+        ],
+        "transparent_background": false
+      },
+      "reference": {
+        "path": "docs/two-player-games/concepts/battleship-captain-directions.png",
+        "sha256": "f06e0438438681b9257c3ea3f20473fa623ffe3c59d2361ece9619e27082cf0d",
+        "role": "Identity and style reference, not extracted"
+      },
+      "original": {
+        "path": "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-c3bceb6c-2181-4fa2-89ea-9f49ad30a089.png",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "sha256": "bccfc428ad376fbd4da3874d36fb9ac20289cf9817b45c7f85152152a63f9e96"
+      },
+      "bundled": {
+        "path": "apps/battleship/src/main/res/drawable-nodpi/profile_reed.webp",
+        "dimensions": [
+          512,
+          512
+        ],
+        "format": "WebP",
+        "quality": 86,
+        "sha256": "74d1380dbe79196fa80bef4fb25460093f73d1951805c76b168e4c4a59bfbf42",
+        "bytes": 43244
+      },
+      "inspection": "Single correct character, square composition, no text or UI frame; facial identity, palette, costume and signature props checked visually. Native circular clipping still requires app capture review.",
+      "preparation": {
+        "tool": "cwebp",
+        "arguments": [
+          "-quiet",
+          "-q",
+          "86",
+          "-resize",
+          "512",
+          "512",
+          "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-c3bceb6c-2181-4fa2-89ea-9f49ad30a089.png",
+          "-o",
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/apps/battleship/src/main/res/drawable-nodpi/profile_reed.webp"
+        ],
+        "semantic_edits": false
+      }
+    },
+    {
+      "id": "kai",
+      "set": "battle",
+      "args": {
+        "prompt": "Use case: stylized-concept. Create ONE individual standalone 1024x1024 SQUARE player portrait. Subject: Lieutenant Kai: East Asian man with tousled black hair and light stubble, thoughtful relaxed expression, no cap, navy ribbed turtleneck under navy officer coat and brown shoulder strap. Reference image is identity and mature painterly-realistic style guidance ONLY; recreate this one character, not the sheet. Match original face, expression, age and signature props. Head and shoulders centered near frontal or gentle three-quarter view. Head about 65 percent of image; hair, cap or goggles completely within central 80 percent, generous clear headroom. Midnight-navy and teal lightly textured backdrop, warm brass light, adventurous welcoming naval mood. No text, labels, logos, emblems, anchor insignia, flags, weapons, borders, circles, focus effects or UI. Native app supplies labels and circular clipping. Render complete square, one character only.",
+        "referenced_image_paths": [
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/docs/two-player-games/concepts/battleship-captain-directions.png"
+        ],
+        "transparent_background": false
+      },
+      "reference": {
+        "path": "docs/two-player-games/concepts/battleship-captain-directions.png",
+        "sha256": "f06e0438438681b9257c3ea3f20473fa623ffe3c59d2361ece9619e27082cf0d",
+        "role": "Identity and style reference, not extracted"
+      },
+      "original": {
+        "path": "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-ecd1ec23-c138-4349-bca8-1e48d1440a3b.png",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "sha256": "7c3736b3768702b93e2c687b7192a9b48b87634a307a8e7c1d90f527b1a35b2b"
+      },
+      "bundled": {
+        "path": "apps/battleship/src/main/res/drawable-nodpi/profile_kai.webp",
+        "dimensions": [
+          512,
+          512
+        ],
+        "format": "WebP",
+        "quality": 86,
+        "sha256": "e8f2b40e3974d3e3d25babddc21eb4666a545540ff7b95bcff61626449f56a87",
+        "bytes": 42250
+      },
+      "inspection": "Single correct character, square composition, no text or UI frame; facial identity, palette, costume and signature props checked visually. Native circular clipping still requires app capture review.",
+      "preparation": {
+        "tool": "cwebp",
+        "arguments": [
+          "-quiet",
+          "-q",
+          "86",
+          "-resize",
+          "512",
+          "512",
+          "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-ecd1ec23-c138-4349-bca8-1e48d1440a3b.png",
+          "-o",
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/apps/battleship/src/main/res/drawable-nodpi/profile_kai.webp"
+        ],
+        "semantic_edits": false
+      }
+    },
+    {
+      "id": "mira",
+      "set": "battle",
+      "args": {
+        "prompt": "Use case: stylized-concept. Create ONE individual standalone 1024x1024 SQUARE player portrait. Subject: Chief Mira: brown-skinned woman with short black curly hair, confident slight smile, brass goggles on top of head, navy engineer coat, brown shoulder straps. Reference image is identity and mature painterly-realistic style guidance ONLY; recreate this one character, not the sheet. Match original face, expression, age and signature props. Head and shoulders centered near frontal or gentle three-quarter view. Head about 65 percent of image; hair, cap or goggles completely within central 80 percent, generous clear headroom. Midnight-navy and teal lightly textured backdrop, warm brass light, adventurous welcoming naval mood. No text, labels, logos, emblems, anchor insignia, flags, weapons, borders, circles, focus effects or UI. Native app supplies labels and circular clipping. Render complete square, one character only.",
+        "referenced_image_paths": [
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/docs/two-player-games/concepts/battleship-captain-directions.png"
+        ],
+        "transparent_background": false
+      },
+      "reference": {
+        "path": "docs/two-player-games/concepts/battleship-captain-directions.png",
+        "sha256": "f06e0438438681b9257c3ea3f20473fa623ffe3c59d2361ece9619e27082cf0d",
+        "role": "Identity and style reference, not extracted"
+      },
+      "original": {
+        "path": "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-ca982ddf-f1b7-41da-808d-2137a8387115.png",
+        "dimensions": [
+          1254,
+          1254
+        ],
+        "sha256": "0185330f72a3acdbe3c5b47cf8cdb62d85f05e262ede9bd8382480ca7f061fbe"
+      },
+      "bundled": {
+        "path": "apps/battleship/src/main/res/drawable-nodpi/profile_mira.webp",
+        "dimensions": [
+          512,
+          512
+        ],
+        "format": "WebP",
+        "quality": 86,
+        "sha256": "42a88b9d7b8ea41818c299a9ba22b34fcc799352eceef16f0cd565b93dcb17d2",
+        "bytes": 49326
+      },
+      "inspection": "Single correct character, square composition, no text or UI frame; facial identity, palette, costume and signature props checked visually. Native circular clipping still requires app capture review.",
+      "preparation": {
+        "tool": "cwebp",
+        "arguments": [
+          "-quiet",
+          "-q",
+          "86",
+          "-resize",
+          "512",
+          "512",
+          "/Users/amine/.codex/generated_images/01a18e5a-daba-7c60-bfbd-e4b3bd4d0972/exec-ca982ddf-f1b7-41da-808d-2137a8387115.png",
+          "-o",
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/apps/battleship/src/main/res/drawable-nodpi/profile_mira.webp"
+        ],
+        "semantic_edits": false
+      }
+    }
+  ],
+  "bundled_total_bytes": 896922,
+  "notes": [
+    "Requested 1024x1024 in prompt; ImageGen returned 1254x1254 square sources. All sources were kept in the original generated_images location.",
+    "Only uniform downscaling and WebP encoding were performed. No sheet extraction, programmatic cropping, or semantic editing.",
+    "Existing font licenses are unchanged; no fonts added."
+  ]
+}
