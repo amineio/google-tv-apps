@@ -49,6 +49,41 @@ class TransferProtocolTest {
     }
 
     @Test
+    fun totalDeadlineClosesSocketDuringBlockedRead() {
+        java.net.ServerSocket(0, 1, java.net.InetAddress.getByName("127.0.0.1")).use { listener ->
+            java.net.Socket("127.0.0.1", listener.localPort).use { client ->
+                listener.accept().use {
+                    SocketDeadline(100).use { deadline ->
+                        deadline.register(client)
+                        client.soTimeout = 2000
+                        val started = System.nanoTime()
+                        assertThrows(java.io.IOException::class.java) { client.inputStream.read() }
+                        assertTrue(client.isClosed)
+                        assertTrue(
+                            java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(
+                                System.nanoTime() - started
+                            ) < 1500
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun expiredDeadlineClosesLateRegisteredSocket() {
+        SocketDeadline(1).use { deadline ->
+            Thread.sleep(20)
+            java.net.Socket().use { socket ->
+                assertThrows(java.net.SocketTimeoutException::class.java) {
+                    deadline.register(socket)
+                }
+                assertTrue(socket.isClosed)
+            }
+        }
+    }
+
+    @Test
     fun boundedHttpRejectsAmbiguityBeforeBody() {
         listOf(
                 "Content-Length: 1\r\nContent-Length: 1",

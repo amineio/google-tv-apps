@@ -180,3 +180,68 @@ internal class TransferProtocol(
                 .encodeToString(ByteArray(32).also { SecureRandom().nextBytes(it) })
     }
 }
+
+internal data class TransferTimeouts(
+    val connectMs: Int = 5000,
+    val handshakeMs: Long = 5000,
+    val readMs: Int = 5000,
+    val totalMs: Long = 30000,
+) {
+    init {
+        require(connectMs > 0 && handshakeMs > 0 && readMs > 0 && totalMs > 0)
+    }
+}
+
+/** Owns one socket's elapsed budget, including registration after the timer has expired. */
+internal class SocketDeadline(timeoutMs: Long) : AutoCloseable {
+    private val started = System.nanoTime()
+    private val budgetNanos = java.util.concurrent.TimeUnit.MILLISECONDS.toNanos(timeoutMs)
+    private var expired = false
+    private var socket: java.net.Socket? = null
+    private val scheduler =
+        java.util.concurrent.Executors.newSingleThreadScheduledExecutor { task ->
+            Thread(task, "Postbox-deadline").apply { isDaemon = true }
+        }
+    private val timer =
+        scheduler.schedule({ expire() }, timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS)
+
+    init {
+        require(timeoutMs > 0)
+    }
+
+    @Synchronized
+    fun register(candidate: java.net.Socket) {
+        if (expired || elapsed()) {
+            try {
+                candidate.close()
+            } catch (_: Exception) {}
+            expire()
+            throw java.net.SocketTimeoutException("Transfer deadline expired.")
+        }
+        check(socket == null || socket === candidate)
+        socket = candidate
+    }
+
+    @Synchronized
+    fun check() {
+        if (expired || elapsed()) {
+            expire()
+            throw java.net.SocketTimeoutException("Transfer deadline expired.")
+        }
+    }
+
+    private fun elapsed() = System.nanoTime() - started >= budgetNanos
+
+    @Synchronized
+    private fun expire() {
+        expired = true
+        try {
+            socket?.close()
+        } catch (_: Exception) {}
+    }
+
+    override fun close() {
+        timer.cancel(false)
+        scheduler.shutdownNow()
+    }
+}

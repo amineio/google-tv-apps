@@ -13,7 +13,9 @@ internal val postboxJson = Json {
 }
 internal const val MAX_CAPTURE_BYTES = 4 * 1024 * 1024
 
-class CaptureCodec {
+class CaptureCodec internal constructor(private val decodeJpeg: (ByteArray) -> Unit) {
+    constructor() : this(::validateAndroidJpeg)
+
     fun canonicalBytes(capture: PostCapture): ByteArray = safely {
         require(
             capture.id.matches(
@@ -34,6 +36,7 @@ class CaptureCodec {
             val bytes = Base64.getDecoder().decode(value)
             require(Base64.getEncoder().encodeToString(bytes) == value)
             validateJpeg(bytes)
+            decodeJpeg(bytes)
         }
         postboxJson.encodeToString(normalized).toByteArray(Charsets.UTF_8).also {
             require(it.size <= MAX_CAPTURE_BYTES)
@@ -111,6 +114,14 @@ class CaptureCodec {
                 components = unsigned(position + 7)
                 require(components in listOf(1, 3) && length == 8 + 3 * components)
                 require(width in 1..2048 && height in 1..2048)
+                val identifiers = mutableSetOf<Int>()
+                repeat(components) { component ->
+                    val offset = position + 8 + component * 3
+                    require(identifiers.add(unsigned(offset)))
+                    val sampling = unsigned(offset + 1)
+                    require(sampling shr 4 in 1..4 && sampling and 15 in 1..4)
+                    require(unsigned(offset + 2) in 0..3)
+                }
             } else if (marker in 0xc0..0xcf && marker !in listOf(0xc4, 0xc8, 0xcc)) {
                 throw IllegalArgumentException()
             }
@@ -152,4 +163,27 @@ class CaptureCodec {
         } catch (_: Exception) {
             throw IllegalArgumentException("Invalid capture.")
         }
+}
+
+private fun validateAndroidJpeg(bytes: ByteArray) {
+    val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+    require(
+        bounds.outMimeType == "image/jpeg" &&
+            bounds.outWidth in 1..2048 &&
+            bounds.outHeight in 1..2048
+    )
+    val options =
+        android.graphics.BitmapFactory.Options().apply {
+            inPreferredConfig = android.graphics.Bitmap.Config.ARGB_8888
+            inScaled = false
+        }
+    val bitmap =
+        android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+            ?: throw IllegalArgumentException("Invalid capture.")
+    try {
+        require(bitmap.width == bounds.outWidth && bitmap.height == bounds.outHeight)
+    } finally {
+        bitmap.recycle()
+    }
 }

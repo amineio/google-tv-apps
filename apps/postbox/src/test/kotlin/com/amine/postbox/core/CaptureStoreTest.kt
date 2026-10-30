@@ -52,6 +52,91 @@ class CaptureStoreTest {
     }
 
     @Test
+    fun directorySyncFollowsAtomicReplacementBeforeSuccess() {
+        val directory = dir()
+        val capture = CaptureCodecTest.sample()
+        val boundaries = mutableListOf<String>()
+        val store =
+            PostboxStore(
+                directory,
+                beforeCommit = { boundaries += "before replacement" },
+                syncDirectory = {
+                    assertTrue(File(it, "${capture.id}.json").isFile)
+                    boundaries += "directory synchronized"
+                },
+            )
+        assertEquals(SaveResult.ADDED, store.save(capture))
+        assertEquals(listOf("before replacement", "directory synchronized"), boundaries)
+    }
+
+    @Test
+    fun directorySyncFailureRequiresDurableRetry() {
+        val directory = dir()
+        val capture = CaptureCodecTest.sample()
+        var fail = true
+        var synchronizations = 0
+        val store =
+            PostboxStore(
+                directory,
+                beforeCommit = {},
+                syncDirectory = {
+                    synchronizations++
+                    if (fail) throw java.io.IOException("Injected directory failure")
+                },
+            )
+        assertThrows(java.io.IOException::class.java) { store.save(capture) }
+        assertEquals(capture, PostboxStore(directory).list().single().capture)
+        fail = false
+        assertEquals(SaveResult.ALREADY_PRESENT, store.save(capture))
+        assertEquals(2, synchronizations)
+        assertEquals(1, store.list().size)
+    }
+
+    @Test
+    fun failedDeleteDirectorySyncCanBeRetried() {
+        val directory = dir()
+        val capture = CaptureCodecTest.sample()
+        PostboxStore(directory).save(capture)
+        var fail = true
+        var synchronizations = 0
+        val store =
+            PostboxStore(
+                directory,
+                beforeCommit = {},
+                syncDirectory = {
+                    assertFalse(File(it, "${capture.id}.json").exists())
+                    synchronizations++
+                    if (fail) throw java.io.IOException("Injected directory failure")
+                },
+            )
+        assertThrows(java.io.IOException::class.java) { store.delete(capture.id) }
+        fail = false
+        store.delete(capture.id)
+        assertEquals(2, synchronizations)
+        assertTrue(store.list().isEmpty())
+    }
+
+    @Test
+    fun malformedUtf8IsIgnoredAndPreserved() {
+        val directory = dir()
+        val capture = CaptureCodecTest.sample()
+        PostboxStore(directory).save(capture)
+        val file = File(directory, "${capture.id}.json")
+        val damaged = file.readBytes()
+        val offset =
+            damaged.toString(Charsets.UTF_8).indexOf("\"text\":\"Text\"") + "\"text\":\"".length
+        assertTrue(offset >= "\"text\":\"".length)
+        damaged[offset] = 0x80.toByte()
+        file.writeBytes(damaged)
+        val reloaded = PostboxStore(directory)
+        assertTrue(reloaded.list().isEmpty())
+        assertTrue(reloaded.hasStorageIssue)
+        assertArrayEquals(damaged, file.readBytes())
+        assertThrows(java.io.IOException::class.java) { reloaded.save(capture) }
+        assertArrayEquals(damaged, file.readBytes())
+    }
+
+    @Test
     fun malformedFileIsPreserved() {
         val d = dir()
         val damaged = File(d, "damaged.json")

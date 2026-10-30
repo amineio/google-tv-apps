@@ -5,8 +5,6 @@ import java.net.InetSocketAddress
 import java.security.MessageDigest
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocket
 import javax.net.ssl.X509TrustManager
@@ -17,7 +15,11 @@ import kotlinx.serialization.encodeToString
 
 @Serializable internal data class ResultBody(val result: String)
 
-class PostboxClient internal constructor(private val connectHostOverride: String?) {
+class PostboxClient
+internal constructor(
+    private val connectHostOverride: String?,
+    private val timeouts: TransferTimeouts = TransferTimeouts(),
+) {
     constructor() : this(null)
 
     fun pair(link: PairingLink): PairedTv = safely {
@@ -69,7 +71,12 @@ class PostboxClient internal constructor(private val connectHostOverride: String
         result
     }
 
-    internal fun openPinned(host: String, port: Int, pin: String): SSLSocket {
+    internal fun openPinned(
+        host: String,
+        port: Int,
+        pin: String,
+        totalDeadline: SocketDeadline? = null,
+    ): SSLSocket {
         PairingLink(host, port, pin, "a".repeat(43)).encode()
         val expected = pin.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
         val trust =
@@ -96,9 +103,15 @@ class PostboxClient internal constructor(private val connectHostOverride: String
             SSLContext.getInstance("TLS").apply { init(null, arrayOf(trust), null) }.socketFactory
         val socket = factory.createSocket() as SSLSocket
         try {
-            socket.soTimeout = 5000
-            socket.connect(InetSocketAddress(connectHostOverride ?: host, port), 5000)
-            socket.startHandshake()
+            totalDeadline?.register(socket)
+            socket.soTimeout = timeouts.readMs
+            socket.connect(InetSocketAddress(connectHostOverride ?: host, port), timeouts.connectMs)
+            SocketDeadline(timeouts.handshakeMs).use { handshake ->
+                handshake.register(socket)
+                socket.startHandshake()
+                handshake.check()
+            }
+            totalDeadline?.check()
             // Verify the negotiated peer again before returning any application stream.
             val certificate = socket.session.peerCertificates.first() as X509Certificate
             trust.checkServerTrusted(arrayOf(certificate), "RSA")
@@ -117,23 +130,9 @@ class PostboxClient internal constructor(private val connectHostOverride: String
         token: String?,
         body: ByteArray,
     ): HttpResponse {
-        val watchdog = Executors.newSingleThreadScheduledExecutor()
-        val activeSocket = java.util.concurrent.atomic.AtomicReference<SSLSocket>()
-        // Includes connect and handshake. Closing the socket also interrupts a stalled write.
-        val deadline =
-            watchdog.schedule(
-                {
-                    try {
-                        activeSocket.get()?.close()
-                    } catch (_: Exception) {}
-                },
-                30,
-                TimeUnit.SECONDS,
-            )
-        return try {
-            val opened = openPinned(host, port, pin)
-            activeSocket.set(opened)
-            opened.use { connection ->
+        return SocketDeadline(timeouts.totalMs).use { deadline ->
+            openPinned(host, port, pin, deadline).use { connection ->
+                deadline.check()
                 val authorization = if (token == null) "" else "Authorization: Bearer $token\r\n"
                 val header =
                     "POST $path HTTP/1.1\r\nHost: $host\r\nContent-Type: application/json\r\nContent-Length: ${body.size}\r\n${authorization}Connection: close\r\n\r\n"
@@ -142,14 +141,10 @@ class PostboxClient internal constructor(private val connectHostOverride: String
                     write(body)
                     flush()
                 }
-                BoundedHttp.readResponse(connection.inputStream)
+                val response = BoundedHttp.readResponse(connection.inputStream)
+                deadline.check()
+                response
             }
-        } finally {
-            deadline.cancel(false)
-            watchdog.shutdownNow()
-            try {
-                activeSocket.get()?.close()
-            } catch (_: Exception) {}
         }
     }
 

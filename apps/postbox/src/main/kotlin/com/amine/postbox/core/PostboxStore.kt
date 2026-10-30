@@ -9,7 +9,11 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlinx.serialization.encodeToString
 
 class PostboxStore
-internal constructor(private val directory: File, private val beforeCommit: () -> Unit) {
+internal constructor(
+    private val directory: File,
+    private val beforeCommit: () -> Unit,
+    private val syncDirectory: (File) -> Unit = ::forceDirectory,
+) {
     constructor(directory: File) : this(directory, {})
 
     private val codec = CaptureCodec()
@@ -31,9 +35,10 @@ internal constructor(private val directory: File, private val beforeCommit: () -
             entries
                 .firstOrNull { it.capture.id == normalized.id }
                 ?.let {
-                    return@synchronized if (codec.digest(it.capture) == codec.digest(normalized))
+                    return@synchronized if (codec.digest(it.capture) == codec.digest(normalized)) {
+                        synchronizeDirectory()
                         SaveResult.ALREADY_PRESENT
-                    else SaveResult.CONFLICT
+                    } else SaveResult.CONFLICT
                 }
             // Never replace an unreadable entry whose UUID matches this request.
             if (File(directory, "${normalized.id}.json").exists())
@@ -56,6 +61,7 @@ internal constructor(private val directory: File, private val beforeCommit: () -
             validateId(id)
             val file = File(directory, "$id.json")
             if (file.exists() && !file.delete()) throw IOException("Local storage unavailable.")
+            if (directory.isDirectory) synchronizeDirectory()
         }
     }
 
@@ -82,7 +88,11 @@ internal constructor(private val directory: File, private val beforeCommit: () -
             try {
                 require(file.length() <= MAX_CAPTURE_BYTES + 256L)
                 val item =
-                    postboxJson.decodeFromString<StoredCapture>(file.readText(Charsets.UTF_8))
+                    postboxJson.decodeFromString<StoredCapture>(
+                        Charsets.UTF_8.newDecoder()
+                            .decode(java.nio.ByteBuffer.wrap(file.readBytes()))
+                            .toString()
+                    )
                 val capture = codec.decode(codec.canonicalBytes(item.capture))
                 require(file.name == "${capture.id}.json")
                 item.copy(capture = capture)
@@ -122,10 +132,19 @@ internal constructor(private val directory: File, private val beforeCommit: () -
                 StandardCopyOption.ATOMIC_MOVE,
                 StandardCopyOption.REPLACE_EXISTING,
             )
+            synchronizeDirectory()
         } catch (_: Exception) {
             throw IOException("Local storage unavailable.")
         } finally {
             temp.delete()
+        }
+    }
+
+    private fun synchronizeDirectory() {
+        try {
+            syncDirectory(directory)
+        } catch (_: Exception) {
+            throw IOException("Local storage unavailable.")
         }
     }
 
@@ -136,4 +155,11 @@ internal constructor(private val directory: File, private val beforeCommit: () -
     companion object {
         private val locks = ConcurrentHashMap<String, Any>()
     }
+}
+
+private fun forceDirectory(directory: File) {
+    java.nio.channels.FileChannel.open(directory.toPath(), java.nio.file.StandardOpenOption.READ)
+        .use { channel ->
+            channel.force(true)
+        }
 }

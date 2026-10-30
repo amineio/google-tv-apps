@@ -22,6 +22,7 @@ internal data class ReceiverOptions(
     val advertisedHost: String? = null,
     val port: Int? = null,
     val windowMs: Long = 300_000,
+    val timeouts: TransferTimeouts = TransferTimeouts(),
 )
 
 class CaptureReceiver
@@ -41,7 +42,10 @@ internal constructor(
         context.applicationContext.getSharedPreferences("postbox-receiver", Context.MODE_PRIVATE)
     private val identity = TlsIdentity(context)
     private val sockets = ConcurrentHashMap.newKeySet<Socket>()
-    private var server: SSLServerSocket? = null
+    @Volatile private var server: SSLServerSocket? = null
+    val isReceiving: Boolean
+        get() = server?.let { !it.isClosed } ?: false
+
     private var workers: ThreadPoolExecutor? = null
     private var timers: java.util.concurrent.ScheduledExecutorService? = null
     private val protocol =
@@ -161,8 +165,8 @@ internal constructor(
                                     socket.close()
                                 } catch (_: Exception) {}
                             },
-                            30,
-                            TimeUnit.SECONDS,
+                            options.timeouts.totalMs,
+                            TimeUnit.MILLISECONDS,
                         )
                     } catch (_: RejectedExecutionException) {
                         sockets.remove(socket)
@@ -194,8 +198,12 @@ internal constructor(
 
     private fun serve(socket: SSLSocket) {
         try {
-            socket.soTimeout = 5000
-            socket.startHandshake()
+            socket.soTimeout = options.timeouts.readMs
+            SocketDeadline(options.timeouts.handshakeMs).use { handshake ->
+                handshake.register(socket)
+                socket.startHandshake()
+                handshake.check()
+            }
             val request = BoundedHttp.readRequest(socket.inputStream)
             if (request.path == "/pair") {
                 if (request.authorization != null) throw ProtocolFailure()

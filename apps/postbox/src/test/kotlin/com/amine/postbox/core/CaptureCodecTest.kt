@@ -5,7 +5,16 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class CaptureCodecTest {
-    private val codec = CaptureCodec()
+    private val codec = CaptureCodec { bytes ->
+        val image =
+            javax.imageio.ImageIO.read(java.io.ByteArrayInputStream(bytes))
+                ?: throw IllegalArgumentException("Invalid test JPEG.")
+        try {
+            require(image.width in 1..2048 && image.height in 1..2048)
+        } finally {
+            image.flush()
+        }
+    }
 
     @Test
     fun preservesMultilineAndNormalizesSource() {
@@ -55,6 +64,20 @@ class CaptureCodecTest {
                         )
                 )
         assertEquals(capture, codec.decode(codec.canonicalBytes(capture)))
+    }
+
+    @Test
+    fun rejectsZeroComponentSampling() {
+        val hex = "FFD8FFC0000B080001000101010000FFDA0008010100003F0000FFD9"
+        val malformed = hex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+        val capture =
+            sample()
+                .copy(
+                    text = "",
+                    imagesJpegBase64 =
+                        listOf(java.util.Base64.getEncoder().encodeToString(malformed)),
+                )
+        assertThrows(IllegalArgumentException::class.java) { codec.canonicalBytes(capture) }
     }
 
     @Test

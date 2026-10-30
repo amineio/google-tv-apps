@@ -62,6 +62,145 @@ class PinnedTransferTest {
     }
 
     @Test
+    fun validPortraitImagesAreDurablyReloaded() {
+        fun jpeg(color: Int): String {
+            val bitmap =
+                android.graphics.Bitmap.createBitmap(
+                    48,
+                    96,
+                    android.graphics.Bitmap.Config.ARGB_8888,
+                )
+            return try {
+                bitmap.eraseColor(color)
+                val output = java.io.ByteArrayOutputStream()
+                assertTrue(bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, output))
+                java.util.Base64.getEncoder().encodeToString(output.toByteArray())
+            } finally {
+                bitmap.recycle()
+            }
+        }
+        val directory = directory()
+        val capture =
+            sample()
+                .copy(
+                    text = "",
+                    imagesJpegBase64 = listOf(jpeg(0xff445544.toInt()), jpeg(0xff776655.toInt())),
+                )
+        val store = PostboxStore(directory)
+        assertEquals(SaveResult.ADDED, store.save(capture))
+        assertEquals(capture, PostboxStore(directory).list().single().capture)
+    }
+
+    @Test
+    fun invalidJpegTablesNeverCommit() {
+        val hex = "FFD8FFC0000B080001000101011100FFDA0008010100003F0000FFD9"
+        val bytes = hex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+        val capture =
+            sample()
+                .copy(
+                    text = "",
+                    imagesJpegBase64 = listOf(java.util.Base64.getEncoder().encodeToString(bytes)),
+                )
+        val store = PostboxStore(directory())
+        assertThrows(IllegalArgumentException::class.java) { store.save(capture) }
+        assertTrue(store.list().isEmpty())
+    }
+
+    @Test
+    fun clientHandshakeBudgetStopsDrippingPeer() {
+        assertDrippingPeerClosesClient(
+            TransferTimeouts(handshakeMs = 250, totalMs = 3000, readMs = 2000)
+        )
+    }
+
+    @Test
+    fun clientTotalDeadlineIncludesHandshake() {
+        assertDrippingPeerClosesClient(
+            TransferTimeouts(handshakeMs = 3000, totalMs = 250, readMs = 2000)
+        )
+    }
+
+    private fun assertDrippingPeerClosesClient(timeouts: TransferTimeouts) {
+        java.net.ServerSocket(0, 1, java.net.InetAddress.getByName("127.0.0.1")).use { listener ->
+            val worker =
+                Thread {
+                        try {
+                            listener.accept().use { peer -> dripHandshake(peer) }
+                        } catch (_: java.io.IOException) {}
+                    }
+                    .apply { start() }
+            try {
+                val started = android.os.SystemClock.elapsedRealtime()
+                val link =
+                    PairingLink("192.168.1.2", listener.localPort, "00".repeat(32), "a".repeat(43))
+                assertThrows(java.io.IOException::class.java) {
+                    PostboxClient("127.0.0.1", timeouts).pair(link)
+                }
+                assertTrue(
+                    "The elapsed deadline must stop partial TLS reads",
+                    android.os.SystemClock.elapsedRealtime() - started < 1500,
+                )
+            } finally {
+                listener.close()
+                worker.join(2000)
+            }
+        }
+    }
+
+    @Test
+    fun receiverHandshakeBudgetStopsDrippingPeer() {
+        val store = PostboxStore(directory())
+        val receiver =
+            CaptureReceiver(
+                context,
+                store,
+                {},
+                ReceiverOptions(
+                    bindHost = "127.0.0.1",
+                    advertisedHost = "192.168.1.2",
+                    port = 0,
+                    timeouts = TransferTimeouts(handshakeMs = 250, totalMs = 3000, readMs = 2000),
+                ),
+            )
+        try {
+            val link = PairingLink.parse(receiver.start().pairingLink)
+            java.net.Socket("127.0.0.1", link.port).use { peer ->
+                peer.soTimeout = 1500
+                val writer =
+                    Thread {
+                            try {
+                                dripHandshake(peer)
+                            } catch (_: java.io.IOException) {}
+                        }
+                        .apply { start() }
+                val started = android.os.SystemClock.elapsedRealtime()
+                try {
+                    assertEquals(-1, peer.inputStream.read())
+                } catch (error: java.io.IOException) {
+                    if (error is java.net.SocketTimeoutException) throw error
+                }
+                assertTrue(android.os.SystemClock.elapsedRealtime() - started < 1500)
+                peer.close()
+                writer.join(2000)
+            }
+            assertTrue(store.list().isEmpty())
+        } finally {
+            receiver.close()
+        }
+    }
+
+    private fun dripHandshake(socket: java.net.Socket) {
+        // A complete TLS record header followed by an incomplete 100-byte handshake record.
+        socket.outputStream.write(byteArrayOf(22, 3, 3, 0, 100))
+        socket.outputStream.flush()
+        repeat(50) {
+            socket.outputStream.write(0)
+            socket.outputStream.flush()
+            Thread.sleep(80)
+        }
+    }
+
+    @Test
     fun nativeIdentityCompletesHandshake() {
         val identity = TlsIdentity(context)
         val server =
@@ -185,9 +324,11 @@ class PinnedTransferTest {
         val s = PostboxStore(directory())
         val r = receiver(s)
         val link = PairingLink.parse(r.start().pairingLink)
+        assertTrue(r.isReceiving)
         PostboxClient("127.0.0.1").openPinned(link.host, link.port, link.pin).use { socket ->
             socket.soTimeout = 5000
             r.close()
+            assertFalse(r.isReceiving)
             try {
                 assertEquals(-1, socket.inputStream.read())
             } catch (error: java.io.IOException) {
