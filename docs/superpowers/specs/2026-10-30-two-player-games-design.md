@@ -1,6 +1,6 @@
 # Two-player chess and Battleship
 
-Status: Proposed design, awaiting user approval. No game code changes, app builds, or device tests accompany this document.
+Status: Approved by the user on 2026-10-30. Implementation is authorized for both games. This document records design requirements, not runtime verification.
 
 Source revision: `4aa14ef36a269293fb9361b9fb5ffc50a0595496`, on `amine/two-player-games` in the isolated `two-player-games` worktree.
 
@@ -16,7 +16,7 @@ The user explicitly requested these behaviors and art choices:
 - Give Battleship portraits more naval personality. Include all eight proposed captains, both animals and humans.
 - Use chosen names or character names instead of visible numbered player labels.
 
-The remaining design decisions below are coordinator proposals. They are not separate user approvals. The proposed implementation uses one shared TV and one remote that participants pass between turns.
+The approved design uses one shared TV and one remote that participants pass between turns. The user also approved execution through subagents.
 
 ## Scope and boundaries
 
@@ -34,7 +34,7 @@ Retain one current saved session per app. A new match replaces it only after an 
 | --- | --- | --- |
 | Reveal both fleets once, then alternate shots | Adds memory to normal Battleship targeting without repeated interruptions | Selected by the user |
 | Reveal both fleets before each round | Reduces memory demands but repeatedly interrupts the match | Not selected |
-| Use private phone screens or ask one person to look away | Supports private ship placement but adds devices or an unenforceable screen rule | Outside the shared-TV proposal |
+| Use private phone screens or ask one person to look away | Supports private ship placement but adds devices or an unenforceable screen rule | Outside the approved shared-TV scope |
 
 For chess, the existing rules already support either color. Make both sides human-controlled in local mode instead of replacing the rules engine. Keep White at the bottom so that the board and directional controls remain stable.
 
@@ -46,23 +46,23 @@ The chess catalog contains Fox, Owl, Bear, Cat, Panda, Rabbit, Turtle, and Drago
 
 Use character names as the default display names. Resolve default names through each app's existing localization resources. Store custom-name metadata separately from the portrait ID so that a language change updates default names but preserves a custom name.
 
-Offer an optional native TV name editor with Save and Cancel. Keep name entry single-line, with a proposed limit of 24 Unicode code points. Trim surrounding whitespace and reject control characters. An empty name returns to the selected character's default name.
+Offer an optional native TV name editor with Save and Cancel. Keep name entry single-line, with a limit of 24 Unicode code points. Trim surrounding whitespace and reject control characters. An empty name returns to the selected character's default name.
 
 Do not open the keyboard when a participant accepts the default name. Changing a portrait updates its default name. It preserves an explicitly saved custom name until the participant edits or clears it.
 
 Require different portraits within a local match. Keep distinct defaults, such as Fox and Owl. Exclude the first participant's selected portrait from the second participant's choices. If a saved ID is unknown, choose a deterministic available fallback without assigning the same portrait twice.
 
-Duplicate custom names are allowed as a coordinator proposal. Keep the portraits visible beside names. Chess also shows White or Black. Battleship board headings, turn prompts, handoffs, and accessible descriptions remain linked to the owner's portrait and full chosen name.
+Duplicate custom names are allowed. Keep the portraits visible beside names. Chess also shows White or Black. Battleship board headings, turn prompts, handoffs, and accessible descriptions remain linked to the owner's portrait and full chosen name.
 
 Use the chosen name throughout setup, turns, board ownership, pause summaries, handoffs, results, and accessible descriptions. Internal seat identifiers can remain stable legacy values. Never expose `Player 1`, `Player 2`, `HUMAN`, or `COMPUTER` as participant names in local mode.
 
-Keep full names in saved data and accessible labels. Use a single-line visual label with ellipsis when necessary. Provide enough label width for the proposed 24-code-point limit at the supported font sizes.
+Keep full names in saved data and accessible labels. Use a single-line visual label with ellipsis when necessary. Provide enough label width for the 24-code-point limit at the supported font sizes.
 
 ## Setup and cancellation
 
 Keep setup as a draft until Start succeeds. Back, Cancel, and leaving setup preserve the existing saved match and its participants. A setup preview must not start a computer task, erase a match, or change saved solo preferences.
 
-Choosing the computer keeps the existing solo setup, portraits, and preferences. It does not require a second participant name or portrait. The proposed local setup sequence is:
+Choosing the computer keeps the existing solo setup, portraits, and preferences. It does not require a second participant name or portrait. The local setup sequence is:
 
 1. Choose the computer or a local opponent.
 2. Choose the first participant's portrait and optional name.
@@ -78,6 +78,8 @@ Use actual directional focus movement. Preserve focus after the keyboard, dialog
 For local chess, the first setup slot plays White and the second plays Black. For local Battleship, the first slot owns the left board and takes the first shot. Rematch keeps these assignments and chosen names. Changing assignments requires an explicit new setup.
 
 ## Chess behavior
+
+Preserve the agreed forest-green, ivory, and honey palette, calm mood, existing forest backdrop, existing piece artwork, and board-first layout. Animal portraits complement that design. Do not introduce naval styling or broadly restyle chess.
 
 Local mode starts directly in chess. It does not run arithmetic rounds or apply the forced thinking delay. Preserve the saved solo arithmetic and thinking preferences. Do not change them when entering or leaving local mode.
 
@@ -121,7 +123,7 @@ Preserve the current ten-by-ten boards, five ship sizes, touching-ship rule, edg
 
 Use the existing rules engine for both seats. Treat legacy `HUMAN` and `COMPUTER` values as internal side identifiers in local mode. Do not rename serialized enums merely to change visible labels.
 
-The proposed accepted-shot sequence is:
+The accepted-shot sequence is:
 
 1. Accept one shot from the active human seat.
 2. Save the completed move and its next active seat.
@@ -193,7 +195,7 @@ The first three images predate the chosen-name requirement. Their numbered label
 
 The independent game UI reviewer accepted the visual direction with required corrections. These include clear editing identity, separate focus and assignment states, fixed owner labels, memory-rule explanation, Ready handoffs, and held-button protection. This design includes those corrections.
 
-Generate separate portrait assets with ImageGen after design approval. Do not bundle a UI screenshot as a portrait sheet. Use the approved character art as references for consistent individual portraits. Preserve ears and caps. Compress resources as WebP in each app.
+Generate separate portrait assets with ImageGen. Do not bundle a UI screenshot as a portrait sheet. Use the approved character art as references for consistent individual portraits. Preserve ears and caps. Compress resources as WebP in each app.
 
 Keep names, labels, focus outlines, grids, and game geometry native. Preserve the existing font licenses. Record final portrait prompts, source lineage, output dimensions, compression, hashes, and rights metadata before release. The concepts are not production resources or runtime evidence.
 
@@ -236,4 +238,4 @@ After successful installation, the coordinator follows the repository's commit a
 
 The builder can choose class names, bounded portrait decode sizes, layout spacing, and test fixture organization. The builder can choose the explicit new Battleship schema number while retaining schema-1 compatibility. The builder must preserve all behavior and migration constraints above.
 
-The proposed 24-code-point limit, distinct portraits, duplicate-name handling, and fixed assignments are coordinator choices for approval with this design. No unresolved art-direction choice remains. The user selected all eight naval captains.
+The approved design includes the 24-code-point limit, distinct portraits, duplicate-name handling, and fixed assignments. No unresolved art-direction choice remains. The user selected all eight naval captains and confirmed that chess retains its existing visual mood.
