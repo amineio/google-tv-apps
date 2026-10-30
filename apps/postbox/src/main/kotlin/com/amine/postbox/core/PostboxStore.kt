@@ -1,0 +1,139 @@
+package com.amine.postbox.core
+
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+import java.util.concurrent.ConcurrentHashMap
+import kotlinx.serialization.encodeToString
+
+class PostboxStore
+internal constructor(private val directory: File, private val beforeCommit: () -> Unit) {
+    constructor(directory: File) : this(directory, {})
+
+    private val codec = CaptureCodec()
+    private val lock = locks.computeIfAbsent(directory.canonicalPath) { Any() }
+    @Volatile
+    var hasStorageIssue: Boolean = false
+        private set
+
+    fun list(): List<StoredCapture> =
+        synchronized(lock) {
+            entries().sortedByDescending { it.capture.capturedAtEpochMs }
+        }
+
+    fun save(capture: PostCapture): SaveResult =
+        synchronized(lock) {
+            val canonical = codec.canonicalBytes(capture)
+            val normalized = codec.decode(canonical)
+            val entries = entries()
+            entries
+                .firstOrNull { it.capture.id == normalized.id }
+                ?.let {
+                    return@synchronized if (codec.digest(it.capture) == codec.digest(normalized))
+                        SaveResult.ALREADY_PRESENT
+                    else SaveResult.CONFLICT
+                }
+            // Never replace an unreadable entry whose UUID matches this request.
+            if (File(directory, "${normalized.id}.json").exists())
+                throw IOException("Local storage unavailable.")
+            val bytes = encode(StoredCapture(normalized))
+            if (
+                files().size >= 50 || files().sumOf { it.length() } + bytes.size > 64L * 1024 * 1024
+            )
+                return@synchronized SaveResult.FULL
+            write(normalized.id, bytes)
+            SaveResult.ADDED
+        }
+
+    fun archive(id: String, archived: Boolean) = update(id) { it.copy(archived = archived) }
+
+    fun markSent(id: String) = update(id) { it.copy(sent = true) }
+
+    fun delete(id: String) {
+        synchronized(lock) {
+            validateId(id)
+            val file = File(directory, "$id.json")
+            if (file.exists() && !file.delete()) throw IOException("Local storage unavailable.")
+        }
+    }
+
+    private fun update(id: String, transform: (StoredCapture) -> StoredCapture) {
+        synchronized(lock) {
+            validateId(id)
+            val old =
+                entries().firstOrNull { it.capture.id == id }
+                    ?: throw IOException("Capture unavailable.")
+            val bytes = encode(transform(old))
+            if (
+                files().sumOf { it.length() } - File(directory, "$id.json").length() + bytes.size >
+                    64L * 1024 * 1024
+            )
+                throw IOException("Local storage full.")
+            write(id, bytes)
+        }
+    }
+
+    private fun entries(): List<StoredCapture> {
+        ensureDirectory()
+        hasStorageIssue = false
+        return files().mapNotNull { file ->
+            try {
+                require(file.length() <= MAX_CAPTURE_BYTES + 256L)
+                val item =
+                    postboxJson.decodeFromString<StoredCapture>(file.readText(Charsets.UTF_8))
+                val capture = codec.decode(codec.canonicalBytes(item.capture))
+                require(file.name == "${capture.id}.json")
+                item.copy(capture = capture)
+            } catch (_: Exception) {
+                hasStorageIssue = true
+                null
+            }
+        }
+    }
+
+    private fun files(): List<File> =
+        directory.listFiles()?.filter { it.isFile && it.name.endsWith(".json") }
+            ?: if (!directory.exists()) emptyList()
+            else throw IOException("Local storage unavailable.")
+
+    private fun ensureDirectory() {
+        if (!directory.isDirectory && !directory.mkdirs())
+            throw IOException("Local storage unavailable.")
+    }
+
+    private fun encode(item: StoredCapture) =
+        postboxJson.encodeToString(item).toByteArray(Charsets.UTF_8)
+
+    private fun write(id: String, bytes: ByteArray) {
+        ensureDirectory()
+        val temp = File.createTempFile("capture-", ".tmp", directory)
+        try {
+            FileOutputStream(temp).use { out ->
+                out.write(bytes)
+                out.flush()
+                out.fd.sync()
+            }
+            beforeCommit()
+            Files.move(
+                temp.toPath(),
+                File(directory, "$id.json").toPath(),
+                StandardCopyOption.ATOMIC_MOVE,
+                StandardCopyOption.REPLACE_EXISTING,
+            )
+        } catch (_: Exception) {
+            throw IOException("Local storage unavailable.")
+        } finally {
+            temp.delete()
+        }
+    }
+
+    private fun validateId(id: String) {
+        require(id.matches(Regex("[0-9a-fA-F-]{36}"))) { "Invalid capture." }
+    }
+
+    companion object {
+        private val locks = ConcurrentHashMap<String, Any>()
+    }
+}
