@@ -26,7 +26,7 @@ def wait_for(predicate, timeout=12):
 
 
 def has_overlay():
-    return "TV Clock overlay" in adb("shell", "dumpsys", "window", "windows")
+    return "Clock overlay" in adb("shell", "dumpsys", "window", "windows")
 
 
 def control(name):
@@ -73,7 +73,7 @@ def adjust(name, direction, count=1):
 
 def frame():
     windows = adb("shell", "dumpsys", "window", "windows")
-    overlay = windows.split("TV Clock overlay}:", 1)[1].split("Window #", 1)[0]
+    overlay = windows.split("Clock overlay}:", 1)[1].split("Window #", 1)[0]
     match = re.search(r" frame=\[(\d+),(\d+)\]\[(\d+),(\d+)\]", overlay)
     if not match:
         raise AssertionError("Clock has no visible frame")
@@ -142,7 +142,7 @@ class ClockDeviceTest(unittest.TestCase):
 
     def test_clock_can_stop_and_cover_other_apps_without_replacing_home(self):
         self.assertIn("package:" + PACKAGE, adb("shell", "pm", "list", "packages", PACKAGE),
-                      "TV Clock is not installed")
+                      "Clock is not installed")
         home_args = ("shell", "cmd", "package", "resolve-activity", "--brief", "-a",
                      "android.intent.action.MAIN", "-c", "android.intent.category.HOME")
         home = adb(*home_args)

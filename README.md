@@ -6,14 +6,14 @@ Each app has its own package, version, permissions, tests, and APK.
 | App | Module | Package | Purpose |
 | --- | --- | --- | --- |
 | [TV Home](apps/home/) | `:home` | `com.gathin.tvhome` | A home screen with an app dock, grid, themes, and screensaver. |
-| [TV Clock](apps/clock/) | `:clock` | `com.amine.tvclock` | A clock overlay, session timer, daily bedtime, and viewing reminders. |
+| [Clock](apps/clock/) | `:clock` | `com.amine.tvclock` | A clock overlay, session timer, daily bedtime, and viewing reminders. |
 | [Schaak & Reken](apps/chess-math/) | `:chessMath` | `com.amine.chessmath` | Offline chess and arithmetic with remote controls and local progress. |
 | [Family Home](apps/family-home/) | Separate Kotlin build | `com.amine.familyhome` | Family profiles, child timers, allowed apps, and an optional parent PIN. |
 | [Battleship](apps/battleship/) | Separate Kotlin build | `com.amine.battleship` | Offline naval strategy against the computer with remote targeting and saved matches. |
 | [AI Chat](apps/ask-tv/) | Separate Kotlin build | `com.amine.asktv` | Spoken or typed questions through a ChatGPT subscription, with local example previews. |
 | [Postbox](apps/postbox/) | Separate Kotlin build | `com.amine.postbox` | Locally captured post text, links, and screenshots sent from an Android phone for TV reading. |
 
-TV Clock works independently of TV Home. Its stop screen supports voluntary viewing limits.
+Clock works independently of TV Home. Its stop screen supports voluntary viewing limits.
 It remains dismissible and does not guarantee that another app pauses playback.
 
 The [Chromecast device profile](docs/devices/google-chromecast-gtv-4k.md) records published specifications, observed firmware, and development limits for the current physical target.
@@ -38,7 +38,7 @@ apps/chess-math/build/outputs/apk/release/chessMath-release.apk
 
 These local release builds use the existing Android debug signing configuration.
 Store publishing and production signing require separate configuration.
-TV Home and Schaak & Reken support Android 8 and later. TV Clock requires Android 14 and later.
+TV Home and Schaak & Reken support Android 8 and later. Clock requires Android 14 and later.
 Family Home requires Android 14 and uses Compose for TV.
 Its independent build requires SDK platform `android-37.0` and build tools `36.0.0`:
 
@@ -83,7 +83,7 @@ Local tests do not establish playback behavior inside every streaming app.
 
 ```text
 apps/home/       TV Home app, resources, and unit tests
-apps/clock/      TV Clock app, resources, and device tests
+apps/clock/      Clock app, resources, and device tests
 apps/chess-math/ Offline chess and arithmetic app
 apps/family-home/ Independent Kotlin family launcher and Gradle build
 apps/battleship/  Independent Kotlin offline naval game and Gradle build

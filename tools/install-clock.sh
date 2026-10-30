@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build and install TV Clock without changing the default home screen.
+# Build and install Clock without changing the default home screen.
 set -euo pipefail
 : "${TV_SERIAL:?set TV_SERIAL to the connected TV address shown by adb devices}"
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
@@ -25,4 +25,4 @@ adb -s "$TV_SERIAL" shell rm -f /data/local/tmp/tv-clock.apk
 adb -s "$TV_SERIAL" shell appops set --user 0 com.amine.tvclock SYSTEM_ALERT_WINDOW allow
 adb -s "$TV_SERIAL" shell appops set --user 0 com.amine.tvclock SCHEDULE_EXACT_ALARM allow
 adb -s "$TV_SERIAL" shell am start -W -n com.amine.tvclock/.MainActivity
-echo 'TV Clock is open. Use Clock appearance for the clock, or Time limits for a timer and bedtime.'
+echo 'Clock is open. Use Clock appearance for the clock, or use the timer and bedtime cards.'

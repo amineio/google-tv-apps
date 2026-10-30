@@ -14,8 +14,9 @@ import android.widget.ScrollView;
 import android.widget.Switch;
 
 final class TvUi {
-    static final int BACKGROUND = Color.rgb(32, 36, 43), TEXT = Color.rgb(237, 239, 243);
+    static final int BACKGROUND = Color.rgb(10, 16, 24), TEXT = Color.rgb(236, 241, 249);
     static final int MUTED = Color.rgb(177, 184, 196), ACCENT = Color.rgb(183, 212, 255);
+    static final int CARD = Color.rgb(16, 23, 33), BORDER = Color.rgb(47, 61, 77);
     static final int FOCUSED_DETAIL = Color.rgb(75, 82, 94);
     static int dp(Context c, int value) { return Math.round(value * c.getResources().getDisplayMetrics().density); }
     static LinearLayout page(Context c) {
@@ -31,12 +32,13 @@ final class TvUi {
     }
     static TextView text(Context c, String text, int size, boolean muted) {
         TextView view = new TextView(c); view.setText(text); view.setTextSize(size);
-        view.setTextColor(muted ? MUTED : TEXT); view.setIncludeFontPadding(false);
+        view.setTextColor(muted ? MUTED : TEXT);
+        view.setTypeface(android.graphics.Typeface.create("sans-serif-light", android.graphics.Typeface.NORMAL)); view.setIncludeFontPadding(false);
         return view;
     }
     static GradientDrawable surface(Context c, int color, int border) {
         GradientDrawable shape = new GradientDrawable(); shape.setColor(color);
-        shape.setCornerRadius(dp(c, 12)); if (border != 0) shape.setStroke(dp(c, 2), border);
+        shape.setCornerRadius(dp(c, 12)); if (border != 0) shape.setStroke(dp(c, 1), border);
         return shape;
     }
     static Button button(Context c, String label, int id, Runnable click) {
@@ -75,6 +77,14 @@ final class TvUi {
         View space = new View(page.getContext()); page.addView(space, new LinearLayout.LayoutParams(1, dp(page.getContext(), height)));
     }
 
+    static StateListDrawable actionBackground(Context c) {
+        StateListDrawable states = new StateListDrawable();
+        states.addState(new int[]{android.R.attr.state_focused}, surface(c, Color.rgb(25, 40, 56), ACCENT));
+        states.addState(new int[]{android.R.attr.state_pressed}, surface(c, Color.rgb(38, 61, 85), ACCENT));
+        states.addState(new int[]{}, surface(c, Color.rgb(23, 31, 43), BORDER));
+        return states;
+    }
+
     static StateListDrawable preferenceBackground(Context c) {
         StateListDrawable states = new StateListDrawable();
         states.addState(new int[]{android.R.attr.state_focused}, surface(c, TEXT, 0));
@@ -93,12 +103,13 @@ final class TvUi {
             setBackgroundColor(BACKGROUND);
             setPadding(dp(c, 48), dp(c, 28), dp(c, 48), dp(c, 28));
             LinearLayout brand = column(c);
-            brand.setPadding(0, dp(c, 36), 0, 0);
+            brand.setPadding(dp(c, 16), dp(c, 36), dp(c, 16), dp(c, 24));
+            brand.setBackground(surface(c, CARD, BORDER));
             brand.setGravity(Gravity.CENTER_HORIZONTAL);
             clock = new AnalogClockView(c);
             brand.addView(clock, new LinearLayout.LayoutParams(dp(c, 160), dp(c, 160)));
             gap(brand, 24);
-            TextView brandTitle = text(c, "TV Clock", 32, false);
+            TextView brandTitle = text(c, "Clock", 32, false);
             brandTitle.setGravity(Gravity.CENTER);
             brand.addView(brandTitle);
             gap(brand, 12);

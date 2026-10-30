@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="ClockTheme" parent="android:style/Theme.Material.NoActionBar.Fullscreen">
-        <item name="android:windowBackground">#111318</item>
+        <item name="android:windowBackground">#0A1018</item>
         <item name="android:colorAccent">#B7D4FF</item>
         <item name="android:colorControlHighlight">#324155</item>
-        <item name="android:fontFamily">sans</item>
+        <item name="android:fontFamily">sans-serif-light</item>
         <item name="android:windowLightStatusBar">false</item>
     </style>
     <item name="clock_switch" type="id" />
