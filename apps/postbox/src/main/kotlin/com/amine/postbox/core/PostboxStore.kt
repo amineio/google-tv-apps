@@ -17,7 +17,7 @@ internal constructor(
     constructor(directory: File) : this(directory, {})
 
     private val codec = CaptureCodec()
-    private val lock = locks.computeIfAbsent(directory.canonicalPath) { Any() }
+    private val lock = locks.computeIfAbsent(directory.canonicalPath) { DirectoryState() }
     @Volatile
     var hasStorageIssue: Boolean = false
         private set
@@ -109,8 +109,31 @@ internal constructor(
             else throw IOException("Local storage unavailable.")
 
     private fun ensureDirectory() {
-        if (!directory.isDirectory && !directory.mkdirs())
-            throw IOException("Local storage unavailable.")
+        if (!directory.isDirectory) {
+            val missing = mutableListOf<File>()
+            var current: File? = directory.absoluteFile
+            while (current != null && !current.exists()) {
+                missing += current
+                current = current.parentFile
+            }
+            if (current == null || !current.isDirectory)
+                throw IOException("Local storage unavailable.")
+            // Stop at the first existing private directory. Its own parent is outside this
+            // creation.
+            lock.pendingParents.addAll(
+                missing.asReversed().map {
+                    it.parentFile ?: throw IOException("Local storage unavailable.")
+                }
+            )
+            if (!directory.mkdirs() && !directory.isDirectory)
+                throw IOException("Local storage unavailable.")
+        }
+        val parents = lock.pendingParents.iterator()
+        while (parents.hasNext()) {
+            synchronizeDirectory(parents.next())
+            // Keep this parent pending if synchronization throws, including across store instances.
+            parents.remove()
+        }
     }
 
     private fun encode(item: StoredCapture) =
@@ -140,9 +163,9 @@ internal constructor(
         }
     }
 
-    private fun synchronizeDirectory() {
+    private fun synchronizeDirectory(target: File = directory) {
         try {
-            syncDirectory(directory)
+            syncDirectory(target)
         } catch (_: Exception) {
             throw IOException("Local storage unavailable.")
         }
@@ -153,8 +176,12 @@ internal constructor(
     }
 
     companion object {
-        private val locks = ConcurrentHashMap<String, Any>()
+        private val locks = ConcurrentHashMap<String, DirectoryState>()
     }
+}
+
+private class DirectoryState {
+    val pendingParents = linkedSetOf<File>()
 }
 
 private fun forceDirectory(directory: File) {

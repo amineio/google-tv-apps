@@ -52,6 +52,50 @@ class CaptureStoreTest {
     }
 
     @Test
+    fun initiallyMissingNestedDirectoriesSyncEveryNewParent() {
+        val existingRoot = dir()
+        val intermediate = File(existingRoot, "new-folder")
+        val library = File(intermediate, "library")
+        val synchronizedDirectories = mutableListOf<File>()
+        val store =
+            PostboxStore(
+                library,
+                beforeCommit = {},
+                syncDirectory = { synchronizedDirectories += it },
+            )
+        assertEquals(SaveResult.ADDED, store.save(CaptureCodecTest.sample()))
+        assertEquals(listOf(existingRoot, intermediate, library), synchronizedDirectories)
+    }
+
+    @Test
+    fun failedParentSyncRemainsPendingAcrossStoreRetry() {
+        val existingRoot = dir()
+        val intermediate = File(existingRoot, "new-folder")
+        val library = File(intermediate, "library")
+        val capture = CaptureCodecTest.sample()
+        val first =
+            PostboxStore(
+                library,
+                beforeCommit = {},
+                syncDirectory = {
+                    if (it == existingRoot)
+                        throw java.io.IOException("Injected parent synchronization failure")
+                },
+            )
+        assertThrows(java.io.IOException::class.java) { first.save(capture) }
+        val synchronizedDirectories = mutableListOf<File>()
+        val retry =
+            PostboxStore(
+                library,
+                beforeCommit = {},
+                syncDirectory = { synchronizedDirectories += it },
+            )
+        assertEquals(SaveResult.ADDED, retry.save(capture))
+        assertEquals(listOf(existingRoot, intermediate, library), synchronizedDirectories)
+        assertEquals(capture, retry.list().single().capture)
+    }
+
+    @Test
     fun directorySyncFollowsAtomicReplacementBeforeSuccess() {
         val directory = dir()
         val capture = CaptureCodecTest.sample()
