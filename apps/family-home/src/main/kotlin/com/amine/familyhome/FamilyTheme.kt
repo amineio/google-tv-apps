@@ -93,8 +93,8 @@ internal fun FamilyBackdrop(content: @Composable BoxScope.() -> Unit) {
 }
 
 @Composable
-internal fun FamilyHeader(modifier: Modifier = Modifier, trailing: (@Composable RowScope.() -> Unit)? = null) {
-    Row(modifier.fillMaxWidth().height(38.dp), verticalAlignment = Alignment.CenterVertically) {
+internal fun FamilyHeader(modifier: Modifier = Modifier, height: Dp = 38.dp, trailing: (@Composable RowScope.() -> Unit)? = null) {
+    Row(modifier.fillMaxWidth().height(height), verticalAlignment = Alignment.CenterVertically) {
         Text(buildAnnotatedString {
             withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append("Family ") }
             withStyle(SpanStyle(color = Gold)) { append("Home") }

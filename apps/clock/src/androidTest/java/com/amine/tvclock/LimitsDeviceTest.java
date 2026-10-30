@@ -42,10 +42,16 @@ public class LimitsDeviceTest {
         });
         return current.get();
     }
+    private boolean homeIsResumed() {
+        String component = shell("cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME")
+                .lines().map(String::trim).filter(line -> line.contains("/")).reduce((a, b) -> b).orElse("");
+        assertFalse("A HOME activity must be configured", component.isEmpty());
+        return shell("dumpsys activity activities").lines().anyMatch(line -> line.contains("topResumedActivity=") && line.contains(component));
+    }
     private void home() {
         main(() -> context.startActivity(new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)));
-        waitUntil(() -> shell("dumpsys activity activities").matches("(?s).*topResumedActivity=.*com\\.gathin\\.tvhome/\\.MainActivity[^\\n]*.*"));
+        waitUntil(this::homeIsResumed);
         shell("input keyevent KEYCODE_DPAD_UP");
         SystemClock.sleep(300);
     }
@@ -111,6 +117,34 @@ public class LimitsDeviceTest {
         return activity();
     }
 
+    @Test public void dashboardRemoteNavigationRestoresFocusAfterDialogsAndAppearance() {
+        int originalDuration = context.getSharedPreferences("MainActivity", Context.MODE_PRIVATE).getInt("minutes", 60);
+        int originalBedtime = LimitsController.read(context).bedtimeMinute;
+        Activity page = openMain();
+        assertEquals("Clock", context.getApplicationInfo().loadLabel(context.getPackageManager()).toString());
+        main(() -> {
+            assertTrue(page.findViewById(R.id.clock_settings).isFocused());
+            assertNotNull(page.findViewById(android.R.id.content).findViewWithTag("dashboard-time"));
+        });
+        shell("input keyevent KEYCODE_DPAD_UP KEYCODE_DPAD_UP KEYCODE_DPAD_CENTER");
+        waitUntil(() -> dialogHas("Hours") && dialogHas("Minutes"));
+        shell("input keyevent KEYCODE_DPAD_UP KEYCODE_BACK");
+        main(() -> assertTrue(page.findViewById(R.id.timer_duration).isFocused()));
+        assertEquals(originalDuration, context.getSharedPreferences("MainActivity", Context.MODE_PRIVATE).getInt("minutes", 60));
+        assertEquals(0, LimitsController.read(context).timerElapsed);
+        shell("input keyevent KEYCODE_DPAD_DOWN KEYCODE_DPAD_CENTER");
+        waitUntil(() -> dialogHas("Daily bedtime"));
+        shell("input keyevent KEYCODE_BACK");
+        main(() -> assertTrue(page.findViewById(R.id.bedtime_time).isFocused()));
+        assertEquals(originalBedtime, LimitsController.read(context).bedtimeMinute);
+        assertFalse(LimitsController.read(context).bedtimeEnabled);
+        shell("input keyevent KEYCODE_DPAD_DOWN KEYCODE_DPAD_CENTER");
+        waitUntil(() -> activity() instanceof ClockSettingsActivity);
+        shell("input keyevent KEYCODE_BACK");
+        waitUntil(() -> activity() instanceof MainActivity);
+        main(() -> assertTrue(page.findViewById(R.id.clock_settings).isFocused()));
+    }
+
     @Test public void flatAppearanceRowsAdjustWithTheRemoteWithoutEnablingAHiddenClock() {
         main(() -> {
             ClockPreferences.setPosition(context, 20);
@@ -134,7 +168,7 @@ public class LimitsDeviceTest {
         shell("input keyevent KEYCODE_DPAD_RIGHT");
         waitUntil(() -> ClockPreferences.size(context) == 28);
         assertFalse(ClockPreferences.isEnabled(context));
-        assertFalse(shell("dumpsys window windows").contains("TV Clock overlay"));
+        assertFalse(shell("dumpsys window windows").contains("Clock overlay"));
         shell("input keyevent KEYCODE_BACK");
         waitUntil(() -> activity() instanceof MainActivity);
         main(() -> page.findViewById(R.id.clock_settings).performClick());
@@ -294,10 +328,10 @@ public class LimitsDeviceTest {
     @Test public void warningUsesARealAlarmWithoutClockOrFocusCapture() {
         home();
         main(() -> LimitsController.startTimer(context, TimeLimits.FIVE_MINUTES + 3_000));
-        waitUntil(() -> shell("dumpsys window windows").contains("TV Clock warning"));
+        waitUntil(() -> shell("dumpsys window windows").contains("Clock warning"));
         String windows = shell("dumpsys window windows");
-        assertFalse(windows.contains("TV Clock overlay"));
-        assertTrue(shell("dumpsys activity activities").matches("(?s).*topResumedActivity=.*com\\.gathin\\.tvhome/\\.MainActivity[^\\n]*.*"));
+        assertFalse(windows.contains("Clock overlay"));
+        assertTrue(homeIsResumed());
         assertFalse(LimitsController.read(context).warnedToken.isEmpty());
         screenshot("limits-warning");
     }
@@ -310,7 +344,7 @@ public class LimitsDeviceTest {
             s.warnedToken = s.next(System.currentTimeMillis(), SystemClock.elapsedRealtime(), LimitsController.boot(context)).token;
             LimitsStore.save(context, s); LimitsController.check(context);
         });
-        assertFalse(shell("dumpsys window windows").contains("TV Clock warning"));
+        assertFalse(shell("dumpsys window windows").contains("Clock warning"));
         waitUntil(() -> activity() instanceof StopActivity);
         Activity stop = activity();
         waitUntil(() -> {
@@ -359,7 +393,7 @@ public class LimitsDeviceTest {
         TimeLimits s = LimitsController.read(context);
         assertTrue(s.stopBedtime); assertTrue(s.bedtimeEnabled);
         assertTrue(s.bedtimeWall > System.currentTimeMillis());
-        waitUntil(() -> !shell("dumpsys window windows").contains("TV Clock warning"));
+        waitUntil(() -> !shell("dumpsys window windows").contains("Clock warning"));
         screenshot("limits-bedtime-stop");
     }
 

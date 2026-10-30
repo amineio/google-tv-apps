@@ -3,13 +3,17 @@ package com.amine.familyhome
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.BringIntoViewSpec
+import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +34,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
@@ -42,7 +47,14 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.tv.material3.*
+import kotlin.math.ceil
 
+// D-pad navigation scrolls complete rows before focusing their tiles.
+private val GridBringIntoView = object : BringIntoViewSpec {
+    override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float): Float = 0f
+}
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun HomeScreen(
     viewer: Viewer,
@@ -71,20 +83,27 @@ internal fun HomeScreen(
     val profiles = remember { FocusRequester() }
     var profileMenuOpen by remember(viewer) { mutableStateOf(false) }
     var profileFocused by remember(viewer) { mutableStateOf(false) }
-    val row = rememberLazyListState()
-    val activeTarget = targets[featured?.pkg]
+    val grid = rememberLazyGridState()
+    val columns = 5
     suspend fun focusMovedApp(pkg: String?, ordered: List<LauncherApp>) {
         val index = ordered.indexOfFirst { it.pkg == pkg }
         if (index < 0) return
         withFrameNanos { }
-        val layout = row.layoutInfo
+        val layout = grid.layoutInfo
         val item = layout.visibleItemsInfo.firstOrNull { it.key == pkg }
-        if (item == null || item.offset < layout.viewportStartOffset ||
-            item.offset + item.size > layout.viewportEndOffset) {
-            row.scrollToItem(index)
+        if (item == null || item.offset.y < layout.viewportStartOffset ||
+            item.offset.y + item.size.height > layout.viewportEndOffset) {
+            grid.scrollToItem(index)
             withFrameNanos { }
         }
         targets[pkg]?.requestFocus()
+    }
+    fun adjacentIndex(index: Int, key: Key, count: Int): Int = when (key) {
+        Key.DirectionLeft -> if (index % columns > 0) index - 1 else index
+        Key.DirectionRight -> if (index % columns < columns - 1 && index + 1 < count) index + 1 else index
+        Key.DirectionUp -> if (index >= columns) index - columns else index
+        Key.DirectionDown -> if ((index / columns + 1) * columns < count) (index + columns).coerceAtMost(count - 1) else index
+        else -> index
     }
     fun cancelMove() {
         val pkg = movingPackage
@@ -112,110 +131,147 @@ internal fun HomeScreen(
                 center = Offset(size.width * .85f, size.height * .16f), radius = size.width * .9f)
             onDrawBehind { drawRect(gradient) }
         })
-        Column(Modifier.fillMaxSize().padding(horizontal = 36.dp, vertical = 23.dp)) {
-            FamilyHeader {
-                if (remainingMs != null) {
-                    TimerChip(remainingMs)
-                    Spacer(Modifier.width(20.dp))
-                }
-                val profileShape = RoundedCornerShape(12.dp)
-                val profileColor = if (profileFocused) Panel else Color.Transparent
-                Surface(onClick = { profileMenuOpen = true },
-                    modifier = Modifier.testTag("home-profile").focusRequester(profiles)
-                        .onFocusChanged { profileFocused = it.isFocused }
-                        .border(2.dp, if (profileFocused) Gold else Color.Transparent, profileShape)
-                        .focusProperties {
-                        up = FocusRequester.Cancel
-                        left = FocusRequester.Cancel
-                        right = FocusRequester.Cancel
-                        down = activeTarget ?: FocusRequester.Cancel
-                    },
-                    shape = ClickableSurfaceDefaults.shape(profileShape),
-                    colors = ClickableSurfaceDefaults.colors(containerColor = profileColor, contentColor = Ink,
-                        focusedContainerColor = profileColor, focusedContentColor = Ink),
-                    scale = ClickableSurfaceDefaults.scale(focusedScale = 1f)) {
-                    Row(Modifier.padding(horizontal = 10.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
-                        ProfilePortrait(viewer, 30.dp, displayName = displayName, portrait = portrait)
-                        Spacer(Modifier.width(10.dp))
-                        Text(displayName, fontSize = 18.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
+            listOf(Color.Black.copy(alpha = .25f), Background.copy(alpha = .72f)))))
+        BoxWithConstraints(Modifier.fillMaxSize().padding(horizontal = 36.dp, vertical = 23.dp)) {
+            val density = LocalDensity.current
+            val labelLineHeight = MaterialTheme.typography.bodyLarge.lineHeight
+            val labelHeight = with(density) { labelLineHeight.roundToPx().toDp() }
+            val gridHeight = with(density) {
+                val cellSpace = maxWidth.roundToPx() - 2 * 8.dp.roundToPx() - (columns - 1) * 12.dp.roundToPx()
+                val widestCell = (cellSpace + columns - 1) / columns
+                val imageHeight = ceil(widestCell * 9.0 / 16.0).toInt()
+                val rowHeight = imageHeight + 7.dp.roundToPx() + labelHeight.roundToPx()
+                (2 * rowHeight + 14.dp.roundToPx() + 2 * 11.dp.roundToPx()).toDp()
+            }
+            Column(Modifier.fillMaxSize()) {
+                FamilyHeader(height = 64.dp) {
+                    if (remainingMs != null) {
+                        TimerChip(remainingMs)
+                        Spacer(Modifier.width(20.dp))
                     }
-                }
-            }
-            Spacer(Modifier.height(20.dp))
-            Box(Modifier.fillMaxWidth().height(208.dp), contentAlignment = Alignment.CenterStart) {
-                Column(Modifier.fillMaxWidth(.53f)) {
-                    Text(featured?.label ?: "Your apps",
-                        fontSize = 46.sp, lineHeight = 49.sp, fontWeight = FontWeight.SemiBold,
-                        maxLines = 2, overflow = TextOverflow.Ellipsis)
-                }
-            }
-            Spacer(Modifier.height(10.dp))
-            if (apps.isNotEmpty()) Text("Your apps", fontSize = 18.sp, fontWeight = FontWeight.Medium)
-            if (apps.isEmpty()) {
-                Box(Modifier.fillMaxWidth().height(112.dp).testTag("home-apps"), contentAlignment = Alignment.CenterStart) {
-                    Text(if (viewer.isChild) "No allowed apps are installed. Ask Amine to review the app list."
-                        else "No TV apps are installed.", color = Muted, fontSize = 18.sp)
-                }
-            } else LazyRow(state = row, horizontalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 11.dp),
-                modifier = Modifier.fillMaxWidth().height(112.dp).testTag("home-apps")) {
-                items(displayedApps, key = { it.pkg }) { app ->
-                    AppTile(app, Modifier.focusRequester(targets.getValue(app.pkg)).focusProperties {
-                        up = if (movingPackage == null) profiles else FocusRequester.Cancel
-                        down = FocusRequester.Cancel
-                        if (app == displayedApps.first()) left = FocusRequester.Cancel
-                        if (app == displayedApps.last()) right = FocusRequester.Cancel
-                    }.onPreviewKeyEvent { event ->
-                        if (movingPackage == null) false
-                        else when (event.key) {
-                            Key.DirectionUp, Key.DirectionDown -> true
-                            Key.DirectionLeft, Key.DirectionRight -> {
-                                if (event.type == KeyEventType.KeyDown && !saving) {
-                                    val current = draft.orEmpty()
-                                    val index = current.indexOfFirst { it.pkg == movingPackage }
-                                    val next = index + if (event.key == Key.DirectionLeft) -1 else 1
-                                    if (index >= 0 && next in current.indices) {
-                                        draft = current.toMutableList().apply {
-                                            val moved = removeAt(index)
-                                            add(next, moved)
-                                        }
-                                    }
+                    val profileShape = RoundedCornerShape(12.dp)
+                    val profileColor = if (profileFocused) Panel else Color.Transparent
+                    Surface(onClick = { profileMenuOpen = true },
+                        modifier = Modifier.testTag("home-profile").focusRequester(profiles)
+                            .onFocusChanged { profileFocused = it.isFocused }
+                            .border(2.dp, if (profileFocused) Gold else Color.Transparent, profileShape)
+                            .focusProperties {
+                            up = FocusRequester.Cancel
+                            left = FocusRequester.Cancel
+                            right = FocusRequester.Cancel
+                            down = FocusRequester.Cancel
+                        }.onPreviewKeyEvent { event ->
+                            if (event.key != Key.DirectionDown) false else {
+                                if (event.type == KeyEventType.KeyDown) {
+                                    scope.launch { focusMovedApp(featured?.pkg, displayedApps) }
                                 }
                                 true
                             }
-                            else -> false
-                        }
-                    }.onFocusChanged { if (it.isFocused) onFocused(app.pkg) },
-                        moving = movingPackage == app.pkg,
-                        onLongClick = {
-                            if (movingPackage == null) {
-                                draft = apps
-                                movingPackage = app.pkg
-                            }
                         },
-                        onClick = {
-                            if (movingPackage == null) onLaunch(app)
-                            else if (!saving) {
-                                saving = true
-                                val packages = displayedApps.map { it.pkg }
-                                scope.launch {
-                                    try {
-                                        val saved = withContext(NonCancellable) { onSaveOrder(packages) }
-                                        if (isActive && saved) {
-                                            draft = null
-                                            movingPackage = null
-                                        }
-                                    } finally { if (isActive) saving = false }
-                                }
-                            }
-                        })
+                        shape = ClickableSurfaceDefaults.shape(profileShape),
+                        colors = ClickableSurfaceDefaults.colors(containerColor = profileColor, contentColor = Ink,
+                            focusedContainerColor = profileColor, focusedContentColor = Ink),
+                        scale = ClickableSurfaceDefaults.scale(focusedScale = 1f)) {
+                        Row(Modifier.padding(horizontal = 10.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
+                            ProfilePortrait(viewer, 48.dp, displayName = displayName, portrait = portrait)
+                            Spacer(Modifier.width(10.dp))
+                            Text(displayName, fontSize = 18.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
                 }
+                Spacer(Modifier.weight(1f))
+                Column(Modifier.fillMaxWidth().height(62.dp), verticalArrangement = Arrangement.Center) {
+                    Text("Your apps", color = Muted, fontSize = 17.sp, fontWeight = FontWeight.Medium)
+                    if (featured != null) Text(featured.label,
+                        fontSize = 28.sp, lineHeight = 33.sp, fontWeight = FontWeight.SemiBold,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                Spacer(Modifier.height(6.dp))
+                if (apps.isEmpty()) {
+                    Box(Modifier.fillMaxWidth().height(gridHeight).testTag("home-apps"), contentAlignment = Alignment.CenterStart) {
+                        Text(if (viewer.isChild) "No allowed apps are installed. Ask Amine to review the app list."
+                            else "No TV apps are installed.", color = Muted, fontSize = 18.sp)
+                    }
+                } else CompositionLocalProvider(LocalBringIntoViewSpec provides GridBringIntoView) {
+                    LazyVerticalGrid(columns = GridCells.Fixed(columns), state = grid,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 11.dp),
+                        modifier = Modifier.fillMaxWidth().height(gridHeight).testTag("home-apps")) {
+                        itemsIndexed(displayedApps, key = { _, app -> app.pkg }) { index, app ->
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                AppTile(app, Modifier.focusRequester(targets.getValue(app.pkg)).focusProperties {
+                                    up = FocusRequester.Cancel
+                                    down = FocusRequester.Cancel
+                                    left = FocusRequester.Cancel
+                                    right = FocusRequester.Cancel
+                                }.onPreviewKeyEvent { event ->
+                                    when (event.key) {
+                                        Key.DirectionUp, Key.DirectionDown, Key.DirectionLeft, Key.DirectionRight -> {
+                                            if (event.type == KeyEventType.KeyDown && !saving) {
+                                                if (movingPackage == null && event.key == Key.DirectionUp && index < columns) {
+                                                    profiles.requestFocus()
+                                                } else {
+                                                    val next = adjacentIndex(index, event.key, displayedApps.size)
+                                                    if (next != index) {
+                                                        if (movingPackage == null) {
+                                                            scope.launch { focusMovedApp(displayedApps[next].pkg, displayedApps) }
+                                                        } else {
+                                                            draft = displayedApps.toMutableList().apply { add(next, removeAt(index)) }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            true
+                                        }
+                                        else -> false
+                                    }
+                                }.onFocusChanged { if (it.isFocused) onFocused(app.pkg) },
+                                    moving = movingPackage == app.pkg,
+                                    onLongClick = {
+                                        if (movingPackage == null) {
+                                            draft = apps
+                                            movingPackage = app.pkg
+                                        }
+                                    },
+                                    onClick = {
+                                        if (movingPackage == null) onLaunch(app)
+                                        else if (!saving) {
+                                            saving = true
+                                            val packages = displayedApps.map { it.pkg }
+                                            scope.launch {
+                                                try {
+                                                    val saved = withContext(NonCancellable) { onSaveOrder(packages) }
+                                                    if (isActive && saved) {
+                                                        draft = null
+                                                        movingPackage = null
+                                                    }
+                                                } finally { if (isActive) saving = false }
+                                            }
+                                        }
+                                    })
+                                Spacer(Modifier.height(7.dp))
+                                Text(app.label, Modifier.fillMaxWidth().height(labelHeight), color = Ink, fontSize = 17.sp,
+                                    lineHeight = labelLineHeight, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
+                        }
+                    }
+                }
+                Box(Modifier.fillMaxWidth().height(26.dp), contentAlignment = Alignment.CenterStart) {
+                    if (movingPackage != null) Text("Arrows move · OK save · Back cancel",
+                        Modifier.testTag("app-move-hint"), color = Gold, fontSize = 15.sp)
+                    else if (apps.isNotEmpty()) Text("Hold OK to move", color = Muted, fontSize = 15.sp)
+                }
+                notice?.let { Text(it, color = Gold, fontSize = 15.sp, maxLines = 2); Spacer(Modifier.height(8.dp)) }
             }
-            if (movingPackage != null) Text("Left/Right move · OK save · Back cancel",
-                Modifier.testTag("app-move-hint"), color = Gold, fontSize = 15.sp)
-            Spacer(Modifier.weight(1f))
-            notice?.let { Text(it, color = Gold, fontSize = 15.sp, maxLines = 2); Spacer(Modifier.height(8.dp)) }
-
+            LaunchedEffect(viewer, keys, resume) {
+                if (focusManageOnEntry) {
+                    profiles.requestFocus()
+                } else if (featured != null) {
+                    focusMovedApp(featured.pkg, apps)
+                } else profiles.requestFocus()
+            }
         }
     }
     if (profileMenuOpen) {
@@ -225,15 +281,6 @@ internal fun HomeScreen(
             onManage = { profileMenuOpen = false; onManage() })
     }
 
-    LaunchedEffect(viewer, keys, resume) {
-        if (focusManageOnEntry) {
-            profiles.requestFocus()
-        } else if (featured != null) {
-            row.scrollToItem(apps.indexOfFirst { it.pkg == featured.pkg }.coerceAtLeast(0))
-            withFrameNanos { }
-            targets.getValue(featured.pkg).requestFocus()
-        } else profiles.requestFocus()
-    }
 }
 
 @Composable
@@ -242,7 +289,7 @@ private fun ProfileMenu(viewer: Viewer, onDismiss: () -> Unit,
     val switchProfile = remember { FocusRequester() }
     val manage = remember { FocusRequester() }
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Box(Modifier.fillMaxSize().padding(top = 82.dp, end = 36.dp, bottom = 120.dp),
+        Box(Modifier.fillMaxSize().padding(top = 96.dp, end = 36.dp, bottom = 120.dp),
             contentAlignment = Alignment.TopEnd) {
             Column(Modifier.width(304.dp).background(Panel, RoundedCornerShape(16.dp))
                 .border(1.dp, Color.White.copy(alpha = .12f), RoundedCornerShape(16.dp))
@@ -305,7 +352,7 @@ private fun AppTile(app: LauncherApp, modifier: Modifier, moving: Boolean,
     onLongClick: () -> Unit, onClick: () -> Unit) {
     val shape = RoundedCornerShape(11.dp)
     Surface(onClick = onClick, onLongClick = onLongClick,
-        modifier = modifier.width(if (app.banner != null) 144.dp else 81.dp).height(81.dp).testTag("app:${app.pkg}"),
+        modifier = modifier.fillMaxWidth().aspectRatio(16f / 9f).testTag("app:${app.pkg}"),
         shape = ClickableSurfaceDefaults.shape(shape),
         colors = ClickableSurfaceDefaults.colors(containerColor = Panel, contentColor = Ink,
             focusedContainerColor = Panel, focusedContentColor = Ink),
@@ -320,7 +367,7 @@ private fun AppTile(app: LauncherApp, modifier: Modifier, moving: Boolean,
             } else {
                 Image(app.icon.asImageBitmap(), app.label, Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
             }
-            if (moving) Text("‹  ›", Modifier.align(Alignment.BottomCenter)
+            if (moving) Text("↕  ↔", Modifier.align(Alignment.BottomCenter)
                 .background(Background.copy(alpha = .9f), RoundedCornerShape(4.dp)).padding(horizontal = 6.dp),
                 color = Gold, fontSize = 18.sp)
         }

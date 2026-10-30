@@ -134,9 +134,15 @@ Follow its [risk-based test workflow](../../docs/kotlin-tv-development.md#choose
 Select one instrumented test class per invocation and inspect its XML results.
 After a minor resource correction, repeat affected tests and captures.
 Keep release lint and packaging in the final delivery checks.
-Use emulator coverage for development and delivery by default. Do not routinely install or test changes on the physical TV.
-Use the physical TV only for an explicit user request or a user-reported issue.
-Instrumented tests use directional events. The runner can remove its tested APK afterward.
+Use emulator coverage for development and instrumented tests.
+Always install the tested release APK on the physical TV before merging app changes or pushing them to `origin/main`.
+The standing delivery instruction authorizes this installation without renewed permission.
+Make sure that the installed version and APK SHA-256 match the tested artifact.
+If the TV is unavailable or installation fails, preserve the task branch and report the blocker without merging.
+Preserve app data, unrelated apps, Google TV Home, and setupwraith.
+Do not run instrumented tests on the physical TV because the runner can remove its tested APK afterward.
+Physical installation does not require unrelated Cast, wake, playback, or audio tests.
+Documentation-only changes do not require an APK installation unless they accompany app delivery.
 Keep personal account screens and device identifiers out of Git.
 Emulator results establish layout and remote behavior. Physical TV readability, audio volume, and remote hardware require separate observations.
 

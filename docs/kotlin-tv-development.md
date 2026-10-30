@@ -124,7 +124,8 @@ Before delivery, inspect the installed app through Family Home in the emulator:
 5. Open the app and return to the launcher, then make sure that focus and artwork match.
 6. Replace the installed APK and make sure that the launcher refreshes its artwork while preserving the selected app.
 
-Emulator inspection is sufficient by default. Keep any physical TV observations separate from emulator results.
+Use emulator inspection during development. Complete physical TV installation before merging app changes or pushing them to `origin/main`.
+Keep physical TV observations separate from emulator results.
 Reuse the patterns in [Battleship's artwork tests](../apps/battleship/src/androidTest/kotlin/com/amine/battleship/LauncherArtworkTest.kt).
 Read its [asset record](battleship/launcher-art/assets.json) and [validation record](battleship/launcher-art/validation.md) for a completed example.
 
@@ -243,7 +244,8 @@ Keep one coordinator responsible for builds and device input throughout these st
 
 ## Iterate in the emulator
 
-Emulator coverage is sufficient for development and delivery by default.
+Use emulator coverage for development and instrumented tests.
+Install the tested release APK on the physical TV before merging app changes or pushing them to `origin/main`.
 Use the existing `Family_TV_API_34` Google TV emulator for layout and D-pad work.
 Read [the emulator instructions](../apps/family-home/README.md#local-tv-emulator) for startup, install, and capture commands.
 Set an explicit device serial so that the emulator and physical TV cannot receive each other's commands.
@@ -267,7 +269,7 @@ Bundle all supported languages offline. If delivery uses app bundles, disable la
 Inspect long translations on the actual layout, especially ship names.
 Use semantic line breaks and shared board geometry instead of shrinking one board to fit a translated label.
 
-Keep instrumented tests on the emulator by default. The runner can uninstall the tested app afterward.
+Keep instrumented tests on the emulator. Do not run them on the physical TV because the runner can uninstall the tested app.
 Presentation fixtures prove interface behavior. They do not prove the real accessibility helper or third-party playback behavior.
 Android UI automation can suppress accessibility services during inspection.
 During Battleship work on 2026-10-29, physical TV UI dumps coincided with Family Home redirects and accessibility interruptions.
@@ -279,15 +281,17 @@ For manual helper tests, use the affected app guide.
 
 ## Physical TV and delivery
 
-Do not routinely install or test changes on the physical TV.
-The user tests on the TV and reports issues.
-Use the physical TV only for an explicit user request or a user-reported issue.
-Changes to audio focus, playback, accessibility, Cast, wake, or other hardware behavior do not create an automatic physical test gate.
-For authorized physical work, limit installation and tests to the requested behavior or reported issue.
-After installation, make sure that the installed version and APK hash match the intended build.
+Always install the changed app's tested release APK on the physical TV before merging app changes or pushing them to `origin/main`.
+This standing instruction authorizes routine physical installation without renewed permission.
+After installation, make sure that the installed version and APK SHA-256 match the tested release artifact.
+If the TV is unavailable or installation fails, block the merge, preserve the task branch, and report the blocker.
+Documentation-only changes do not require an APK installation unless they accompany app delivery.
+Keep development and instrumented tests on the emulator. The test runner can uninstall the tested app.
+Physical installation does not require unrelated Cast, wake, playback, or audio tests.
+Limit additional physical tests to the requested behavior or reported issue.
 Requested development, testing, and installation take priority over TV viewing.
 Stop device input when the user explicitly asks you to stop.
-Do not clear app data or end an existing session as routine test cleanup.
+Preserve app data and unrelated apps. Do not end an existing session as routine test cleanup.
 Preserve Google TV Home and `com.google.android.tungsten.setupwraith` because Cast uses their credentials.
 
 Keep device identifiers, personal account screens, and backups out of Git.
@@ -297,5 +301,5 @@ While the repository remains public, keep new family screenshots and personal da
 
 Report local tests, emulator results, physical observations, installation, and Git delivery separately.
 State any untested hardware behavior and any requested physical tests that remain unperformed.
-Do not infer physical results from interface tests or make missing evidence an automatic physical test gate.
-After an authorized installation, follow the commit and push instructions in [AGENTS.md](../AGENTS.md).
+Do not infer physical behavior from interface tests or APK installation alone.
+After the required physical installation, follow the commit and push instructions in [AGENTS.md](../AGENTS.md).
