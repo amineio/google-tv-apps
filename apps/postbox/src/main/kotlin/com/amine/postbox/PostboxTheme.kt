@@ -42,7 +42,13 @@ internal fun PostboxTheme(phone: Boolean = false, content: @Composable () -> Uni
                     surfaceVariant = Sage,
                     onSurfaceVariant = Muted,
                 ),
-            content = content,
+            content = {
+                androidx.compose.runtime.CompositionLocalProvider(
+                    androidx.compose.material3.LocalContentColor provides
+                        androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
+                    content = content,
+                )
+            },
         )
     } else {
         MaterialTheme(
