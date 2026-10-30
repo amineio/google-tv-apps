@@ -165,7 +165,13 @@ The coordinator read package versions with `dumpsys package` and installed APK l
 Device-side `sha256sum` matched each local artifact hash above.
 `am start -W` returned `Status: ok` for both apps on both target types.
 The corrected Chess physical launch also returned `Status: ok`. Its emulator launch succeeded before the final captures.
-The coordinator left Chess in the physical TV foreground. Git delivery remains pending.
+The coordinator left Chess in the physical TV foreground.
+
+The app changes reached `origin/amine/two-player-games` and `origin/main` at `67bbb0d0321c872c256d2b4213cb86b9941ad7c8`.
+The coordinator read both remote references with `git ls-remote`. Both matched that delivered revision.
+The merge incorporates concurrent validation documentation from `aceb0e14`, after task documentation commit `ede88e29`.
+The merge leaves runtime source, build configuration, tests, and resources for both apps unchanged from the tested and installed `e4d433f0` revision.
+The delivered release APKs retain the installed hashes listed above.
 
 The coordinator used this command pattern for each app and explicit target. Private target identifiers remain outside Git.
 

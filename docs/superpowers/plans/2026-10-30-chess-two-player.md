@@ -12,7 +12,7 @@
 
 The full integration suites passed. Corrected release installation passed on the physical TV and emulator.
 Six focused native tests, lint, and release packaging passed for that resource correction.
-Final native review accepted the corrected result actions. Only Git delivery remains pending.
+Final native review accepted the corrected result actions. App changes reached `origin/main` at `67bbb0d0321c872c256d2b4213cb86b9941ad7c8`.
 The [validation record](../../two-player-games/validation-2026-10-30.md) records executed commands, test counts, revisions, and delivery evidence.
 The latest standing instruction requires physical release installation before delivery to `origin/main`.
 
@@ -82,4 +82,7 @@ The latest standing instruction requires physical release installation before de
 - [x] Capture the current native chooser, name editor, White and Black turns, promotion, pause, and results with generic names. Ask the fresh reviewer to inspect code and captures for all spec requirements, the five Review Focus conditions, and the preserved chess mood. Delegate fixes and repeat affected checks.
 - [x] Install the corrected release version `0.13`, code `13`, on the physical TV and its emulator. Make sure that package versions and installed SHA-256 values match the tested release artifact. Preserve app data.
 - [x] Make sure that portrait packaging, release versions and hashes, lint/build results, and test counts match the recorded evidence.
-- [ ] Fetch origin before integration. Preserve concurrent changes and repeat affected checks if integration changes the app. Commit only authorized changes and complete the shortest safe push/merge to `origin/main`. Report emulator tests, physical installation, and Git delivery separately.
+- [x] Fetch origin before integration. Preserve concurrent changes and repeat affected checks if integration changes the app. Commit only authorized changes and complete the shortest safe push/merge to `origin/main`. Report emulator tests, physical installation, and Git delivery separately.
+
+Both `origin/amine/two-player-games` and `origin/main` reached `67bbb0d0321c872c256d2b4213cb86b9941ad7c8`.
+The final merge incorporates validation documentation for other games from `aceb0e14`. App sources remain identical to the tested and installed `e4d433f0` revision.
