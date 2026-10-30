@@ -163,7 +163,6 @@ public final class MainActivity extends Activity {
         controller=sharedController;
         if(saved!=null){
             started=saved.getBoolean("started",false);menu=saved.getString("menu","");
-            startAfterReset=saved.getBoolean("start-after-reset",false);
             lastPad=saved.getInt("pad",4);
             setupReturn=saved.getString("setup-return","");
             setupWhite=PlayerProfile.restored(saved.getString("setup-white","fox"),saved.getString("setup-white-name"),null);
@@ -191,7 +190,6 @@ public final class MainActivity extends Activity {
     }
     @Override protected void onSaveInstanceState(Bundle saved){
         saved.putBoolean("started",started);saved.putString("menu",menu);saved.putInt("pad",lastPad);
-        saved.putBoolean("start-after-reset",startAfterReset);
         saved.putString("setup-return",setupReturn);saved.putString("setup-white",setupWhite.portraitId);
         saved.putString("setup-white-name",setupWhite.customName);saved.putString("setup-black",setupBlack.portraitId);
         saved.putString("setup-black-name",setupBlack.customName);
@@ -266,7 +264,7 @@ public final class MainActivity extends Activity {
             return;
         }
         String target=presenting!=null?"CHESS":!menu.isEmpty()?menu:!started?"start":(state.phase==Session.Phase.TO_MATH||state.phase==Session.Phase.TO_CHESS)?state.phase.name():state.paused?"pause":state.phase.name();
-        if(target.equals("CHESS")&&screen.equals("CHESS")&&state.promotionTo<0&&state.intendedMove==null&&(state.result.isEmpty()||presenting!=null||showingChessResult)&&board!=null){
+        if(target.equals("CHESS")&&screen.equals("CHESS")&&state.promotionTo<0&&state.intendedMove==null&&showingChessResult==(!state.result.isEmpty()&&presenting==null)&&board!=null){
             bindBoard();
             return;
         }

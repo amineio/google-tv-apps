@@ -200,7 +200,7 @@ public final class ParentAndPromotionRemoteTest {
             key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_CENTER);
             focusDown("language");
             assertFocus("language");
-            key(KeyEvent.KEYCODE_DPAD_CENTER);key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_CENTER);
+            key(KeyEvent.KEYCODE_DPAD_CENTER);awaitWindowFocus(false);key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_CENTER);awaitWindowFocus(true);
             assertEquals("Settings",activity.getString(R.string.parent_title));
             screenshot("settings-english");
             assertFocus("language");
@@ -224,7 +224,7 @@ public final class ParentAndPromotionRemoteTest {
             });
             key(KeyEvent.KEYCODE_BACK);key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_CENTER);
             focusDown("language");
-            key(KeyEvent.KEYCODE_DPAD_CENTER);key(KeyEvent.KEYCODE_DPAD_UP);key(KeyEvent.KEYCODE_DPAD_CENTER);
+            key(KeyEvent.KEYCODE_DPAD_CENTER);awaitWindowFocus(false);key(KeyEvent.KEYCODE_DPAD_UP);key(KeyEvent.KEYCODE_DPAD_CENTER);awaitWindowFocus(true);
             assertEquals("Instellingen",activity.getString(R.string.parent_title));
             assertEquals(fixture.moves,controller.state().moves);
             assertEquals(71,controller.state().exercise.id);
@@ -365,6 +365,11 @@ public final class ParentAndPromotionRemoteTest {
         instrumentation.runOnMainSync(()->assertFalse("Start must resume the fixture",controller.state().paused));
     }
 
+    private void awaitWindowFocus(boolean expected) throws Exception{
+        AtomicBoolean ready=new AtomicBoolean();long until=SystemClock.elapsedRealtime()+5000;
+        do{instrumentation.waitForIdleSync();instrumentation.runOnMainSync(()->ready.set(activity.hasWindowFocus()==expected));if(!ready.get())SystemClock.sleep(20);}while(!ready.get()&&SystemClock.elapsedRealtime()<until);
+        assertTrue("Language dialog must finish its focus transition: expected Activity focus="+expected,ready.get());
+    }
     private void finishAndAwaitDestroyed() throws Exception {
         MainActivity previous=activity;
         instrumentation.runOnMainSync(previous::finish);

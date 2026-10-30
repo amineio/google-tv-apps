@@ -23,6 +23,7 @@ public final class LocalChessRemoteTest {
     @org.junit.Rule public final PlayModeRule playMode=new PlayModeRule();
     private final Instrumentation instrumentation=InstrumentationRegistry.getInstrumentation();
     private MainActivity activity;private SessionController controller;
+    private ImeTransition editorTransition;
     private static final String FULL_NAME="Amber Alexandria Rowan";
     private interface Checked{void run() throws Exception;}
     private Session local(){Session s=new Session(false);s.revision=7;s.mode=Session.Mode.LOCAL;s.phase=Session.Phase.CHESS;s.whiteProfile=new PlayerProfile("fox",FULL_NAME);s.blackProfile=new PlayerProfile("owl","Robin");return s;}
@@ -46,10 +47,13 @@ public final class LocalChessRemoteTest {
         await(()->activity.hasWindowFocus()&&activity.getCurrentFocus()!=null&&!controller.busy());
     }
     private void key(int code) throws Exception{instrumentation.sendKeyDownUpSync(code);instrumentation.waitForIdleSync();await(()->!controller.busy());}
-    private void await(BooleanSupplier ready) throws Exception{
+    private void await(BooleanSupplier ready) throws Exception{await("Native UI transition",ready);}
+    private void await(String stage,BooleanSupplier ready) throws Exception{
         long end=SystemClock.elapsedRealtime()+5000;AtomicBoolean yes=new AtomicBoolean();
         do{instrumentation.waitForIdleSync();instrumentation.runOnMainSync(()->yes.set(ready.getAsBoolean()));if(yes.get())return;SystemClock.sleep(20);}while(SystemClock.elapsedRealtime()<end);
-        fail("Native UI did not reach the expected state");
+        java.util.concurrent.atomic.AtomicReference<String> state=new java.util.concurrent.atomic.AtomicReference<>();
+        instrumentation.runOnMainSync(()->state.set(diagnostics()+"; "+editorDiagnostics()));
+        fail(stage+" timed out; "+state.get());
     }
     private void focus(String tag){focus("Remote focus",tag);}
     private void focus(String stage,String tag){
@@ -69,22 +73,37 @@ public final class LocalChessRemoteTest {
         instrumentation.runOnMainSync(previous::finish);
         await(previous::isDestroyed);await(()->!controller.busy());
     }
-    private boolean hasNameEditor(android.view.accessibility.AccessibilityNodeInfo node){
-        if(node==null)return false;
-        if("android.widget.EditText".equals(String.valueOf(node.getClassName()))&&activity.getString(R.string.local_name_hint).equals(String.valueOf(node.getContentDescription())))return true;
-        for(int i=0;i<node.getChildCount();i++)if(hasNameEditor(node.getChild(i)))return true;
-        return false;
+    private View nativeEditor(){
+        if(android.os.Build.VERSION.SDK_INT<29)return null;
+        for(View root:android.view.inspector.WindowInspector.getGlobalWindowViews()){
+            View editor=findNativeEditor(root);if(editor!=null)return editor;
+        }
+        return null;
     }
-    /** Wait for the first Back to expose either the editor dialog or the Activity. */
-    private boolean editorStillShowingAfterBack() throws Exception{
-        long end=SystemClock.elapsedRealtime()+5000;AtomicBoolean focused=new AtomicBoolean();
-        do{
-            instrumentation.waitForIdleSync();instrumentation.runOnMainSync(()->focused.set(activity.hasWindowFocus()));
-            if(focused.get())return false;
-            if(hasNameEditor(instrumentation.getUiAutomation().getRootInActiveWindow()))return true;
-            SystemClock.sleep(20);
-        }while(SystemClock.elapsedRealtime()<end);
-        fail("Back must expose the native editor dialog or its Activity");return false;
+    private boolean nativeEditorAttached(){return nativeEditor()!=null;}
+    private View findNativeEditor(View view){
+        if(view instanceof android.widget.EditText&&view.isAttachedToWindow()&&activity.getString(R.string.local_name_hint).equals(String.valueOf(view.getContentDescription())))return view;
+        if(view instanceof android.view.ViewGroup){android.view.ViewGroup group=(android.view.ViewGroup)view;for(int i=0;i<group.getChildCount();i++){View found=findNativeEditor(group.getChildAt(i));if(found!=null)return found;}}
+        return null;
+    }
+    private Boolean editorImeVisible(){
+        View editor=nativeEditor();if(editor==null||android.os.Build.VERSION.SDK_INT<30)return null;
+        android.view.WindowInsets insets=editor.getRootWindowInsets();
+        return insets==null?null:insets.isVisible(android.view.WindowInsets.Type.ime());
+    }
+    private String editorDiagnostics(){
+        View editor=nativeEditor();
+        return "editorAttached="+(editor!=null)+", editorWindowFocus="+(editor!=null&&editor.hasWindowFocus())+", imeInsetsVisible="+editorImeVisible()+", imeAnimationCount="+(editorTransition==null?0:editorTransition.running.size());
+    }
+    private static final class ImeTransition extends android.view.WindowInsetsAnimation.Callback {
+        final java.util.Set<android.view.WindowInsetsAnimation> running=new java.util.HashSet<>();
+        ImeTransition(){super(DISPATCH_MODE_CONTINUE_ON_SUBTREE);}
+        private boolean ime(android.view.WindowInsetsAnimation animation){return (animation.getTypeMask()&android.view.WindowInsets.Type.ime())!=0;}
+        @Override public void onPrepare(android.view.WindowInsetsAnimation animation){if(ime(animation))running.add(animation);}
+        @Override public android.view.WindowInsets onProgress(android.view.WindowInsets insets,java.util.List<android.view.WindowInsetsAnimation> animations){
+            running.clear();for(android.view.WindowInsetsAnimation animation:animations)if(ime(animation))running.add(animation);return insets;
+        }
+        @Override public void onEnd(android.view.WindowInsetsAnimation animation){running.remove(animation);}
     }
     private View view(String tag){return activity.findViewById(android.R.id.content).findViewWithTag(tag);}
     private void goLocalSetup() throws Exception{
@@ -111,10 +130,19 @@ public final class LocalChessRemoteTest {
         fixture(local(),()->{
             String id=controller.state().id;goLocalSetup();
             key(KeyEvent.KEYCODE_DPAD_DOWN);key(KeyEvent.KEYCODE_DPAD_DOWN);focus("edit-name");key(KeyEvent.KEYCODE_DPAD_CENTER);
+            await("Name editor owns the input window",()->!activity.hasWindowFocus()&&nativeEditorAttached()&&nativeEditor().hasWindowFocus());
+            ImeTransition ime=new ImeTransition();editorTransition=ime;
+            instrumentation.runOnMainSync(()->nativeEditor().getRootView().setWindowInsetsAnimationCallback(ime));
+            await("Name editor keyboard is visible and settled",()->Boolean.TRUE.equals(editorImeVisible())&&ime.running.isEmpty());
             key(KeyEvent.KEYCODE_BACK);
-            if(editorStillShowingAfterBack())key(KeyEvent.KEYCODE_BACK); // The first Back can hide the IME.
-            await(activity::hasWindowFocus);focus("Canceled native name editor","edit-name");
-            key(KeyEvent.KEYCODE_DPAD_RIGHT);key(KeyEvent.KEYCODE_DPAD_CENTER);focus("portrait-owl");
+            await("First Back hides the keyboard or closes the editor",()->!nativeEditorAttached()||(Boolean.FALSE.equals(editorImeVisible())&&ime.running.isEmpty()));
+            AtomicBoolean editorOpen=new AtomicBoolean();instrumentation.runOnMainSync(()->editorOpen.set(nativeEditorAttached()));
+            if(editorOpen.get())key(KeyEvent.KEYCODE_BACK);
+            await("Native editor cancellation returns to chooser",()->activity.hasWindowFocus()&&!nativeEditorAttached());focus("Canceled native name editor","edit-name");
+            key(KeyEvent.KEYCODE_DPAD_RIGHT);focus("Next after native editor dismissal","setup-next");
+            key(KeyEvent.KEYCODE_DPAD_CENTER);
+            await(()->"local-black".equals(value(MainActivity.class,activity,"menu")));
+            focus("Black chooser after editor cancellation","portrait-owl");
             nextParticipant();focus(activity.getString(R.string.local_start));key(KeyEvent.KEYCODE_DPAD_CENTER);
             await(()->!activity.hasWindowFocus());key(KeyEvent.KEYCODE_DPAD_CENTER); // Cancel initially focused.
             await(activity::hasWindowFocus);focus(activity.getString(R.string.local_start));
@@ -166,5 +194,25 @@ public final class LocalChessRemoteTest {
     private boolean containsDescription(android.view.ViewGroup group,String name){
         for(int i=0;i<group.getChildCount();i++){View child=group.getChildAt(i);if(child.getContentDescription()!=null&&child.getContentDescription().toString().contains(name))return true;}
         return false;
+    }
+    @Test public void restoredFinalBoardRematchReturnsToFocusableBoardAndRemovesResult() throws Exception{
+        Session finished=local();finished.moves=Arrays.asList("f2f3","e7e5","g2g4","d8h4");
+        finished.result=ChessGame.fromHistory(finished.moves).result();
+        fixture(SessionCodec.decode(SessionCodec.encode(finished)),()->{
+            key(KeyEvent.KEYCODE_DPAD_CENTER);focus("Restored result action","game-continue");
+            instrumentation.runOnMainSync(()->assertNotNull(view("game-result")));
+            key(KeyEvent.KEYCODE_DPAD_CENTER);
+            assertEquals(Session.Mode.LOCAL,controller.state().mode);assertTrue(controller.state().result.isEmpty());assertTrue(controller.state().moves.isEmpty());
+            assertEquals(FULL_NAME,controller.state().whiteProfile.customName);assertEquals("Robin",controller.state().blackProfile.customName);
+            instrumentation.runOnMainSync(()->{
+                assertNull("Rematch must remove the old result footer",view("game-result"));
+                assertNull("Rematch must remove the old result action",view("game-continue"));
+                assertTrue("Rematch board must accept directional input",view("board").isFocusable());
+            });
+            focus("Restored final board rematch","board");
+            key(KeyEvent.KEYCODE_DPAD_CENTER);assertEquals(52,controller.state().selected);
+            key(KeyEvent.KEYCODE_DPAD_UP);key(KeyEvent.KEYCODE_DPAD_UP);key(KeyEvent.KEYCODE_DPAD_CENTER);
+            assertEquals(Arrays.asList("e2e4"),controller.state().moves);
+        });
     }
 }

@@ -27,7 +27,7 @@ public final class MathRemoteTest {
     private static final Handler MAIN=new Handler(Looper.getMainLooper());
 
     @Test public void testStartCanBeReachedWithRemoteOnly() throws Exception {
-        withFixture(new Session(),()->{
+        withFixture(new Session(),false,()->{
             launch();
             assertStartFocus();
             key(KeyEvent.KEYCODE_DPAD_UP);
@@ -36,6 +36,11 @@ public final class MathRemoteTest {
             assertFocus(activity.getString(R.string.parents));
             key(KeyEvent.KEYCODE_DPAD_DOWN);
             assertFocus(activity.getString(R.string.exit));
+            key(KeyEvent.KEYCODE_DPAD_UP);key(KeyEvent.KEYCODE_DPAD_UP);assertStartFocus();
+            key(KeyEvent.KEYCODE_DPAD_CENTER);assertFocus(activity.getString(R.string.versus_computer));
+            key(KeyEvent.KEYCODE_DPAD_DOWN);assertFocus(activity.getString(R.string.versus_local));
+            key(KeyEvent.KEYCODE_DPAD_UP);key(KeyEvent.KEYCODE_DPAD_CENTER);
+            awaitSave(controller);assertEquals(Session.Mode.COMPUTER,controller.state().mode);assertFocus("pad4");
         });
     }
 
@@ -111,13 +116,14 @@ public final class MathRemoteTest {
     }
 
     private interface Checked { void run() throws Exception; }
-    private void withFixture(Session fixture,Checked test) throws Exception {
+    private void withFixture(Session fixture,Checked test) throws Exception {withFixture(fixture,true,test);}
+    private void withFixture(Session fixture,boolean savedProgress,Checked test) throws Exception {
         Field shared=MainActivity.class.getDeclaredField("sharedController");
         shared.setAccessible(true);
         SessionController previous=(SessionController)shared.get(null);
         SessionController.Persistence memory=new SessionController.Persistence(){
             private Session saved=fixture.copy();
-            {saved.revision=Math.max(1,saved.revision);}
+            {if(savedProgress)saved.revision=Math.max(1,saved.revision);}
             public Session load(){return saved.copy();}
             public void save(Session state){saved=state.copy();}
         };
