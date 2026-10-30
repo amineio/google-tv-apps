@@ -10,7 +10,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -88,6 +90,8 @@ private fun qrBitmap(value: String): ImageBitmap? {
 
 @Composable
 internal fun TvScreens(model: PostboxViewModel, onAddPosts: () -> Unit) {
+    val savedListState = rememberLazyListState()
+    val archiveListState = rememberLazyListState()
     BackHandler(model.tvScreen != "library") { model.library() }
     BoxWithConstraints(Modifier.fillMaxSize().background(WarmInk)) {
         val horizontal = maxWidth * .06f
@@ -101,14 +105,23 @@ internal fun TvScreens(model: PostboxViewModel, onAddPosts: () -> Unit) {
             when (model.tvScreen) {
                 "reader" -> TvReader(model)
                 "add" -> ReceiveScreen(model, onAddPosts)
-                else -> TvLibrary(model, onAddPosts)
+                else ->
+                    TvLibrary(
+                        model,
+                        onAddPosts,
+                        if (model.archived) archiveListState else savedListState,
+                    )
             }
         }
     }
 }
 
 @Composable
-private fun ColumnScope.TvLibrary(model: PostboxViewModel, onAddPosts: () -> Unit) {
+private fun ColumnScope.TvLibrary(
+    model: PostboxViewModel,
+    onAddPosts: () -> Unit,
+    listState: LazyListState,
+) {
     val savedTab = remember { FocusRequester() }
     val archiveTab = remember { FocusRequester() }
     val add = remember { FocusRequester() }
@@ -119,7 +132,9 @@ private fun ColumnScope.TvLibrary(model: PostboxViewModel, onAddPosts: () -> Uni
         remember(list.map { it.capture.id }) {
             list.associate { it.capture.id to FocusRequester() }
         }
-    val initial = list.firstOrNull()?.let { requesters.getValue(it.capture.id) } ?: emptyAdd
+    val landing = list.firstOrNull { it.capture.id == model.selectedTvId } ?: list.firstOrNull()
+    val initial = landing?.let { requesters.getValue(it.capture.id) } ?: emptyAdd
+    var pendingFocusId by remember { mutableStateOf<String?>(null) }
     val preview = list.firstOrNull { it.capture.id == model.selectedTvId } ?: list.firstOrNull()
     LaunchedEffect(
         model.loaded,
@@ -128,8 +143,16 @@ private fun ColumnScope.TvLibrary(model: PostboxViewModel, onAddPosts: () -> Uni
         model.resumeGeneration,
     ) {
         if (model.loaded) {
-            val target = requesters[model.selectedTvId] ?: initial
-            target.requestFocus()
+            val index = list.indexOfFirst { it.capture.id == model.selectedTvId }.coerceAtLeast(0)
+            if (list.isEmpty()) {
+                emptyAdd.requestFocus()
+            } else {
+                val id = list[index].capture.id
+                pendingFocusId = id
+                if (listState.layoutInfo.visibleItemsInfo.none { it.key == id }) {
+                    listState.scrollToItem(index)
+                }
+            }
         }
     }
     Row(
@@ -223,9 +246,18 @@ private fun ColumnScope.TvLibrary(model: PostboxViewModel, onAddPosts: () -> Uni
         ) {
             LazyColumn(
                 Modifier.weight(.38f).fillMaxHeight(),
+                state = listState,
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 items(list, key = { it.capture.id }) { item ->
+                    // This effect exists only after the lazy card is composed and its node
+                    // attached.
+                    LaunchedEffect(pendingFocusId) {
+                        if (pendingFocusId == item.capture.id) {
+                            requesters.getValue(item.capture.id).requestFocus()
+                            pendingFocusId = null
+                        }
+                    }
                     TvAction(
                         "${captureTitle(item.capture)}\n${captureSource(item.capture)} · ${captureType(item.capture)}",
                         Modifier.fillMaxWidth()

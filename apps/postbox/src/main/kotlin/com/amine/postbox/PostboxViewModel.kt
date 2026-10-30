@@ -33,8 +33,13 @@ internal data class CaptureDraft(
         get() = text.isBlank() && images.isEmpty() && sourceUrl.isNotBlank()
 }
 
-internal class PostboxViewModel(application: Application, private val phone: Boolean) :
-    AndroidViewModel(application) {
+internal class PostboxViewModel(
+    application: Application,
+    private val phone: Boolean,
+    private val receiverDispatcher: kotlinx.coroutines.CoroutineDispatcher = Dispatchers.IO,
+    private val receiverNowMs: () -> Long = android.os.SystemClock::elapsedRealtime,
+    private val awaitReceiverPoll: suspend () -> Unit = { delay(1000) },
+) : AndroidViewModel(application) {
     var items by mutableStateOf<List<StoredCapture>>(emptyList())
         private set
 
@@ -85,9 +90,9 @@ internal class PostboxViewModel(application: Application, private val phone: Boo
 
     private var resumed = false
     private var lanAllowed = false
-    private var receiver: CaptureReceiver? = null
+    @Volatile private var receiver: CaptureReceiver? = null
     private val receiverMutex = Mutex()
-    private var receiverGeneration = 0
+    @Volatile private var receiverGeneration = 0
     private var receiverDeadlineElapsedMs = 0L
     private var refreshGeneration = 0
     private var mutationRevision = 0
@@ -506,17 +511,12 @@ internal class PostboxViewModel(application: Application, private val phone: Boo
         val generation = ++receiverGeneration
         session = null
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+            withContext(receiverDispatcher) {
                 receiverMutex.withLock {
+                    if (generation != receiverGeneration) return@withLock
                     receiver?.close()
                     receiver = null
-                    if (
-                        generation != receiverGeneration ||
-                            !resumed ||
-                            tvScreen != "add" ||
-                            !lanAllowed
-                    )
-                        return@withLock
+                    if (!resumed || tvScreen != "add" || !lanAllowed) return@withLock
                     try {
                         val created = CaptureReceiver(app, store) { refresh() }
                         receiver = created
@@ -524,8 +524,7 @@ internal class PostboxViewModel(application: Application, private val phone: Boo
                         withContext(Dispatchers.Main) {
                             if (generation == receiverGeneration && resumed && tvScreen == "add") {
                                 session = opened
-                                receiverDeadlineElapsedMs =
-                                    android.os.SystemClock.elapsedRealtime() + 300_000L
+                                receiverDeadlineElapsedMs = receiverNowMs() + 300_000L
                                 remainingSeconds = 300
                             }
                         }
@@ -542,21 +541,23 @@ internal class PostboxViewModel(application: Application, private val phone: Boo
             while (
                 generation == receiverGeneration && resumed && tvScreen == "add" && session != null
             ) {
-                delay(1000)
+                awaitReceiverPoll()
                 if (generation != receiverGeneration || !resumed || tvScreen != "add") break
-                val active = receiver?.isReceiving == true
+                val observedReceiver = receiver
+                val active = observedReceiver?.isReceiving == true
                 remainingSeconds =
-                    ((receiverDeadlineElapsedMs - android.os.SystemClock.elapsedRealtime() + 999L) /
-                            1000L)
+                    ((receiverDeadlineElapsedMs - receiverNowMs() + 999L) / 1000L)
                         .toInt()
                         .coerceAtLeast(0)
                 if (!active || remainingSeconds == 0) {
                     session = null
                     message = "Receive window closed. Select Start receiving to open a new window."
-                    withContext(Dispatchers.IO) {
+                    withContext(receiverDispatcher) {
                         receiverMutex.withLock {
-                            receiver?.close()
-                            receiver = null
+                            if (generation == receiverGeneration && receiver === observedReceiver) {
+                                observedReceiver?.close()
+                                receiver = null
+                            }
                         }
                     }
                 }
@@ -565,6 +566,7 @@ internal class PostboxViewModel(application: Application, private val phone: Boo
     }
 
     override fun onCleared() {
+        receiverGeneration++
         val closing = receiver
         Thread({ closing?.close() }, "Postbox-close").start()
         super.onCleared()

@@ -79,6 +79,34 @@ class PostboxNavigationTest {
     }
 
     @Test
+    fun distantCardReturnsFromReaderWithFocusAndScrollRestored() {
+        repeat(20) { index ->
+            store.save(
+                PostCapture(
+                    UUID.randomUUID().toString(),
+                    "Capture ${index + 1}",
+                    "A saved capture for directional navigation.",
+                    "",
+                    emptyList(),
+                    index.toLong(),
+                )
+            )
+        }
+        val ordered = store.list()
+        launch()
+        compose.onNodeWithTag("capture-${ordered.first().capture.id}").assertIsFocused()
+        repeat(14) { key(KeyEvent.KEYCODE_DPAD_DOWN) }
+        val target = ordered[14].capture.id
+        compose.onNodeWithTag("capture-$target").assertIsFocused()
+        key(KeyEvent.KEYCODE_DPAD_CENTER)
+        compose.onNodeWithTag("reader-archive").assertIsFocused()
+        key(KeyEvent.KEYCODE_BACK)
+        compose.onNodeWithTag("capture-$target").assertIsFocused().assertIsDisplayed()
+        key(KeyEvent.KEYCODE_DPAD_DOWN)
+        compose.onNodeWithTag("capture-${ordered[15].capture.id}").assertIsFocused()
+    }
+
+    @Test
     fun firstCardReaderScrollAndBackRestoreFocus() {
         val capture = seed()
         launch()
