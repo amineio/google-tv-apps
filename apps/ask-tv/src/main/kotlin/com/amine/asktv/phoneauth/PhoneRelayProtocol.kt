@@ -27,7 +27,11 @@ class PhoneRelayProtocol(
     private val protocol: OAuthProtocol,
     private val monotonicMs: () -> Long,
     private val onGrant: (AuthGrant) -> Unit,
+    private val cancelOAuth: () -> Unit,
 ) : AutoCloseable {
+    constructor(protocol: OAuthProtocol, monotonicMs: () -> Long, onGrant: (AuthGrant) -> Unit) :
+        this(protocol, monotonicMs, onGrant, { protocol.cancel() })
+
     private val stateLock = Any()
     // Never hold stateLock while acquiring this monitor, OAuth, or storage locks.
     // Identical retries wait here until validation AND dispatch have completed.
@@ -43,6 +47,7 @@ class PhoneRelayProtocol(
     private var terminalAt: Long? = null
     private var dispatchedDigest: ByteArray? = null
     private var accepted = false
+    private var cancellationRequested = false
 
     fun open(durationMs: Long = 600_000): String {
         require(durationMs in 1..600_000) { "Invalid relay duration." }
@@ -100,7 +105,7 @@ class PhoneRelayProtocol(
                 if (!accepted || !MessageDigest.isEqual(previous, digest)) throw RelayRejected(409)
                 true
             } else {
-                if (state.isTerminal) throw RelayRejected(409)
+                if (state.isTerminal || cancellationRequested) throw RelayRejected(409)
                 false
             }
         }
@@ -115,8 +120,9 @@ class PhoneRelayProtocol(
             throw RelayRejected(400)
         }
         synchronized(stateLock) {
+            if (closed || cancellationRequested || state.isTerminal) throw RelayRejected(409)
             dispatchedDigest = digest
-            if (!state.isTerminal) state = RelayState.VERIFYING
+            state = RelayState.VERIFYING
         }
         try {
             // May synchronously enter OAuth's durable commit guard, then terminal().
@@ -142,6 +148,9 @@ class PhoneRelayProtocol(
         require(state.isTerminal) { "Invalid terminal relay state." }
         synchronized(stateLock) {
             if (!opened || this.state.isTerminal) return
+            // OAuth invalidation and CANCELED publication are separate operations.
+            // A callback rejected in that gap must not claim the terminal result.
+            if (state == RelayState.FAILED && cancellationRequested) return
             this.state = state
             terminalAt = monotonicMs()
             bootstrap = null
@@ -149,10 +158,13 @@ class PhoneRelayProtocol(
     }
 
     fun cancel(relayToken: String) {
-        synchronized(stateLock) { authorize(relayToken) }
+        synchronized(stateLock) {
+            authorize(relayToken)
+            if (!state.isTerminal) cancellationRequested = true
+        }
         // A commit may hold OAuth while publishing terminal under stateLock.
         // Waiting for it under stateLock would deadlock and could erase its result.
-        protocol.cancel()
+        cancelOAuth()
         terminal(RelayState.CANCELED)
     }
 

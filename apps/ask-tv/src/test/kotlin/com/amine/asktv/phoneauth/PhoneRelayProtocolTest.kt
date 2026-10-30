@@ -171,6 +171,40 @@ class PhoneRelayProtocolTest {
         assertEquals(RelayState.CANCELED, relay.status(claim.relayToken))
     }
 
+    @Test fun cancelBeforeValidationPreservesCanceledDuringOAuthPublicationGap() {
+        val invalidated = CountDownLatch(1)
+        val publishCancellation = CountDownLatch(1)
+        val pool = Executors.newFixedThreadPool(2)
+        val oauth = OAuthProtocol("urn:uuid:test")
+        val dispatches = AtomicInteger()
+        val commits = AtomicInteger()
+        val relay = PhoneRelayProtocol(oauth, { 0L }, { grant ->
+            dispatches.incrementAndGet()
+            oauth.commit(grant.attempt) { commits.incrementAndGet() }
+        }, {
+            oauth.cancel()
+            invalidated.countDown()
+            check(publishCancellation.await(3, TimeUnit.SECONDS))
+        })
+        val claim = relay.claim(relay.open())
+        val callback = target(oauth)
+        try {
+            val cancel = pool.submit { relay.cancel(claim.relayToken) }
+            assertTrue(invalidated.await(2, TimeUnit.SECONDS))
+            assertNull(oauth.pending)
+            // The real OAuth attempt is invalid, but cancel() has not published its result yet.
+            val rejectedCallback = pool.submit<RelayRejected> {
+                rejected { relay.callback(claim.relayToken, callback) }
+            }
+            assertTrue(rejectedCallback.get(2, TimeUnit.SECONDS).status in setOf(400, 409))
+            assertEquals(0, dispatches.get())
+            assertEquals(0, commits.get())
+            publishCancellation.countDown()
+            cancel.get(2, TimeUnit.SECONDS)
+            assertEquals(RelayState.CANCELED, relay.status(claim.relayToken))
+        } finally { publishCancellation.countDown(); pool.shutdownNow(); relay.close() }
+    }
+
     @Test fun terminalGraceIsThirtySecondsAndNeverExtendsAttemptDeadline() {
         for (terminalAt in listOf(10_000L, 590_000L)) {
             var elapsed = 0L
