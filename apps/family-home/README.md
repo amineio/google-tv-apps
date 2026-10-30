@@ -9,6 +9,8 @@ Follow [AGENTS.md](../../AGENTS.md) for coordinator ownership, delegated file ed
 
 ## Interface
 
+Version 1.13 shows exactly two complete grid rows without a partial third row.
+Additional vertical space stays above the heading and grid.
 Version 1.12 replaces the horizontal app row with a five-column grid and enlarges the circular Home profile picture.
 Read the [grid validation record](../../docs/family-home/grid-validation.md) for test evidence and limits.
 Version 1.11 adds the fixed adult Hasnaa, shared parent controls, and native profile-menu icons.
@@ -22,7 +24,8 @@ Read the [artwork validation record](../../docs/battleship/launcher-art/validati
 The profile screen uses circular illustrated portraits, Outfit text, and a gold focus outline.
 The home screen keeps the profile at the upper right and gives the countdown fixed bounds and equal-width digit cells.
 The Home profile picture uses equal 48 dp dimensions inside a 64 dp header.
-The app grid shows five equal landscape tiles per row, with labels below and two complete rows visible.
+The app grid shows five equal landscape tiles per row, with labels below and exactly two complete rows visible.
+The grid does not expose part of a third row. Extra vertical space stays above the heading and grid.
 Additional rows scroll vertically. The compact heading and background follow the selected app.
 Left and Right move within a row and stop at its ends.
 Up and Down move between rows. A short final row uses the nearest available column.

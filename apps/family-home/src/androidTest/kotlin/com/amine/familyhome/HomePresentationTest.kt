@@ -140,6 +140,39 @@ class HomePresentationTest {
         tile(0).assertIsFocused()
     }
 
+    @Test fun gridKeepsExactlyTwoCompleteRowsAndPlacesSpareSpaceAbove() {
+        val catalog = (0..24).map { app("example.app$it", "App $it") }
+        screen.setContent { FamilyTheme {
+            var focused by remember { mutableStateOf<String?>(null) }
+            HomeScreen(Viewer.AMINE, null, catalog, focused, 0, { focused = it }, {}, {}, {}, displayName = "Parent")
+        } }
+        fun assertFullRows(first: Int) {
+            val bounds = screen.onNodeWithTag("home-apps").fetchSemanticsNode().boundsInRoot
+            for (index in first until first + 10) {
+                val tile = screen.onNodeWithTag("app:example.app$index")
+                tile.assertIsDisplayed()
+                val tileBounds = tile.fetchSemanticsNode().boundsInRoot
+                assertTrue("Tile $index must fit completely", tileBounds.top >= bounds.top && tileBounds.bottom <= bounds.bottom)
+                val label = screen.onNode(hasText("App $index") and hasAnyAncestor(hasTestTag("home-apps")))
+                label.assertIsDisplayed()
+                val labelBounds = label.fetchSemanticsNode().boundsInRoot
+                assertTrue("Label $index must fit completely", labelBounds.top >= bounds.top && labelBounds.bottom <= bounds.bottom)
+            }
+            screen.onNodeWithTag("app:example.app${first + 10}").assertIsNotDisplayed()
+            if (first >= 5) screen.onNodeWithTag("app:example.app${first - 5}").assertIsNotDisplayed()
+        }
+        assertFullRows(0)
+        val headerBottom = screen.onNodeWithTag("home-profile").fetchSemanticsNode().boundsInRoot.bottom
+        val headingTop = screen.onNodeWithText("Your apps").fetchSemanticsNode().boundsInRoot.top
+        val spareSpace = with(screen.density) { 32.dp.toPx() }
+        assertTrue("Keep spare space above the heading and grid", headingTop - headerBottom >= spareSpace)
+        capture("home-grid-two-rows-v1-13-initial")
+        pressRemote(listOf(Key.DirectionDown, Key.DirectionDown))
+        screen.onNodeWithTag("app:example.app10").assertIsFocused()
+        capture("home-grid-two-rows-v1-13-scrolled")
+        assertFullRows(10)
+    }
+
     @Test fun resumeRestoresAnAppBeyondTheFirstVisibleRow() {
         var catalog by mutableStateOf((0..16).map { app("example.app$it", if (it == 16) "An application with a long title that must fit within the TV screen" else "App $it") })
         var resume by mutableIntStateOf(0)
