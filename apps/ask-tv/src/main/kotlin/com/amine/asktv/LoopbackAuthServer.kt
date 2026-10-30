@@ -1,13 +1,13 @@
 package com.amine.asktv
 
 import android.util.Log
+import com.amine.asktv.phoneauth.AuthCallbackParser
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
 import java.net.SocketTimeoutException
 import java.net.URI
-import java.net.URLDecoder
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -57,13 +57,7 @@ class LoopbackAuthServer(private val protocol: OAuthProtocol, private val onGran
                     "/status" -> respond(s,200,if(closed.get()) "ended" else "pending")
                     "/auth/callback" -> {
                         stage = "DECODE_QUERY"
-                        val params=linkedMapOf<String,String>()
-                        uri.rawQuery.orEmpty().split('&').filter { it.isNotBlank() }.forEach {
-                            val pair=it.split('=',limit=2)
-                            val key=URLDecoder.decode(pair[0],"UTF-8")
-                            if(params.containsKey(key)) throw AuthFailure()
-                            params[key]=URLDecoder.decode(pair.getOrElse(1){""},"UTF-8")
-                        }
+                        val params=AuthCallbackParser.parseTarget(parts[1])
                         stage = "VALIDATE_CALLBACK"
                         val grant=protocol.callback(params)
                         stage = "DISPATCH_GRANT"

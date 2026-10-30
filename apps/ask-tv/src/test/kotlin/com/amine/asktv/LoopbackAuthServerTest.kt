@@ -142,4 +142,44 @@ class LoopbackAuthServerTest {
         }, "READ_HEADERS")
     }
 
+    @Test fun malformedSharedParserInputDoesNotConsumeMacAuthorization() {
+        val badTargets = listOf("/auth/callback?state=%FF", "/auth/callback?state=x&%73tate=y",
+            "http://127.0.0.1:1455/auth/callback?state=x", "/auth/callback?state=x#fragment")
+        for (target in badTargets) {
+            val protocol = OAuthProtocol("urn:uuid:test")
+            val attempt = protocol.begin()
+            var grants = 0
+            var failures = 0
+            val server = LoopbackAuthServer(protocol, { grants++ }, { failures++ }, { _, _ -> })
+            try {
+                val invalid = CapturedBrowserSocket(ByteArrayInputStream("GET $target HTTP/1.1\r\nHost: localhost\r\n\r\n".toByteArray(Charsets.US_ASCII)))
+                handle(server, invalid)
+                assertTrue(invalid.output.toString("UTF-8").startsWith("HTTP/1.1 400 "))
+                assertEquals(0, failures)
+                assertSame(attempt, protocol.pending)
+                assertFalse(attempt.consumed)
+                handle(server, CapturedBrowserSocket(ByteArrayInputStream(callbackRequest(attempt.state).toByteArray(Charsets.US_ASCII))))
+                assertEquals(1, grants)
+            } finally { server.close() }
+        }
+    }
+
+    @Test fun sharedCallbackParserPreservesMacStartAndStatusRoutes() {
+        val protocol = OAuthProtocol("urn:uuid:test")
+        val attempt = protocol.begin()
+        val server = LoopbackAuthServer(protocol, { fail("Diagnostic routes cannot deliver a grant") }, {})
+        try {
+            for ((path, response) in listOf("/start" to "HTTP/1.1 302 ", "/status" to "HTTP/1.1 200 ")) {
+                val socket = CapturedBrowserSocket(ByteArrayInputStream("GET $path HTTP/1.1\r\nHost: localhost\r\n\r\n".toByteArray(Charsets.US_ASCII)))
+                handle(server, socket)
+                val body = socket.output.toString("UTF-8")
+                assertTrue(body.startsWith(response))
+                if (path == "/start") assertTrue(body.contains("Location: " + protocol.authorizationUrl()))
+                else assertTrue(body.endsWith("pending"))
+            }
+            assertSame(attempt, protocol.pending)
+            assertFalse(attempt.consumed)
+        } finally { server.close() }
+    }
+
 }
