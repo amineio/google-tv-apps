@@ -89,6 +89,10 @@ Android speech engines limit one spoken segment. Answers longer than the engine 
 
 Artwork and rights are recorded in [the asset record](../../docs/ask-tv/assets.md).
 
+The [AI Chat 0.2 validation record](../../docs/ask-tv/validation-2026-10-30-ai-chat.md) records the installed release, completed Mac sign-in, and current test results.
+The user reported that a remote question and spoken answer worked on the actual TV. The coordinator did not independently assess spoken output.
+The user also reports that the interface needs substantial polish. Work on the complete user flow continues.
+
 The [version 0.1 validation record for 2026-10-30](../../docs/ask-tv/validation-2026-10-30.md) separates test results, visual review, installation, and unfinished sign-in.
 
 The [current diagnostic scope](../../docs/superpowers/specs/2026-10-30-ai-chat-sign-in.md) keeps the existing Mac loopback flow. No QR flow is included.
