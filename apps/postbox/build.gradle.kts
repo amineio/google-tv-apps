@@ -10,6 +10,7 @@ plugins {
 android {
     namespace = "com.amine.postbox"
     compileSdk = 37
+    buildToolsVersion = "36.0.0"
     defaultConfig {
         applicationId = "com.amine.postbox"
         minSdk = 34
@@ -41,7 +42,7 @@ dependencies {
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
-    implementation("androidx.datastore:datastore-preferences:1.3.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
     testImplementation("junit:junit:4.13.2")
@@ -50,5 +51,6 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation("androidx.test:runner:1.7.0")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
+    androidTestImplementation("androidx.test.espresso:espresso-intents:3.7.0")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }

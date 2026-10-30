@@ -1,0 +1,154 @@
+{
+  "date": "2026-10-30",
+  "source": "OpenAI ImageGen, generated concept references supplied by coordinator",
+  "source_directory": "/Users/amine/.codex/generated_images/01a18a1e-524d-7810-9078-d97960db0b78",
+  "references": [
+    {
+      "name": "direction-a",
+      "source_file": "exec-982366a0-4da3-43c6-a3d2-cb7f565b883c.png",
+      "source_dimensions": [
+        1672,
+        941
+      ],
+      "source_sha256": "eeb0970b0e2483eb92c9d7c5b6a0cbc5081ccdb902ece90495a3dc4ed6c4c221",
+      "reference_file": "direction-a.webp",
+      "reference_dimensions": [
+        1280,
+        720
+      ],
+      "reference_sha256": "1a853452e2f601f38261f1353ab67525de9ed430bbe509895e62b58a66ec58cc",
+      "reference_bytes": 35730,
+      "compression": "cwebp -q 78; longest edge at most 1280 pixels",
+      "review_note": "Selected visual direction; native controls and actual focus remain implementation work.",
+      "prompt": "Create a high-fidelity UI concept image for a Google TV app called Postbox, for reviewing Twitter/X and Instagram posts saved from an Android phone. This is CONCEPT A, 'Evening library'. Output one flat full-bleed 16:9 television screen, no physical TV, no room mockup, no device chrome, high resolution. Art direction: warm near-black #131817 canvas, soft ivory typography, desaturated sage surfaces, restrained warm apricot focus ring, precise spacious native-TV layout. Premium editorial reading tool, understated, no sci-fi gradients, no glassmorphism. TV couch distance: large text, generous spacing, strong contrast, safe outer margins about 5%. Header: simple native bookmark symbol and Postbox at left, two calm tabs Saved and Archive toward center, large '+ Add posts' button at upper right. Main body: left 36% column headed 'Saved \u00b7 3'. A vertical list of THREE large cards: first card focused with a very obvious apricot outline and subtle scale, X source marker, title 'Small habits, lasting change', secondary label 'Saved text'. Second card Instagram marker, title 'A quieter place', secondary label 'Screenshot'. Third card X marker, title 'A post to revisit', secondary label 'Link only'. Right 58% spacious selected preview: small source label 'X \u00b7 Saved text', large heading 'Small habits, lasting change', a comfortably readable 4-line body 'A useful habit starts small. Choose one thing you can repeat, make room for it, and return to it tomorrow.' A subtle divider then muted copy 'Captured on your phone'. At the bottom of preview a native-looking 'Read post' button, not focused. No likes, no comment icons, no follower counts, no AI summaries, no login avatars, no fake automatic sync, no huge thumbnail-heavy feed. Footer lower left simple '\u2191 \u2193 Choose a post    OK Read    Back Exit'. Lower right 20% is quiet for independent clock overlay. Visually communicate a focused library and one selected post, NOT endless social media. All text crisp and correctly spelled. Compose-feasible native shapes and typography.",
+      "prompt_status": "Copied verbatim from coordinator manifest",
+      "prompt_key": "concept_a"
+    },
+    {
+      "name": "library-link-flow",
+      "source_file": "exec-4e923d04-fcde-4726-8054-34c97b975887.png",
+      "source_dimensions": [
+        941,
+        1672
+      ],
+      "source_sha256": "63e1ac80cbdf61305cb682bee440a5edb2611fc3adec26925b7bcd1a294e9d2f",
+      "reference_file": "library-link-flow.webp",
+      "reference_dimensions": [
+        720,
+        1280
+      ],
+      "reference_sha256": "dd55b6f4875a5bab81fb2818f1d320a503a46265591d271e83362d37fc7a7dee",
+      "reference_bytes": 56858,
+      "compression": "cwebp -q 78; longest edge at most 1280 pixels",
+      "review_note": "Corrected link-only flow reference; generated sketch aspect is not a TV layout template.",
+      "prompt": "Revise this Postbox Google TV concept in the SAME warm ink, cream, sage, apricot art direction. Output one flat full-screen 16:9 app screenshot at high resolution. Critical changes: every control including focus outline lives INSIDE 6% horizontal and vertical safe margins, left list occupies just 33% and right reading preview 61%; platform icons are very small, no oversized logos. Header Postbox, Saved, Archive, + Add posts. Left list three spacious cards: 'Small habits, lasting change' / 'X \u00b7 Saved text'; 'A quieter place' / 'Instagram \u00b7 Screenshot'; 'A post to revisit' / 'X \u00b7 Link only'. The THIRD card is the SINGLE focused control with unmistakable thick apricot outline. Right panel shows selected third item: small 'X \u00b7 Link only', large 'A post to revisit', very clear large text 'Add text or a screenshot on your phone'. Supporting secondary text 'Only the link was shared. The post content is not saved yet.' Show a clearly white QR card marked 'Open original on phone', plus source URL 'x.com/sample/status/123'. This QR is concept placeholder, not real data. Do not show any fabricated post body. Right lower panel plain 'Read post' button with NO external link icon. Footer left concise '\u2191 \u2193 Choose    OK Read    Back Exit'. Safe padding, readable even on phone preview, quiet bottom-right quarter for separate Clock overlay. Keep all UI feasible as native Compose controls. No browser chrome, no perspective, no decorative backdrop.",
+      "prompt_status": "Copied verbatim from coordinator manifest",
+      "prompt_key": "revision"
+    },
+    {
+      "name": "phone-capture",
+      "source_file": "exec-06252ccd-bb71-4992-9932-331608938ce0.png",
+      "source_dimensions": [
+        1223,
+        1286
+      ],
+      "source_sha256": "0caff9f1a3b45a41e4692acfbd789209610129718a03dcde61995da45043b744",
+      "reference_file": "phone-capture.webp",
+      "reference_dimensions": [
+        1217,
+        1280
+      ],
+      "reference_sha256": "001bb64be9d7ff563a44f6a2781ab1643ae4f4bf5b129f7c3b2642e8481d023f",
+      "reference_bytes": 87090,
+      "compression": "cwebp -q 78; longest edge at most 1280 pixels",
+      "review_note": "Approved phone capture direction; use Save on phone and explicit Send to TV.",
+      "prompt": "Create a final UX concept board for Postbox Android companion, FOUR separate portrait flat Android screens in a horizontal row, generous legible typography. Consistent warm ink near-black canvas, ivory type, sage cards, warm apricot buttons. NO hardware frames. Each screen distinct state, no simultaneous before/after. Screen 1 CAPTURE: heading 'Save a post', one amber notice 'Only a link was shared', editable Link Instagram sample URL, Title 'A quieter place', Post text empty with placeholder 'Paste the caption or post text', 'Add image' button, main 'Save on phone' button, quiet plain status text 'Not sent to TV' (NOT button). Do not duplicate warning. Screen2 PHONE SAVED: heading 'Saved on phone', a Link only card 'A quieter place', note 'Add text or an image for TV reading', equal prominent actions 'Edit capture' and 'Connect TV', quiet 'Your draft stays on this phone'. Screen3 READY: heading 'Ready to send', named destination 'Postbox TV' with Connected status, a card titled 'A quieter place', label 'Instagram \u00b7 Image', thumbnail image of a quiet cabin, primary 'Send to Postbox TV'; NO received or sent confirmation on this screen. Screen4 SUCCESS: heading 'Received on TV', clear green checkmark, sentence 'Saved on Postbox TV', matching capture A quieter place / Instagram \u00b7 Image, quiet 'Your phone copy is kept', primary 'Save another post', secondary 'Back to library'; NO active send button. All controls correctly spelled, honest state progression. No AI, no account import, no fake retrieved captions, no disabled-looking status buttons. Distinct screens must make capture, local save, explicit send, durable receipt understandable in that order.",
+      "prompt_status": "Copied verbatim from coordinator manifest",
+      "prompt_key": "phone_final"
+    },
+    {
+      "name": "reader-archive",
+      "source_file": "exec-08942ab4-6ac2-43d3-b613-567933ec6060.png",
+      "source_dimensions": [
+        1182,
+        1330
+      ],
+      "source_sha256": "10ef3fd66570ef3313435cad0b252171cd3b09b73ec2ebaafa449b27559d345f",
+      "reference_file": "reader-archive.webp",
+      "reference_dimensions": [
+        1138,
+        1280
+      ],
+      "reference_sha256": "eece1ebef5f43e1a836e0e41d5bfe79e1ae088ae0259d349ad0ecc6ef5418c5d",
+      "reference_bytes": 78060,
+      "compression": "cwebp -q 78; longest edge at most 1280 pixels",
+      "review_note": "Reader/archive flow reference; generated double focus must not be copied into native UI.",
+      "prompt": "Create a high-fidelity UX concept board with TWO large 16:9 Google TV screens STACKED VERTICALLY (overall8:9 portrait). App Postbox. Style warm near-black ink #131817, sage panels, ivory LARGE plain sans-serif type, strong apricot SINGLE focus outline, generous 6% screen safe margins. Upper screen READER: header Postbox / Back to Saved; left 60% large native reading area labeled 'X \u00b7 Saved text', title 'Small habits, lasting change', comfortably large several multiline paragraphs 'A useful habit starts small. Choose one thing you can repeat, make room for it, and return to it tomorrow.\\n\\nWhen progress feels slow, look for a simpler next step. Give it your full attention. Keep the part that helps and leave the rest.' Visible scroll affordance, a native side control stack 'Archive', 'Next post', 'View image'. Archive is focused. Include a small separate phone screenshot preview underneath source label 'Image added on phone', with clearly portrait proportions and no falsely extracted text. Caption 'View image to enlarge'. Lower screen ARCHIVE: header Postbox / Saved / Archive / + Add posts. Large title 'Archive \u00b7 1'. Left single list card 'A quieter place' / 'Instagram \u00b7 Image'. Right selected preview shows cabin thumbnail, title 'A quieter place', 'Archived posts stay here until you restore or delete them.' Large 'Restore to Saved' focused button, secondary 'Delete' button with no confirmation shown. Footer left 'Back Saved'. Quiet bottom-right clock area on BOTH. No endless feed, no AI, no browser icons. Long text must read as captured text, image remains separate.",
+      "prompt_status": "Copied verbatim from coordinator manifest",
+      "prompt_key": "reader_archive"
+    },
+    {
+      "name": "pairing-final",
+      "source_file": "exec-2acfdcb3-e6fb-4654-9645-1626d755f84a.png",
+      "source_dimensions": [
+        1672,
+        941
+      ],
+      "source_sha256": "1c79aa5aefd409edcddefa5e5d1352b116fa7c9c0eb70f7e6bdd8c7e5248a427",
+      "reference_file": "pairing-final.webp",
+      "reference_dimensions": [
+        1280,
+        720
+      ],
+      "reference_sha256": "dedf7c4a4ca2c1d71758920b1baefd25d3ffe74d7926663d529150dd2b43aa43",
+      "reference_bytes": 33834,
+      "compression": "cwebp -q 78; longest edge at most 1280 pixels",
+      "review_note": "Accepted pairing correction; native QR remains functional and time limited.",
+      "prompt": "Revise ONLY the instructional copy of this single WIDE 16:9 Postbox TV receiver screenshot. Keep its clear warm ink/sage/cream/apricot layout, large QR at left, one focused Stop receiving button right, generous margins. Replace the three numbered steps with exactly this order: '1  Connect your phone to the same Wi-Fi as this TV', '2  Open Postbox on your phone and choose Connect TV', '3  Choose Photograph TV code'. Under QR keep only 'Connect Postbox on your phone'. REMOVE the alternate sentence 'Or scan with your phone camera' entirely from everywhere. Keep heading Send from your phone, status Ready to receive \u00b7 5:00 remaining, Stop receiving primary, Cannot scan? Show pairing link secondary, footer Keep this screen open while sending. Use plain sans-serif readable typography, true6% safe padding. One complete TV screenshot only, LANDSCAPE16:9, no extra panels, no room, no phone.",
+      "prompt_status": "Copied verbatim from coordinator manifest",
+      "prompt_key": "pair_approved_candidate"
+    },
+    {
+      "name": "image-reader-final",
+      "source_file": "exec-522958ce-db20-49d3-8f46-f074a1385b86.png",
+      "source_dimensions": [
+        1672,
+        941
+      ],
+      "source_sha256": "2443d05ec776d13babadcb0e8554f0994a04413fe6afead87ee4411c39b5c914",
+      "reference_file": "image-reader-final.webp",
+      "reference_dimensions": [
+        1280,
+        720
+      ],
+      "reference_sha256": "cc46176f2fde2892e696fc58f62024dbe04e44e4cff526aeff3b73bfc13a3912",
+      "reference_bytes": 45762,
+      "compression": "cwebp -q 78; longest edge at most 1280 pixels",
+      "review_note": "Accepted image correction; tall images fit width and scroll, with one real focus.",
+      "prompt": "One SINGLE WIDE LANDSCAPE16:9 flat Google TV native app screenshot for Postbox IMAGE VIEW, no board, no room or physical TV. Near-black warm ink background, ivory plain sans serif large text, sage buttons, amber focus. At least6% safe screen margins. Header top left bookmark Postbox, small 'Image 1 of 2', top right plain Back to post. Main left two-thirds is a LARGE image viewport showing a tall screenshot of a generic social post; the screenshot is NOT squeezed to show all its height. At visible top of screenshot generic creator 'Field Notes', a photo of quiet mountain cabin, short large screenshot caption 'A quieter place'. The image extends past viewport bottom with a visible vertical scroll bar indicating more below. Preserve screenshot proportions and readable screenshot text. Right third is a fixed action column titled 'Image view', big focus-bordered control 'Scroll image' with a concise hint '\u2191 \u2193 Move through the image'. Beneath it unfocused 'Next image' and 'Back to post' native controls. Small footer left 'Right Actions \u00b7 Back Post'. The tall image needs fit-width vertical scroll rather than tiny whole-phone thumbnail; no fake OCR or extracted body. Controls and hints are actual native UI outside the screenshot. Only ONE amber focused element on the entire screen. Keep lower-right quarter quiet for Clock overlay.",
+      "prompt_status": "Copied verbatim from coordinator manifest",
+      "prompt_key": "imageview"
+    },
+    {
+      "name": "empty-upper-reference",
+      "source_file": "exec-febbab67-f47c-46a6-a9c7-2827fbd977f1.png",
+      "source_dimensions": [
+        1182,
+        1330
+      ],
+      "source_sha256": "c8a148d5f4fdebfb84a0af07254c5b86498dfd821ff30c54e9496ce66b98c1dc",
+      "reference_file": "empty-upper-reference.webp",
+      "reference_dimensions": [
+        1138,
+        1280
+      ],
+      "reference_sha256": "c6d5fb269437d4383452d1d6db558bcafe8abdf1037b54fee0b47ae40cdfb1a1",
+      "reference_bytes": 56802,
+      "compression": "cwebp -q 78; longest edge at most 1280 pixels",
+      "review_note": "Only the upper empty-state composition is approved; the lower composition is not an implementation reference.",
+      "prompt": "Design a clear UX concept board with TWO large 16:9 Google TV app screens stacked vertically, no device frames, overall aspect ratio 8:9 portrait. App 'Postbox', premium warm near-black #131817, sage native controls, ivory big sans-serif type, APRICOT focus outlines, match reference. Every essential UI INSIDE 6% screen margins. Upper screen is 'Empty Saved': header Postbox / Saved / Archive / Add posts, main large 'Your saved posts, on the big screen', then 'Share a post or screenshot from your Android phone.' Big focused button '+ Add posts', secondary 'Try an example' clearly sample. Small footer 'Your library stays on this TV'. No fake prefilled feed. Lower screen is 'Add posts': header Postbox and Back; big title 'Send from your phone'; large white QR code card at left (placeholder), readable right-side instructions: '1  Install Postbox on your Android phone', '2  Use the same Wi-Fi as this TV', '3  Enter the address and code shown here'. Display separate TV address '192.168.1.24:8765' and one pairing code '482 719', clear receiver status 'Ready to receive \u00b7 5:00 remaining', large focused 'Stop receiving' button. Small text 'Keep this screen open while sending.' Do not imply scanning automatically installs APK or magical access to saved account posts. Quiet bottom-right in both screens for Clock overlay. NO other screens, no tiny notes around frames, no AI, no browser UI. Large enough text to review in a phone chat.",
+      "prompt_status": "Copied verbatim from coordinator manifest",
+      "prompt_key": "pair_empty"
+    }
+  ]
+}

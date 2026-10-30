@@ -11,6 +11,7 @@ Each app has its own package, version, permissions, tests, and APK.
 | [Family Home](apps/family-home/) | Separate Kotlin build | `com.amine.familyhome` | Family profiles, child timers, allowed apps, and an optional parent PIN. |
 | [Battleship](apps/battleship/) | Separate Kotlin build | `com.amine.battleship` | Offline naval strategy against the computer with remote targeting and saved matches. |
 | [Ask TV](apps/ask-tv/) | Separate Kotlin build | `com.amine.asktv` | Spoken or typed questions through a ChatGPT subscription, with local example previews. |
+| [Postbox](apps/postbox/) | Separate Kotlin build | `com.amine.postbox` | Locally captured post text, links, and screenshots sent from an Android phone for TV reading. |
 
 TV Clock works independently of TV Home. Its stop screen supports voluntary viewing limits.
 It remains dismissible and does not guarantee that another app pauses playback.
