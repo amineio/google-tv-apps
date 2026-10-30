@@ -9,6 +9,8 @@ Follow [AGENTS.md](../../AGENTS.md) for coordinator ownership, delegated file ed
 
 ## Interface
 
+Version 1.12 replaces the horizontal app row with a five-column grid and enlarges the circular Home profile picture.
+Read the [grid validation record](../../docs/family-home/grid-validation.md) for test evidence and limits.
 Version 1.11 adds the fixed adult Hasnaa, shared parent controls, and native profile-menu icons.
 Remote Back on adult Home keeps the selected profile. Use Switch profile to open the chooser.
 Version 1.10 adds offline spoken timer updates and retains the Home key correction from version 1.9.
@@ -19,20 +21,25 @@ Version 1.6 adds backgrounds supplied by the selected app, including Battleship.
 Read the [artwork validation record](../../docs/battleship/launcher-art/validation.md) for its tests and device observations.
 The profile screen uses circular illustrated portraits, Outfit text, and a gold focus outline.
 The home screen keeps the profile at the upper right and gives the countdown fixed bounds and equal-width digit cells.
+The Home profile picture uses equal 48 dp dimensions inside a 64 dp header.
+The app grid shows five equal landscape tiles per row, with labels below and two complete rows visible.
+Additional rows scroll vertically. The compact heading and background follow the selected app.
+Left and Right move within a row and stop at its ends.
+Up and Down move between rows. A short final row uses the nearest available column.
 Select an app tile with the remote center key to open it.
-Hold the center key on an app to enter move mode. Left and Right move that app one position.
-Press OK to save the order. Remote Back cancels the draft. Up and Down stay within move mode.
+Hold the center key on an app to enter move mode. All four arrow keys move that app through the grid.
+Press OK to save the order. Remote Back cancels the draft and keeps focus on that app.
 Each profile keeps its own order after restart. New apps appear after the saved order.
 Chess keeps its illustrated background. Apps can supply their own text-free background through application metadata.
 Family Home loads only the selected background and limits its decoded dimensions to 1920 by 1080 pixels.
 Apps without usable artwork use a subdued gradient based on their icon color.
-Landscape banners fill landscape tiles. Square icons fill square tiles.
+Landscape banners and square icons fit inside equal landscape tiles without stretching.
 Children see installed permitted apps in their saved order. Both adults keep all installed TV apps.
 
 The launcher restores the selected app after returning from it.
 It refreshes the catalog after resume or a package change.
 The upper-right profile control opens Switch profile and Settings, or End session for a child.
-Press Up from an app to reach the profile control. Press Down to return to the selected app.
+Press Up from the first app row to reach the profile control. Press Down to return to the selected app.
 Remote Back closes the menu and returns focus to the profile control.
 Profile controls and history reports stay clear of the independent Clock overlay.
 The artwork is bundled locally. The launcher does not fetch recommendations or viewing history.

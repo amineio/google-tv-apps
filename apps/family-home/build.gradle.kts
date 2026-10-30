@@ -14,8 +14,8 @@ android {
         applicationId = "com.amine.familyhome"
         minSdk = 34
         targetSdk = 37
-        versionCode = 12
-        versionName = "1.11"
+        versionCode = 13
+        versionName = "1.12"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     compileOptions {
