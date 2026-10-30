@@ -44,7 +44,20 @@ Both classes reported no failures or errors.
 A catalog replacement test passed both its initial and stronger queued-navigation triggers on unchanged product code.
 Native captures passed coordinator and independent visual review.
 The independent final reviewer accepted specification compliance and code quality with no material findings.
-The full integration checkpoint, installation, and Git delivery remain pending.
+Implementation revision `7334cc3fdef77a463a4d2673c1b5752c4f92049d` passed 94 debug and 94 release unit tests.
+Release lint reported no errors and six warnings outside the changed behavior.
+Release packaging passed.
+The full emulator suite reported 72 tests, eight failures, and no errors.
+Seven failures came from ambiguous Settings selectors. One failure lacked the emulator Home role precondition after app removal.
+A reviewed selector correction passed all 18 Family remote tests on rerun.
+The other 52 tests outside Family remote and voice runtime passed in the full suite.
+Both direct voice runtime tests passed after the coordinator restored the Home role.
+All 72 unique emulator tests have passing outcomes across the full run and focused reruns.
+No single full-suite invocation passed all tests.
+The release is installed on the emulator as version 1.12, code 13, with a matching APK hash.
+The integration checkpoint and emulator installation are complete.
+The coordinator owns the final documentation commit, branch push, and integration into `origin/main`.
+The final task response records Git delivery separately.
 Builds, device operations, and final evidence remain with the coordinator.
 
 ---
@@ -99,7 +112,7 @@ ANDROID_SERIAL=emulator-5554 apps/family-home/gradlew -p apps/family-home connec
 Expected: all selected tests pass, XML lists the intended classes, and captures show two readable rows and a circular portrait.
 The coordinator also operates affected profile menu and remote tests separately.
 
-- [ ] **Step 5: Complete the integration evidence and independent review.**
+- [x] **Step 5: Complete the integration evidence and independent review.**
 
 ```sh
 apps/family-home/gradlew -p apps/family-home testDebugUnitTest testReleaseUnitTest lintRelease assembleRelease assembleDebugAndroidTest --console=plain
@@ -111,9 +124,10 @@ Expected: passing unit and emulator suites, no lint errors, a release APK, and a
 Record XML counts, tested revision, commands, capture paths, and emulator limits in `docs/family-home/grid-validation.md`.
 Resolve material findings from a fresh independent reviewer before delivery.
 
-- [ ] **Step 6: Let the coordinator complete installation and Git delivery.**
+**Step 6: Coordinator delivery handoff.**
 
-The documentation owner updates the app guide and version to `1.12`, code `13`.
-After emulator installation, the coordinator commits only task changes, fetches `origin`, and integrates concurrent changes if needed.
+The app guide and version are updated to `1.12`, code `13`.
+The release installation passed, and the installed APK matches the tested build.
+The coordinator now commits only task changes, fetches `origin`, and integrates concurrent changes if needed.
 The coordinator pushes the task branch and fast-forwards `origin/main` from the tested branch.
-Report emulator installation and Git delivery separately.
+The final task response reports emulator installation and Git delivery separately.

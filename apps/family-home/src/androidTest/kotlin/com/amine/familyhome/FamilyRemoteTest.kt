@@ -92,7 +92,7 @@ class FamilyRemoteTest {
         pressRemote(listOf(Key.DirectionCenter))
         screen.waitUntil(10_000) { screen.onAllNodesWithTag("home-profile").fetchSemanticsNodes().isNotEmpty() }
         pressRemote(listOf(Key.DirectionUp, Key.DirectionCenter, Key.DirectionDown))
-        screen.onNodeWithText("Settings").assertIsFocused()
+        screen.onNode(hasText("Settings") and hasAnyAncestor(isDialog())).assertIsFocused()
         pressRemote(listOf(Key.DirectionCenter))
         screen.onNodeWithText("Profiles").assertIsFocused()
         pressRemote(listOf(Key.DirectionCenter))
@@ -146,7 +146,7 @@ class FamilyRemoteTest {
             assertProfileGoldBorder(true)
             remote(KeyEvent.KEYCODE_DPAD_CENTER)
             remote(KeyEvent.KEYCODE_DPAD_DOWN)
-            screen.onNodeWithText("Settings").assertIsFocused()
+            screen.onNode(hasText("Settings") and hasAnyAncestor(isDialog())).assertIsFocused()
             remote(KeyEvent.KEYCODE_DPAD_CENTER)
             screen.onNodeWithTag("setting:profiles").assertIsFocused()
             remote(KeyEvent.KEYCODE_BACK)
@@ -209,7 +209,7 @@ class FamilyRemoteTest {
         pressRemote(listOf(Key.DirectionUp, Key.DirectionCenter))
         screen.onNodeWithText("Switch profile").assertIsFocused()
         pressRemote(listOf(Key.DirectionDown))
-        screen.onNodeWithText("Settings").assertIsFocused()
+        screen.onNode(hasText("Settings") and hasAnyAncestor(isDialog())).assertIsFocused()
         pressRemote(listOf(Key.DirectionCenter))
     }
 
