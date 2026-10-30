@@ -1,6 +1,9 @@
 package com.amine.asktv
 
+import android.accessibilityservice.AccessibilityServiceInfo
+import android.app.UiAutomation
 import android.view.KeyEvent
+import android.view.accessibility.AccessibilityWindowInfo
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
@@ -37,18 +40,44 @@ class AskTvNavigationTest {
         rule.onNodeWithTag("configuration").assertIsFocused()
     }
 
+    private fun waitForIme(automation: UiAutomation, visible: Boolean) {
+        rule.waitUntil(timeoutMillis = 5_000) {
+            automation.windows.any { it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD } == visible
+        }
+        // Compose idleness does not cover events and animations in the separate IME window.
+        automation.waitForIdle(200, 5_000)
+        rule.waitForIdle()
+    }
+
     @Test fun typedDialogAndBackRestoreFocus() {
-        key(KeyEvent.KEYCODE_DPAD_DOWN)
-        rule.onNodeWithTag("type").assertIsFocused()
-        key(KeyEvent.KEYCODE_DPAD_CENTER)
-        rule.onNodeWithTag("question-input").assertExists()
-        // The first Back closes the Android keyboard while keeping the dialog open.
-        key(KeyEvent.KEYCODE_BACK)
-        rule.onNodeWithTag("question-input").assertExists()
-        rule.onNodeWithTag("question-input").assertIsFocused()
-        key(KeyEvent.KEYCODE_BACK)
-        rule.onNodeWithTag("question-input").assertDoesNotExist()
-        rule.onNodeWithTag("type").assertIsFocused()
+        val automation = InstrumentationRegistry.getInstrumentation()
+            .getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES)
+        val serviceInfo = automation.serviceInfo
+        val originalFlags = serviceInfo.flags
+        serviceInfo.flags = originalFlags or AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
+        automation.serviceInfo = serviceInfo
+        try {
+            key(KeyEvent.KEYCODE_DPAD_DOWN)
+            rule.onNodeWithTag("type").assertIsFocused()
+            key(KeyEvent.KEYCODE_DPAD_CENTER)
+            rule.onNodeWithTag("question-input").assertExists()
+            waitForIme(automation, visible = true)
+
+            // Wait for actual keyboard dismissal before sending the dialog's Back event.
+            key(KeyEvent.KEYCODE_BACK)
+            waitForIme(automation, visible = false)
+            rule.onNodeWithTag("question-input").assertExists()
+            rule.onNodeWithTag("question-input").assertIsFocused()
+            key(KeyEvent.KEYCODE_BACK)
+            rule.waitUntil(timeoutMillis = 5_000) {
+                rule.onAllNodesWithTag("question-input").fetchSemanticsNodes().isEmpty()
+            }
+            rule.onNodeWithTag("question-input").assertDoesNotExist()
+            rule.onNodeWithTag("type").assertIsFocused()
+        } finally {
+            serviceInfo.flags = originalFlags
+            automation.serviceInfo = serviceInfo
+        }
     }
 
     @Test fun answerScrollUsesDirectionalInput() {
