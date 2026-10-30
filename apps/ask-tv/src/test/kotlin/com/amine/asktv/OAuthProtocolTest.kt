@@ -11,7 +11,7 @@ class OAuthProtocolTest {
     @Test fun pkceUsesS256() { assertEquals("E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM", OAuthProtocol.challenge("dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk")) }
     @Test fun authorizationUsesFreshStateNonceAndRegistrationOnlyHint() {
         val a=attempt(); val first=a.pending!!; a.begin(); assertNotEquals(first.state,a.pending!!.state); assertNotEquals(first.nonce,a.pending!!.nonce)
-        assertTrue(a.authorizationUrl().contains("agent_name_hint=Ask+TV")); assertFalse(attempt("issued").authorizationUrl().contains("agent_name_hint"))
+        assertTrue(a.authorizationUrl().contains("agent_name_hint=AI+Chat")); assertFalse(attempt("issued").authorizationUrl().contains("agent_name_hint"))
     }
     @Test fun wrongStateRejected() { val a=attempt(); assertThrows(AuthFailure::class.java) { a.callback(mapOf("state" to "wrong", "code" to "code", "client_id" to "issued")) } }
     @Test fun initialClientRequired() { val a=attempt(); assertThrows(AuthFailure::class.java) { a.callback(mapOf("state" to a.pending!!.state,"code" to "code")) } }

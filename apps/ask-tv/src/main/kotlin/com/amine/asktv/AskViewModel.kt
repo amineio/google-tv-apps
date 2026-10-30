@@ -40,7 +40,7 @@ class AskViewModel(private val app:Application):ViewModel() {
         private var permissionToken:Long?=null
     var ui by mutableStateOf(AskUi(speech=prefs.getBoolean("speech",true),model=prefs.getString("model",null)))
         private set
-    init { accountStatus(); if(store==null) ui=ui.copy(message="Secure session storage is unavailable. Reopen Ask TV to try again.") }
+    init { accountStatus(); if(store==null) ui=ui.copy(message="Secure session storage is unavailable. Reopen AI Chat to try again.") }
     private fun accountStatus(record:CredentialRecord?=store?.snapshot()) {
         ui=ui.copy(signedIn=record?.accessToken!=null,planAllowed=record?.canInfer==true,
             account=if(record?.accessToken!=null) record.email ?: "ChatGPT account connected" else "Signed out")
@@ -149,7 +149,7 @@ class AskViewModel(private val app:Application):ViewModel() {
         val cancel=Cancellation()
         var server:LoopbackAuthServer?=null
         val token=operation.begin { cancel.cancel(); protocol.cancel(); server?.close() }
-        ui=ui.copy(page=Page.SETTINGS,busy="Waiting for browser sign-in…",message="On your Mac, run tools/sign-in-ask-tv.sh with TV_SERIAL. Keep Ask TV open. Sign-in expires after 10 minutes.")
+        ui=ui.copy(page=Page.SETTINGS,busy="Waiting for browser sign-in…",message="On your Mac, run tools/sign-in-ask-tv.sh with TV_SERIAL. Keep AI Chat open. Sign-in expires after 10 minutes.")
         server=LoopbackAuthServer(protocol,{ grant -> executor.execute {
             try {
                 protocol.withActiveAttempt(grant.attempt) {
@@ -182,7 +182,7 @@ class AskViewModel(private val app:Application):ViewModel() {
                     if(operation.isCurrent(token)) {
                         operation.finish(token)
                         session.clear()
-                        ui=ui.copy(models=emptyList(),busy=null,answer="",question="",message=if(confirmed) "Signed out." else "Signed out locally. Remote revocation was not confirmed. You can disconnect Ask TV in ChatGPT Settings.")
+                        ui=ui.copy(models=emptyList(),busy=null,answer="",question="",message=if(confirmed) "Signed out." else "Signed out locally. Remote revocation was not confirmed. You can disconnect AI Chat in ChatGPT Settings.")
                     }
                 }
             } catch(e:Exception) { failure(token,e) }

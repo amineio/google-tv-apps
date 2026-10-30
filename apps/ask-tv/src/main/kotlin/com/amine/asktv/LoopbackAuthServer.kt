@@ -1,5 +1,6 @@
 package com.amine.asktv
 
+import android.util.Log
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.ServerSocket
@@ -33,6 +34,7 @@ class LoopbackAuthServer(private val protocol: OAuthProtocol, private val onGran
     }
     private fun handle(client:Socket) {
         client.use { s ->
+            var stage = "READ_HEADERS"
             try {
                 s.soTimeout=5000
                 val reader=s.getInputStream().bufferedReader(Charsets.US_ASCII)
@@ -41,6 +43,7 @@ class LoopbackAuthServer(private val protocol: OAuthProtocol, private val onGran
                 while(true) { val line=reader.readLine() ?: return; count+=line.length; if(count>16384) return; if(line.isEmpty()) break }
                 val parts=request.split(' ')
                 if(parts.size!=3 || parts[0]!="GET") { respond(s,405,"Method not allowed."); return }
+                stage = "PARSE_URI"
                 val uri=URI(parts[1])
                 when(uri.path) {
                     "/start" -> {
@@ -49,6 +52,7 @@ class LoopbackAuthServer(private val protocol: OAuthProtocol, private val onGran
                     }
                     "/status" -> respond(s,200,if(closed.get()) "ended" else "pending")
                     "/auth/callback" -> {
+                        stage = "DECODE_QUERY"
                         val params=linkedMapOf<String,String>()
                         uri.rawQuery.orEmpty().split('&').filter { it.isNotBlank() }.forEach {
                             val pair=it.split('=',limit=2)
@@ -56,15 +60,20 @@ class LoopbackAuthServer(private val protocol: OAuthProtocol, private val onGran
                             if(params.containsKey(key)) throw AuthFailure()
                             params[key]=URLDecoder.decode(pair.getOrElse(1){""},"UTF-8")
                         }
+                        stage = "VALIDATE_CALLBACK"
                         val grant=protocol.callback(params)
+                        stage = "DISPATCH_GRANT"
                         onGrant(grant)
                         // A reset browser connection must not discard an accepted authorization.
-                        runCatching { respond(s,200,"Ask TV received your authorization. Check the TV to confirm sign-in. You can close this tab.") }
+                        runCatching { respond(s,200,"AI Chat received your authorization. Check the TV to confirm sign-in. You can close this tab.") }
                     }
                     else -> respond(s,404,"Not found.")
                 }
-            } catch(e:AuthFailure) { runCatching { respond(s,400,"Sign-in could not be completed. Check Ask TV.") }; protocol.cancel(); onFailure(e.safeMessage); close() }
-            catch (_:Exception) { runCatching { respond(s,400,"This request could not be read.") } }
+            } catch(e:AuthFailure) { runCatching { respond(s,400,"Sign-in could not be completed. Check AI Chat.") }; protocol.cancel(); onFailure(e.safeMessage); close() }
+            catch (e:Exception) {
+                Log.w("AIChatAuth", "stage=$stage exception=${e.javaClass.name}")
+                runCatching { respond(s,400,"This request could not be read.") }
+            }
         }
     }
     private fun respond(socket:Socket,status:Int,text:String,location:String?=null) {

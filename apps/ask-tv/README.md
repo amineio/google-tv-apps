@@ -1,9 +1,9 @@
-# Ask TV
+# AI Chat
 
-Ask a spoken or typed question on Google TV. Ask TV uses the official open-source ChatGPT subscription flow.
+Ask a spoken or typed question on Google TV. AI Chat uses the official open-source ChatGPT subscription flow.
 It has no API key entry, paid API fallback, or ChatGPT history import.
 
-Version `0.1` uses package `com.amine.asktv`. Android 14 or later is required.
+Version `0.2` uses package `com.amine.asktv`. Android 14 or later is required.
 
 ## Remote controls
 
@@ -23,9 +23,9 @@ Leaving the app stops all recording, inference, and audio. The displayed text re
 
 ## Continue with ChatGPT
 
-1. Install Ask TV on the authorized TV or emulator.
+1. Install AI Chat on the authorized TV or emulator.
 2. Connect the Mac through ADB and use the explicit device serial.
-3. Keep Ask TV visible and run this command from the repository root:
+3. Keep AI Chat visible and run this command from the repository root:
 
 ```sh
 TV_SERIAL='<connected serial>' tools/sign-in-ask-tv.sh
@@ -47,12 +47,12 @@ Configuration shows the current server model catalog. Only listed subscription m
 No default model name is bundled. Subscription availability depends on the current OpenAI preview and account permissions.
 Use ChatGPT Settings → Usage to review plan limits. This app never substitutes a paid API call.
 
-Version 0.1 retains one registration. Reauthorization must use the same account and issued client ID.
+Version 0.2 retains one registration. Reauthorization must use the same account and issued client ID.
 An issued registration ID is saved before code exchange. If exchange fails or the process stops, the next attempt reuses that ID.
 This pending registration does not become a connected account until its signed identity is verified.
 Sign-out clears local access, refresh, and ID tokens, and removes login hints.
 It retains the opaque host ID and verified registration binding for the next sign-in.
-If remote revocation cannot be confirmed, the app says so. You can disconnect Ask TV in ChatGPT Settings.
+If remote revocation cannot be confirmed, the app says so. You can disconnect AI Chat in ChatGPT Settings.
 
 Conversation context stays in memory. It retains at most six completed pairs and 24,000 characters, dropping oldest complete pairs first.
 Questions are limited to 4,000 characters. Partial answers are marked incomplete and do not enter conversation context.
@@ -67,7 +67,7 @@ The app has its own Gradle build:
 apps/ask-tv/gradlew -p apps/ask-tv testDebugUnitTest testReleaseUnitTest lintRelease assembleDebug assembleRelease assembleDebugAndroidTest --console=plain
 ```
 
-Install only Ask TV with:
+Install only AI Chat with:
 
 ```sh
 TV_SERIAL='<connected serial>' tools/install-ask-tv.sh
@@ -89,4 +89,6 @@ Android speech engines limit one spoken segment. Answers longer than the engine 
 
 Artwork and rights are recorded in [the asset record](../../docs/ask-tv/assets.md).
 
-The [validation record for 2026-10-30](../../docs/ask-tv/validation-2026-10-30.md) separates test results, visual review, installation, and unfinished sign-in.
+The [version 0.1 validation record for 2026-10-30](../../docs/ask-tv/validation-2026-10-30.md) separates test results, visual review, installation, and unfinished sign-in.
+
+The [current diagnostic scope](../../docs/superpowers/specs/2026-10-30-ai-chat-sign-in.md) keeps the existing Mac loopback flow. No QR flow is included.

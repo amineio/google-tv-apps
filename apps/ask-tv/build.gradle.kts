@@ -15,8 +15,8 @@ android {
         applicationId = "com.amine.asktv"
         minSdk = 34
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.1"
+        versionCode = 2
+        versionName = "0.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     compileOptions {

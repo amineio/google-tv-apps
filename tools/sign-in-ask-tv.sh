@@ -35,7 +35,7 @@ if curl --silent --fail --max-time 2 http://127.0.0.1:1455/status >/dev/null 2>&
 else
   START=$(adb -s "$TV_SERIAL" shell am start -W -n com.amine.asktv/.MainActivity --ez authenticate true 2>&1)
   if ! printf '%s\n' "$START" | grep -q '^Status: ok'; then
-    echo 'Ask TV did not open. Install Ask TV first.' >&2
+    echo 'AI Chat did not open. Install AI Chat first.' >&2
     exit 1
   fi
   for ((attempt=0; attempt<60; attempt++)); do
@@ -43,14 +43,14 @@ else
     sleep 0.2
   done
 fi
-if [ "$READY" != 1 ]; then echo 'The TV sign-in listener is unavailable. Check Ask TV and try again.' >&2; exit 1; fi
+if [ "$READY" != 1 ]; then echo 'The TV sign-in listener is unavailable. Check AI Chat and try again.' >&2; exit 1; fi
 open "$URL"
-printf '%s\n' 'Finish sign-in in your browser. Keep Ask TV open. Cancel on the TV or press Ctrl-C here to close the tunnel.'
+printf '%s\n' 'Finish sign-in in your browser. Keep AI Chat open. Cancel on the TV or press Ctrl-C here to close the tunnel.'
 for ((attempt=0; attempt<600; attempt++)); do
   sleep 1
   if ! curl --silent --fail --max-time 2 http://127.0.0.1:1455/status >/dev/null 2>&1; then
-    printf '%s\n' 'The browser flow ended. Check Ask TV for verified sign-in status.'
+    printf '%s\n' 'The browser flow ended. Check AI Chat for verified sign-in status.'
     exit 0
   fi
 done
-printf '%s\n' 'The sign-in window ended. Check Ask TV and start again if needed.'
+printf '%s\n' 'The sign-in window ended. Check AI Chat and start again if needed.'

@@ -34,7 +34,7 @@ class OAuthProtocol(private val hostId: String, private val clientId: String? = 
             "ext_agent_host_id" to hostId, "response_type" to "code", "redirect_uri" to CALLBACK,
             "scope" to REQUIRED_SCOPES.joinToString(" "), "resource" to RESOURCE, "state" to a.state,
             "nonce" to a.nonce, "code_challenge_method" to "S256", "code_challenge" to challenge(a.verifier))
-        if (a.returningClient == null) params["agent_name_hint"] = "Ask TV"
+        if (a.returningClient == null) params["agent_name_hint"] = "AI Chat"
         if (requestConsent) params["prompt"] = "consent"
         return "$ISSUER/api/accounts/authorize?${form(params)}"
     }

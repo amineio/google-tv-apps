@@ -46,7 +46,7 @@ import kotlinx.coroutines.launch
             Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
                 Image(painterResource(R.drawable.ask_icon),null,Modifier.size(36.dp))
                 Spacer(Modifier.width(12.dp))
-                Text("Ask TV",fontFamily=Outfit,fontSize=25.sp,fontWeight=FontWeight.SemiBold)
+                Text("AI Chat",fontFamily=Outfit,fontSize=25.sp,fontWeight=FontWeight.SemiBold)
                 Spacer(Modifier.weight(1f))
                 if(ui.page!=Page.SETTINGS) TvButton("Configuration",Modifier.testTag("configuration").focusRequester(requester("configuration")).onFocusChanged { if(it.isFocused) model.focused("configuration") }
                     .focusProperties { down=requester(if(ui.page==Page.READY) "ask" else "answer-scroll") },onClick=model::settings)
