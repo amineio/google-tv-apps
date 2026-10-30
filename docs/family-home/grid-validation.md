@@ -165,3 +165,66 @@ The fresh TV capture remains private outside Git.
 These observations establish installation, TV presentation, and the observed ADB navigation.
 The coordinator did not test the physical remote handset, Cast, wake behavior, audio, or streaming playback during this follow-up.
 The final task response reports the policy commit and Git integration result separately.
+
+## Two-row layout correction: 2026-10-30
+
+The user requested exactly two visible grid rows without a partial third row.
+The remaining vertical space belongs above the heading and grid.
+Version 1.13, code 14, applies this layout correction.
+The earlier captures and test records above describe version 1.12 and remain unchanged.
+
+### Regression and focused tests
+
+Before the correction, the new regression test failed because app 10 remained visible as part of a third row.
+The initial height correction exposed focus scrolling that could leave partial rows visible and an empty-list profile focus timing issue.
+The implementation uses a grid-local `BringIntoViewSpec` with a zero automatic scroll distance, so explicit row scrolling owns grid navigation.
+The entry focus effect now runs inside `BoxWithConstraints` after the grid constraints are available.
+
+The final focused classes passed with no failures or errors:
+
+- `HomePresentationTest`: 10 tests.
+- `AppOrderPresentationTest`: six tests.
+- `ProfileMenuTest`: four tests.
+
+Their XML reports remain outside Git under `/tmp/launcher-two-rows-evidence/home-final`, `order-final`, and `profile-final`.
+The direct new regression invocation also returned `OK (1 test)`.
+The fresh generic captures `initial-final.png` and `scrolled-final.png` remain outside Git under `/tmp/launcher-two-rows-evidence`.
+The coordinator inspected both captures and observed exactly two complete rows without a partial third row.
+All spare vertical space appeared above the heading and grid.
+The fresh reviewer accepted the code correction and both final emulator captures with no material findings.
+
+### Release build
+
+The implementation revision is `6cafc6420cf9817759f2f5f396a711f9811f44d5`.
+With the JDK 17 and Android SDK paths recorded above, the coordinator operated:
+
+```sh
+apps/family-home/gradlew -p apps/family-home testReleaseUnitTest lintRelease assembleRelease --console=plain
+```
+
+All 94 release unit tests passed with no failures.
+Release lint reported no errors and six existing warnings.
+Release packaging succeeded in 12 minutes and 44 seconds while the optimizer remained active.
+No product refactor was needed for the build duration.
+The release APK is 2,814,615 bytes.
+Its SHA-256 is `4052a66d4f630f258da809ce1994186ae174d5ef6b48afe21a91e4b842e41d0c`.
+
+### Physical installation and limits
+
+The coordinator installed the release through `tools/install-family-home.sh` with a successful cached build.
+The physical TV reports version 1.13, code 14.
+The pulled installed APK matched the release SHA-256 recorded above.
+Family Home held the Home role, and cold launch returned `Status: ok` in 4,544 ms.
+Google TV Home and setupwraith remained enabled.
+The initial profile chooser retained a resumable balance.
+
+During adult profile entry and capture, the foreground display changed to Battleship.
+The same change followed an explicit Home activity launch.
+The coordinator stopped input instead of repeating the sequence.
+These observations do not establish the cause.
+The follow-up does not establish a TV capture of the corrected two-row grid.
+The fresh emulator captures establish the exact two-row layout.
+Physical installation, version, and artifact identity are established separately.
+The physical remote handset, Cast, wake behavior, and playback were not tested during this follow-up.
+Private captures, device addresses, profile names, and installer backups remain outside Git.
+The final task response reports Git delivery after the documentation commit and push.
