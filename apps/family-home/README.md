@@ -106,8 +106,9 @@ This app uses its own Gradle wrapper. From this directory, operate:
 ```
 
 The release APK is `build/outputs/apk/release/family-home-release.apk`.
-Use the physical TV only for an explicit user request or a user-reported issue.
-For an authorized installation, connect and authorize the Chromecast.
+Always install the tested release APK on the physical TV before merging app changes or pushing them to `origin/main`.
+The standing delivery instruction authorizes this installation without renewed permission.
+Connect and authorize the Chromecast.
 From the repository root, set its ADB address:
 
 ```sh
@@ -118,6 +119,9 @@ The installer builds only Family Home and captures the current Home role and acc
 It keeps Google TV Home and setupwraith enabled for Cast credentials.
 It removes the competing Home helper from the active helper list and preserves unrelated helpers.
 It does not erase data or reinstall the other apps. The installer prints the backup directory.
+Make sure that the installed version and APK SHA-256 match the tested release artifact.
+If the TV is unavailable or installation fails, preserve the task branch and report the blocker without merging.
+Documentation-only changes do not require an APK installation unless they accompany app delivery.
 
 ## Local TV emulator
 
@@ -160,12 +164,13 @@ ANDROID_SERIAL=emulator-5554 ./gradlew connectedDebugAndroidTest --console=plain
 ```
 
 The emulator supports layout, text contrast, and remote navigation tests.
-Emulator coverage is sufficient for development and delivery by default.
-The user tests on the TV and reports issues.
-Do not routinely install or test changes on the physical TV.
+Use the emulator for development and instrumented tests.
+Do not run instrumented tests on the physical TV because the test runner can uninstall the app.
+Physical installation of the tested release remains required before merging app changes or pushing them to `origin/main`.
 The emulator does not establish Cast, streaming playback, wake behavior, or final appearance on the TV.
 It does not contain the family's streaming accounts or all installed TV apps.
-State these limits in the delivery report. Missing hardware evidence does not require physical testing.
+State these limits in the delivery report.
+Installation alone does not establish hardware behavior or require unrelated Cast, wake, playback, or audio tests.
 
 For manual helper tests, use `adb input` and `screencap`.
 Android's default UI automation suppresses accessibility services, which interrupts the helper during a hierarchy dump.

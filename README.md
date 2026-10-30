@@ -75,6 +75,12 @@ The [Family Home guide](apps/family-home/README.md) covers its separate installe
 For Chromecast with Google TV, use [the Cast-compatible Home installer](docs/CAST-HOME.md).
 It keeps the Google packages enabled so that the custom Home screen and casting can work together.
 
+Before merging app changes or pushing them to `origin/main`, always install the tested release APK on the physical TV.
+Make sure that the installed version and APK SHA-256 match the tested artifact.
+If the TV is unavailable or installation fails, preserve the task branch and report the blocker without merging.
+Use the emulator for development and instrumented tests. Documentation-only changes do not require an APK installation.
+Read [the delivery instructions](AGENTS.md#app-installation-and-delivery) for the standing authorization, data protection, and delivery sequence.
+
 ## Test
 
 From the repository root, run local tests and Android lint:

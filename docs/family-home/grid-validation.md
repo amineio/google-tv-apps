@@ -133,3 +133,35 @@ The final task response reports the Git delivery result separately from installa
 This task uses the Google TV emulator for presentation and directional navigation.
 Physical TV installation and testing are outside this task.
 Emulator evidence does not establish physical remote behavior, Cast, streaming playback, wake behavior, audio focus, or audible quality.
+
+## Physical TV follow-up: 2026-10-30
+
+The earlier emulator-only delivery record above describes the original task boundary.
+The user then requested TV installation and a standing requirement to install app changes on the TV before they reach `main`.
+The active repository instructions now require physical installation of the tested release APK before merging app changes or pushing them to `origin/main`.
+
+### Installation and artifact match
+
+The coordinator installed Family Home through `tools/install-family-home.sh` with the JDK 17 and Android SDK paths recorded above.
+The installer build passed all 94 release unit tests, release lint with no errors, and release packaging.
+The cached build completed in one second.
+The source revision was `f4166576279108d53dea8d2a4797a3b7d4fe2673`.
+Its product code matches the previously tested implementation at `7334cc3fdef77a463a4d2673c1b5752c4f92049d`.
+
+The physical Chromecast upgraded from version 1.11, code 12, to version 1.12, code 13.
+The pulled installed APK matched the tested release at 2,814,615 bytes.
+Its SHA-256 was `45c1e03aeb8b9a5fe158b4426cd0139b29bb5e152a96d82ba9168f5c58960f36`.
+Family Home held the Home role, launch returned `Status: ok`, and its MainActivity was in the foreground.
+Google TV Home and setupwraith remained enabled.
+The installer backup remains private and ignored by Git.
+
+### Observed presentation
+
+The initial profile chooser retained a resumable child balance.
+The coordinator selected an adult profile with ADB input and observed the Home screen.
+The TV showed five columns, two complete rows, a larger circular profile picture, and clear space around the Clock overlay.
+The fresh TV capture remains private outside Git.
+
+These observations establish installation, TV presentation, and the observed ADB navigation.
+The coordinator did not test the physical remote handset, Cast, wake behavior, audio, or streaming playback during this follow-up.
+The final task response reports the policy commit and Git integration result separately.

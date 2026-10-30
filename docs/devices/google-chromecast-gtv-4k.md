@@ -52,8 +52,15 @@ The RAM and storage capacities do not establish a safe per-app allocation or a s
 Include `armeabi-v7a` when shipping native libraries for this firmware.
 The CPU's 64-bit capability does not provide a 64-bit app ABI on this installation.
 
-Use the Google TV emulator for routine development and delivery.
-Use the physical target only when the user requests it or reports an issue.
+Use the Google TV emulator for development and instrumented tests.
+Always install the changed app's tested release APK on the physical target before merging app changes or pushing them to `origin/main`.
+This standing instruction authorizes routine installation without renewed permission.
+Make sure that the installed version and APK SHA-256 match the tested artifact.
+Preserve app data, unrelated apps, Google TV Home, and setupwraith.
+If the TV is unavailable or installation fails, preserve the task branch and report the blocker without merging.
+Do not run instrumented tests on the physical target because the test runner can uninstall the app.
+Installation does not require unrelated Cast, wake, playback, or audio tests.
+Documentation-only changes do not require an APK installation unless they accompany app delivery.
 Published capabilities and emulator results do not establish physical playback, audio focus, Cast, wake behavior, or audible quality.
 
 ## Refresh the observations

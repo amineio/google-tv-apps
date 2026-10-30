@@ -80,7 +80,7 @@ After a minor resource correction, repeat affected tests and captures without re
 Record the tested revision and commands. Keep lint and release packaging in the final delivery checks.
 Follow the [risk-based test workflow](docs/kotlin-tv-development.md#choose-tests-by-risk).
 Set an explicit ADB serial for every install, test, screenshot, and remote command.
-Run instrumented tests on the emulator by default; the test runner can uninstall the tested app.
+Run instrumented tests on the emulator. Do not run them on the physical TV because the runner can uninstall the tested app.
 For focused tests, select one class per invocation or use a verified package filter.
 Inspect XML test counts and class names before claiming coverage. Build success alone does not establish test selection.
 Test initial focus, directional navigation, scrolling, dialogs, empty lists, and focus after app return.
@@ -88,12 +88,14 @@ Use actual directional input in navigation tests instead of forcing focus onto t
 Keep presentation tests separate from timer, accessibility helper, playback, wake, and Cast evidence.
 For variable fonts, make sure that the configured weights render correctly in device captures.
 Keep launcher controls clear of the separate Clock overlay.
-Emulator coverage is sufficient for development and delivery by default.
-Do not routinely install or test changes on the physical TV.
-The user tests on the TV and reports issues.
-Use the physical TV only for an explicit user request or a user-reported issue.
-Hardware changes alone do not require physical tests.
-State the limits of emulator evidence without making untested hardware behavior an automatic delivery gate.
+Use emulator coverage for development and instrumented tests.
+Always install the changed app's tested release APK on the physical TV before merging app changes or pushing them to `origin/main`.
+This standing instruction authorizes the installation without renewed permission.
+Make sure that the installed version and APK SHA-256 match the tested release artifact.
+Preserve app data, unrelated apps, Google TV Home, and `com.google.android.tungsten.setupwraith`.
+If the TV is unavailable or installation fails, block the merge, preserve the task branch, and report the blocker.
+Physical installation does not require unrelated Cast, wake, playback, or audio tests.
+State untested hardware behavior separately from installation evidence.
 Emulator results do not establish audio focus, playback, Cast, wake, accessibility, or audible quality on the physical TV.
 Use fresh capture filenames and make sure that each image belongs to the current build.
 Do not infer audible quality from MediaPlayer state or successful decoding.
@@ -114,8 +116,10 @@ Attach review images directly in the conversation through the available file or 
 
 ## App installation and delivery
 
-Emulator-only delivery does not require a physical TV installation.
-After each successful app installation, commit the installed app changes and push them to `origin/main`.
+Always complete physical TV installation before merging app changes or pushing them to `origin/main`.
+An emulator installation alone does not satisfy this requirement.
+Documentation-only changes do not require an APK installation unless they accompany app delivery.
+After successful physical installation, commit the installed app changes and push them to `origin/main`.
 Fetch `origin` again before integration or push.
 If remote changes exist, integrate them into the task branch and repeat the affected checks.
 Do not force-push over concurrent changes.
