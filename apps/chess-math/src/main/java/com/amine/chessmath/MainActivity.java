@@ -88,6 +88,27 @@ public final class MainActivity extends Activity {
     private TextView savingText,breakCountdown;
     private long displayedBreakSecond=-1;
     private MathConfig draft;
+    private PlayerProfile setupWhite=new PlayerProfile("fox",null),setupBlack=new PlayerProfile("owl",null);
+    private String setupReturn="",setupReturnFocus="";
+    private long confirmationDownTime=-1;
+    private int confirmationKey=-1;
+    private View confirmationTarget;
+    @Override public boolean dispatchKeyEvent(KeyEvent event){
+        int key=event.getKeyCode();
+        if(key==KeyEvent.KEYCODE_DPAD_CENTER||key==KeyEvent.KEYCODE_ENTER||key==KeyEvent.KEYCODE_NUMPAD_ENTER){
+            if(event.getAction()==KeyEvent.ACTION_DOWN){
+                if(event.getRepeatCount()>0||confirmationDownTime==event.getDownTime())return true;
+                confirmationDownTime=event.getDownTime();confirmationKey=key;confirmationTarget=getCurrentFocus();
+            }else if(event.getAction()==KeyEvent.ACTION_UP){
+                // Synthetic input can timestamp DOWN and UP separately. Pair the key and
+                // owning view, while repeats remain blocked by the DOWN path.
+                boolean orphan=confirmationKey!=key||confirmationTarget!=getCurrentFocus()||event.isCanceled();
+                confirmationDownTime=-1;confirmationKey=-1;confirmationTarget=null;
+                if(orphan)return true;
+            }
+        }
+        return super.dispatchKeyEvent(event);
+    }
     private static LanguagePreferences sharedLanguage;
     private LanguagePreferences language;
     private Context languageContext;
@@ -144,6 +165,9 @@ public final class MainActivity extends Activity {
             started=saved.getBoolean("started",false);menu=saved.getString("menu","");
             startAfterReset=saved.getBoolean("start-after-reset",false);
             lastPad=saved.getInt("pad",4);
+            setupReturn=saved.getString("setup-return","");
+            setupWhite=PlayerProfile.restored(saved.getString("setup-white","fox"),saved.getString("setup-white-name"),null);
+            setupBlack=PlayerProfile.restored(saved.getString("setup-black","owl"),saved.getString("setup-black-name"),setupWhite.portraitId);
             if(saved.containsKey("draft-limit")){
                 draft=controller.state().config.copy();
                 draft.limit=saved.getInt("draft-limit");
@@ -168,6 +192,9 @@ public final class MainActivity extends Activity {
     @Override protected void onSaveInstanceState(Bundle saved){
         saved.putBoolean("started",started);saved.putString("menu",menu);saved.putInt("pad",lastPad);
         saved.putBoolean("start-after-reset",startAfterReset);
+        saved.putString("setup-return",setupReturn);saved.putString("setup-white",setupWhite.portraitId);
+        saved.putString("setup-white-name",setupWhite.customName);saved.putString("setup-black",setupBlack.portraitId);
+        saved.putString("setup-black-name",setupBlack.customName);
         if(draft!=null){
             saved.putInt("draft-limit",draft.limit);saved.putBoolean("draft-add",draft.addition);
             saved.putBoolean("draft-sub",draft.subtraction);saved.putBoolean("draft-mul",draft.multiplication);
@@ -247,9 +274,14 @@ public final class MainActivity extends Activity {
             updateBreakCountdown();return;
         }
         Object focusTag=getCurrentFocus()==null?null:getCurrentFocus().getTag();
+        if(target.startsWith("local-")&&!screen.equals(target))focusTag=null;
         shell();
         screen=target;
         switch(target){
+            case "opponent":opponent();break;
+            case "local-white":localParticipant(true);break;
+            case "local-black":localParticipant(false);break;
+            case "local-review":localReview();break;
             case "start":start();
             break;
             case "pause":pause();
@@ -392,13 +424,13 @@ public final class MainActivity extends Activity {
         int primary=controller.state().revision==0?R.string.start:R.string.continue_game;
         Button play=TvStyle.titleButton(this,s(primary),true,false);
         play.setTag(s(primary));
-        play.setOnClickListener(v->act(()->{started=true;menu="";controller.resume();render();}));
+        play.setOnClickListener(v->act(()->{if(controller.state().revision==0){beginSetup();}else{started=true;menu="";controller.resume();render();}}));
         addTitleAction(menuColumn,play);
         if(controller.state().revision!=0){
             space(menuColumn,12);
             Button fresh=TvStyle.titleButton(this,s(R.string.new_game),false,false);
             fresh.setTag(s(R.string.new_game));
-            fresh.setOnClickListener(v->act(()->confirmReset(true)));
+            fresh.setOnClickListener(v->act(this::beginSetup));
             addTitleAction(menuColumn,fresh);
         }
         space(menuColumn,12);
@@ -414,18 +446,133 @@ public final class MainActivity extends Activity {
         if(showArtwork)scene.addView(new TvStyle.TitleArtwork(this),new LinearLayout.LayoutParams(0,-1,.42f));
         verticalClamp(menuColumn);
     }
+    private void beginSetup(){
+        setupReturn=started?"pause":"";
+        setupReturnFocus=getCurrentFocus()==null?"":String.valueOf(getCurrentFocus().getTag());
+        setupWhite=new PlayerProfile("fox",null);setupBlack=new PlayerProfile("owl",null);
+        menu="opponent";render();
+    }
+    private void cancelSetup(){menu=setupReturn;render();View previous=content.findViewWithTag(setupReturnFocus);if(previous!=null)previous.requestFocus();}
+    private void opponent(){
+        title(R.string.choose_opponent);
+        action(R.string.versus_computer,()->confirmStart(false));
+        action(R.string.versus_local,()->{menu="local-white";render();});
+        action(R.string.cancel,this::cancelSetup);verticalClamp(content);
+    }
+    private String localSummary(){
+        Session st=controller.state();
+        return PlayerPortraits.seat(this,st.whiteProfile,true)+"  ·  "+PlayerPortraits.seat(this,st.blackProfile,false);
+    }
+    private String localResult(Session st){
+        String result=localized(st.result);
+        if(st.mode!=Session.Mode.LOCAL)return result;
+        if(st.result.startsWith("Wit wint"))return PlayerPortraits.name(this,st.whiteProfile)+" · "+result;
+        if(st.result.startsWith("Zwart wint"))return PlayerPortraits.name(this,st.blackProfile)+" · "+result;
+        return localSummary()+" · "+result;
+    }
+    private void localParticipant(boolean white){
+        PlayerProfile selected=white?setupWhite:setupBlack;
+        title(R.string.choose_opponent).setText(getString(R.string.local_choose,s(white?R.string.local_white:R.string.local_black)));
+        TextView identity=body(PlayerPortraits.seat(this,selected,white));identity.setTag("setup-name");
+        ScrollView scroll=new ScrollView(this);scroll.setFillViewport(false);
+        LinearLayout form=new LinearLayout(this);form.setOrientation(LinearLayout.VERTICAL);
+        scroll.addView(form);content.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
+        Button[] portraits=new Button[8];
+        for(int row=0;row<2;row++){
+            LinearLayout line=new LinearLayout(this);form.addView(line,new LinearLayout.LayoutParams(-1,-2));
+            for(int col=0;col<4;col++){
+                int index=row*4+col;String id=PlayerProfile.PORTRAITS.get(index);
+                PlayerProfile character=new PlayerProfile(id,null);String label=PlayerPortraits.name(this,character);
+                boolean assigned=id.equals(selected.portraitId),available=white||!id.equals(setupWhite.portraitId);
+                Button tile=button(assigned?getString(R.string.selected,label):label,"portrait-"+id,()->{
+                    PlayerProfile next=new PlayerProfile(id,(white?setupWhite:setupBlack).customName);
+                    if(white){setupWhite=next;if(setupBlack.portraitId.equals(id))setupBlack=PlayerProfile.restored("",setupBlack.customName,id);}
+                    else setupBlack=next;
+                    render();
+                });
+                tile.setTextSize(17);tile.setSingleLine(true);tile.setEllipsize(android.text.TextUtils.TruncateAt.END);
+                tile.setSelected(assigned);tile.setEnabled(available);tile.setAlpha(available?1f:.38f);
+                tile.setContentDescription((assigned?getString(R.string.local_selected,label):label)+(available?"":" · "+s(R.string.local_unavailable)));
+                android.graphics.drawable.Drawable portrait=getDrawable(PlayerPortraits.image(id));portrait.setBounds(0,0,dp(66),dp(66));
+                tile.setCompoundDrawables(null,portrait,null,null);tile.setCompoundDrawablePadding(dp(3));
+                LinearLayout.LayoutParams bounds=new LinearLayout.LayoutParams(0,-2,1);bounds.setMargins(dp(3),dp(3),dp(3),dp(3));
+                line.addView(tile,bounds);portraits[index]=tile;
+            }
+        }
+        LinearLayout actions=new LinearLayout(this);actions.setOrientation(LinearLayout.HORIZONTAL);
+        form.addView(actions,new LinearLayout.LayoutParams(-1,-2));
+        Button edit=button(s(R.string.local_edit_name),"edit-name",()->editName(white));
+        Button next=button(s(R.string.next),"setup-next",()->{menu=white?"local-black":"local-review";render();});
+        Button cancel=button(s(R.string.cancel),"setup-cancel",this::cancelSetup);
+        for(Button b:new Button[]{edit,next,cancel})actions.addView(b,new LinearLayout.LayoutParams(0,-2,1));
+        horizontalClamp(actions);
+        for(int i=0;i<8;i++){
+            Button tile=portraits[i];int col=i%4,row=i/4;
+            int left=i,right=i,up=i,down=i;
+            for(int c=col-1;c>=0;c--)if(portraits[row*4+c].isEnabled()){left=row*4+c;break;}
+            for(int c=col+1;c<4;c++)if(portraits[row*4+c].isEnabled()){right=row*4+c;break;}
+            if(row==1&&portraits[col].isEnabled())up=col;
+            if(row==0){down=4+col;if(!portraits[down].isEnabled())down=4+(col+1)%4;}
+            tile.setNextFocusLeftId(portraits[left].getId());tile.setNextFocusRightId(portraits[right].getId());tile.setNextFocusUpId(portraits[up].getId());
+            tile.setNextFocusDownId(row==0?portraits[down].getId():edit.getId());
+        }
+        for(Button b:new Button[]{edit,next,cancel})b.setNextFocusUpId(portraits[4].isEnabled()?portraits[4].getId():portraits[5].getId());
+        portraits[PlayerProfile.PORTRAITS.indexOf(selected.portraitId)].requestFocus();
+    }
+    private void editName(boolean white){
+        PlayerProfile profile=white?setupWhite:setupBlack;
+        android.widget.EditText input=new android.widget.EditText(this);
+        input.setSingleLine(true);input.setInputType(android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
+        input.setHint(PlayerPortraits.name(this,new PlayerProfile(profile.portraitId,null)));input.setText(profile.customName==null?"":profile.customName);
+        input.setContentDescription(s(R.string.local_name_hint));
+        input.setPadding(dp(24),dp(12),dp(24),dp(12));
+        AlertDialog dialog=new AlertDialog.Builder(this).setTitle(R.string.local_edit_name).setMessage(R.string.local_name_help).setView(input)
+                .setNegativeButton(R.string.cancel,(d,w)->{})
+                .setPositiveButton(R.string.save,null).create();
+        dialog.setOnDismissListener(d->{View edit=content.findViewWithTag("edit-name");if(edit!=null)edit.requestFocus();});
+        dialog.setOnShowListener(d->{
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
+                try{
+                    PlayerProfile changed=new PlayerProfile(profile.portraitId,input.getText().toString());
+                    if(white)setupWhite=changed;else setupBlack=changed;
+                    dialog.dismiss();render();View edit=content.findViewWithTag("edit-name");if(edit!=null)edit.requestFocus();
+                }catch(IllegalArgumentException invalid){input.setError(s(R.string.local_invalid_name));}
+            });
+            input.requestFocus();
+        });
+        dialog.show();
+    }
+    private void localReview(){
+        title(R.string.local_review);
+        body(PlayerPortraits.seat(this,setupWhite,true));body(PlayerPortraits.seat(this,setupBlack,false));body(s(R.string.local_rules));
+        action(R.string.local_start,()->confirmStart(true));
+        action(R.string.cancel,this::cancelSetup);verticalClamp(content);
+    }
+    private void confirmStart(boolean local){
+        Runnable commit=()->{
+            started=true;menu="";startAfterReset=true;
+            if(local)controller.startLocalGame(setupWhite,setupBlack);else controller.startComputerGame();
+            render();
+        };
+        if(controller.state().revision==0){commit.run();return;}
+        new AlertDialog.Builder(this).setTitle(R.string.confirm_reset).setMessage(R.string.local_replace)
+                .setNegativeButton(R.string.cancel,(d,w)->{})
+                .setPositiveButton(R.string.ok,(d,w)->commit.run()).show().getButton(AlertDialog.BUTTON_NEGATIVE).requestFocus();
+    }
     private void addTitleAction(LinearLayout parent,Button action){
         int width=Math.min(dp(320),getResources().getDisplayMetrics().widthPixels-dp(144));
         parent.addView(action,new LinearLayout.LayoutParams(width,-2));
     }
     private void pause(){
         title(R.string.pause);
+        if(controller.state().mode==Session.Mode.LOCAL)body(localSummary());
         action(R.string.resume,()->{
             menu="";controller.resume();render();
         }
         );
         if(controller.state().phase==Session.Phase.CHESS&&controller.game().claimableDraw())action(R.string.claim_draw,()->controller.claimDraw());
         action(R.string.parents,()->{menu="parents";render();});
+        if(controller.state().mode==Session.Mode.LOCAL)action(R.string.local_new_setup,this::beginSetup);
         action(R.string.exit,this::finish);
         verticalClamp(content);
     }
@@ -482,7 +629,7 @@ public final class MainActivity extends Activity {
         preferenceValue(languageChoice,label,value);
         list.addView(languageChoice,new LinearLayout.LayoutParams(-1,-2));
         settingsHeading(list,R.string.settings_session,"settings-session",false);
-        if(play.mathsEnabled())settingsAction(list,R.string.to_math,R.drawable.ic_setting_calculator,()->confirmSkip(true));
+        if(controller.state().mode==Session.Mode.COMPUTER&&play.mathsEnabled())settingsAction(list,R.string.to_math,R.drawable.ic_setting_calculator,()->confirmSkip(true));
         settingsAction(list,R.string.to_chess,R.drawable.ic_setting_chess,()->confirmSkip(false));
         settingsAction(list,R.string.restart_chess,R.drawable.ic_setting_restart,()->{started=true;menu="";controller.restartGame();render();});
         settingsAction(list,R.string.reset,R.drawable.ic_setting_reset,()->confirmReset());
@@ -549,6 +696,7 @@ public final class MainActivity extends Activity {
         Session st=controller.state();
         if(st.promotionTo>=0&&presenting==null){
             title(R.string.promotion);
+            if(st.mode==Session.Mode.LOCAL)body(PlayerPortraits.seat(this,controller.game().whiteToMove()?st.whiteProfile:st.blackProfile,controller.game().whiteToMove()));
             LinearLayout row=new LinearLayout(this);
             content.addView(row);
             String[] names={
@@ -562,7 +710,7 @@ public final class MainActivity extends Activity {
             for(int i=0;i<4;i++){
                 final char piece=values[i];
                 Button choice=button(names[i],"promotion"+i,()->controller.promote(piece));
-                choice.setContentDescription(names[i]);
+                choice.setContentDescription(st.mode==Session.Mode.LOCAL?PlayerPortraits.seat(this,controller.game().whiteToMove()?st.whiteProfile:st.blackProfile,controller.game().whiteToMove())+" · "+names[i]:names[i]);
                 choice.setSoundEffectsEnabled(false);
                 char image=controller.game().whiteToMove()?Character.toUpperCase(piece):piece;
                 choice.setCompoundDrawables(null,new PromotionPiece(image),null,null);
@@ -625,10 +773,10 @@ public final class MainActivity extends Activity {
             LinearLayout footer=new LinearLayout(this);
             footer.setGravity(Gravity.CENTER_VERTICAL);
             footer.setPadding(0,dp(8),0,0);
-            TextView result=TvStyle.text(this,localized(st.result),22,true);
+            TextView result=TvStyle.text(this,localResult(st),22,true);
             result.setTag("game-result");
             footer.addView(result,new LinearLayout.LayoutParams(0,-2,1));
-            Button next=button(s(controller.mathsEnabled()?R.string.math_action:R.string.new_game),"game-continue",controller::continueAfterGame);
+            Button next=button(s(st.mode==Session.Mode.LOCAL?R.string.local_rematch:controller.mathsEnabled()?R.string.math_action:R.string.new_game),"game-continue",controller::continueAfterGame);
             footer.addView(next,new LinearLayout.LayoutParams(dp(250),dp(56)));
             content.addView(footer,new LinearLayout.LayoutParams(-1,-2));
             next.requestFocus();
@@ -637,8 +785,13 @@ public final class MainActivity extends Activity {
     private void bindBoard(){
         Session st=controller.state();
         ChessGame game=controller.game();
+        board.setParticipantDescription(st.mode==Session.Mode.LOCAL?PlayerPortraits.seat(this,game.whiteToMove()?st.whiteProfile:st.blackProfile,game.whiteToMove()):"");
         board.bind(game,st.focus,st.selected,st.moves.isEmpty()?"":st.moves.get(st.moves.size()-1));
         if(playerScore!=null){
+            if(st.mode==Session.Mode.LOCAL){
+                playerScore.setProfile(st.whiteProfile,true,game.whiteToMove()&&st.result.isEmpty());
+                computerScore.setProfile(st.blackProfile,false,!game.whiteToMove()&&st.result.isEmpty());
+            }
             playerScore.setPoints(presenting==null?MaterialPoints.total(game,true):MaterialPoints.before(presenting,true));
             computerScore.setPoints(presenting==null?MaterialPoints.total(game,false):MaterialPoints.before(presenting,false));
             updateThinkingStatus();
@@ -647,7 +800,8 @@ public final class MainActivity extends Activity {
     private void updateThinkingStatus(){
         if(playerScore==null||!screen.equals("CHESS"))return;
         long remaining=presenting==null?controller.thinkingRemainingMs():0;
-        String turn=!controller.state().result.isEmpty()?"":s(controller.game().whiteToMove()?R.string.your_turn:R.string.computer_turn);
+        Session st=controller.state();
+        String turn=!st.result.isEmpty()?"":st.mode==Session.Mode.LOCAL?getString(R.string.local_turn,PlayerPortraits.name(this,controller.game().whiteToMove()?st.whiteProfile:st.blackProfile)):s(controller.game().whiteToMove()?R.string.your_turn:R.string.computer_turn);
         playerScore.updateThinking(remaining,controller.thinkingTotalMs(),turn);
         computerScore.updateThinking(remaining,controller.thinkingTotalMs(),turn);
     }
@@ -1047,6 +1201,10 @@ public final class MainActivity extends Activity {
             interruptEffects();menu="pause";controller.pause();render();return;
         }
         if(controller.busy())return;
+        if(menu.equals("local-review")){menu="local-black";render();return;}
+        if(menu.equals("local-black")){menu="local-white";render();return;}
+        if(menu.equals("local-white")){menu="opponent";render();return;}
+        if(menu.equals("opponent")){cancelSetup();return;}
         if(!menu.isEmpty()){
             if(menu.equals("pause")){menu="";controller.resume();render();return;}
             menu=menu.equals("settings")||menu.equals("licenses")||menu.equals("help")?"parents":started?"pause":"";

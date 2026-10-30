@@ -6,6 +6,9 @@ import java.util.UUID;
 
 /** One locally saved game and practice round. The controller owns mutations. */
 public final class Session {
+    public enum Mode { COMPUTER, LOCAL }
+    public Mode mode=Mode.COMPUTER;
+    public PlayerProfile whiteProfile=new PlayerProfile("fox",null),blackProfile=new PlayerProfile("owl",null);
     public enum Phase { CHESS, TO_MATH, MATH, TO_CHESS, BREAK }
     public String id = UUID.randomUUID().toString();
     public long revision, elapsedMs;
@@ -30,6 +33,7 @@ public final class Session {
     }
     public Session copy() {
         Session s = new Session(false);
+        s.mode=mode;s.whiteProfile=whiteProfile;s.blackProfile=blackProfile;
         s.id=id; s.revision=revision; s.elapsedMs=elapsedMs; s.phase=phase;
         s.thinkingRemainingMs=thinkingRemainingMs; s.thinkingTotalMs=thinkingTotalMs;
         s.paused=paused; s.chessPending=chessPending; s.mathPending=mathPending; s.solved=solved;

@@ -116,4 +116,35 @@
     <string name="thinking_countdown">Think first · %1$d s</string>
     <string name="thinking_prompt">Study the last move</string>
     <string name="thinking_setting_help">Wait after each computer move. Changes apply from the next reply. Off clears the current wait.</string>
+
+    <string name="choose_opponent">Choose your opponent</string>
+    <string name="versus_computer">Against the computer</string>
+    <string name="versus_local">Together on this TV</string>
+    <string name="local_white">White</string>
+    <string name="local_black">Black</string>
+    <string name="local_choose">Choose a character for %1$s</string>
+    <string name="local_seat">%1$s · %2$s</string>
+    <string name="local_turn">%1$s\'s turn</string>
+    <string name="local_active">▶ To move</string>
+    <string name="local_waiting">Waiting for the next move</string>
+    <string name="local_rules">White starts. Pass the remote after each move. White stays at the bottom. No maths or thinking delay.</string>
+    <string name="local_review">Ready to play chess?</string>
+    <string name="local_edit_name">Edit name</string>
+    <string name="local_name_hint">Name (optional)</string>
+    <string name="local_name_help">Use up to 24 characters. An empty name uses the character name.</string>
+    <string name="local_invalid_name">Use up to 24 characters, with no control characters.</string>
+    <string name="local_start">Start chess game</string>
+    <string name="local_rematch">Play again with these characters</string>
+    <string name="local_new_setup">Choose a new opponent</string>
+    <string name="local_selected">Selected: %1$s</string>
+    <string name="local_unavailable">Already chosen for White</string>
+    <string name="local_replace">This replaces the saved game and its participants.</string>
+    <string name="profile_fox">Fox</string>
+    <string name="profile_owl">Owl</string>
+    <string name="profile_bear">Bear</string>
+    <string name="profile_cat">Cat</string>
+    <string name="profile_panda">Panda</string>
+    <string name="profile_rabbit">Rabbit</string>
+    <string name="profile_turtle">Turtle</string>
+    <string name="profile_dragon">Dragon</string>
 </resources>

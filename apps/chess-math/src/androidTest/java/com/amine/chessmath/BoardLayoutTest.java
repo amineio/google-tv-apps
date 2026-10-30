@@ -234,7 +234,7 @@ public final class BoardLayoutTest {
         volatile Session saved;
         volatile boolean delayNextSave,failNextSave;
         final CountDownLatch entered=new CountDownLatch(1),release=new CountDownLatch(1);
-        DelayedPersistence(Session fixture){saved=fixture.copy();}
+        DelayedPersistence(Session fixture){saved=fixture.copy();saved.revision=Math.max(1,saved.revision);}
         public Session load(){return saved.copy();}
         public void save(Session state) throws Exception {
             if(delayNextSave){
@@ -274,6 +274,7 @@ public final class BoardLayoutTest {
     private void withFixture(Session fixture,Checked test) throws Exception {
         SessionController.Persistence memory=new SessionController.Persistence(){
             private Session saved=fixture.copy();
+            {saved.revision=Math.max(1,saved.revision);}
             public Session load(){return saved.copy();}
             public void save(Session state){saved=state.copy();}
         };

@@ -34,6 +34,7 @@ public final class StartScreenTest {
             key(KeyEvent.KEYCODE_DPAD_DOWN);
             instrumentation.runOnMainSync(()->assertEquals(activity.getString(R.string.new_game),activity.getCurrentFocus().getTag()));
             key(KeyEvent.KEYCODE_DPAD_CENTER);
+            key(KeyEvent.KEYCODE_DPAD_CENTER); // Select the computer before final replacement consent.
             awaitWindowFocus(false);
             assertEquals(savedId,controller.state().id);
             assertEquals(Arrays.asList("e2e4","e7e5"),controller.state().moves);

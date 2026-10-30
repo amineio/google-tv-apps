@@ -42,7 +42,10 @@ public final class RecreationTest {
             first=(MainActivity)instrumentation.startActivitySync(intent);
             instrumentation.waitForIdleSync();
             MainActivity initial=first;
-            instrumentation.runOnMainSync(()->initial.getCurrentFocus().performClick());
+            instrumentation.runOnMainSync(()->{
+                initial.getCurrentFocus().performClick();
+                if(controller.state().revision==0&&!controller.busy())initial.getCurrentFocus().performClick();
+            });
             assertTrue("Save must be in flight before recreation",writing.await(3,TimeUnit.SECONDS));
             assertTrue(controller.busy());
             long revision=controller.state().revision;

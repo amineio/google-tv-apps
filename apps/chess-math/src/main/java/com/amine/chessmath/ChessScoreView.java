@@ -11,7 +11,10 @@ import android.widget.TextView;
 /** Nonfocusable score and thinking feedback beside the board. */
 @android.annotation.SuppressLint("ViewConstructor") // Created directly with an explicit player side, never inflated from XML.
 final class ChessScoreView extends LinearLayout {
-    private final TextView points,delta,status,help;
+    private final TextView label,points,delta,status,help;
+    private final android.widget.ImageView portrait;
+    private boolean local,active;
+    private String portraitId;
     private final ProgressBar progress;
     private final boolean player;
     private final Runnable hideFeedback=this::clearFeedback;
@@ -21,7 +24,9 @@ final class ChessScoreView extends LinearLayout {
         setOrientation(VERTICAL);setGravity(Gravity.CENTER_HORIZONTAL);
         setFocusable(false);setTag(player?"player-score":"computer-score");
         setPadding(dp(4),0,dp(4),0);
-        TextView label=text(context.getString(player?R.string.score_you:R.string.score_computer),18,true);
+        portrait=new android.widget.ImageView(context);portrait.setVisibility(GONE);portrait.setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
+        LayoutParams picture=new LayoutParams(dp(54),dp(54));picture.bottomMargin=dp(6);addView(portrait,picture);
+        label=text(context.getString(player?R.string.score_you:R.string.score_computer),18,true);
         label.setMinLines(2);label.setGravity(Gravity.CENTER);addView(label,params());
         points=text("",46,true);points.setTag(player?"player-points":"computer-points");
         addView(points,params());
@@ -51,11 +56,32 @@ final class ChessScoreView extends LinearLayout {
         TextView view=TvStyle.text(getContext(),value,size,bold);
         view.setGravity(Gravity.CENTER);view.setFocusable(false);return view;
     }
+    void setProfile(PlayerProfile profile,boolean white,boolean toMove){
+        local=true;active=toMove;
+        if(!profile.portraitId.equals(portraitId)){portraitId=profile.portraitId;portrait.setImageResource(PlayerPortraits.image(portraitId));}
+        portrait.setVisibility(VISIBLE);
+        String full=PlayerPortraits.name(getContext(),profile);
+        label.setSingleLine(true);label.setMinLines(1);label.setEllipsize(android.text.TextUtils.TruncateAt.END);label.setText(full);
+        String color=getContext().getString(white?R.string.local_white:R.string.local_black);
+        portrait.setContentDescription(null);
+        label.setContentDescription(full+" · "+color);
+        help.setText(color);help.setVisibility(VISIBLE);help.setTextColor(TvStyle.MUTED);
+        android.graphics.drawable.GradientDrawable outline=new android.graphics.drawable.GradientDrawable();
+        outline.setColor(android.graphics.Color.TRANSPARENT);outline.setCornerRadius(dp(8));
+        if(toMove)outline.setStroke(dp(2),TvStyle.AMBER);
+        portrait.setBackground(outline);portrait.setPadding(dp(3),dp(3),dp(3),dp(3));
+        status.setContentDescription(full+" · "+color+" · "+getContext().getString(toMove?R.string.local_active:R.string.local_waiting));
+    }
     void setPoints(int value){
         String label=Integer.toString(value);
         if(!label.contentEquals(points.getText()))points.setText(label);
     }
     void updateThinking(long remaining,long total,String turn){
+        if(local){
+            status.setText(active?"▶ "+turn:getContext().getString(R.string.local_waiting));
+            status.setTextColor(active?TvStyle.AMBER:TvStyle.MUTED);status.setVisibility(VISIBLE);
+            help.setVisibility(VISIBLE);progress.setVisibility(INVISIBLE);return;
+        }
         boolean waiting=remaining>0;
         String label=waiting?getContext().getString(R.string.thinking_countdown,(remaining+999)/1000):turn;
         if(!label.contentEquals(status.getText()))status.setText(label);

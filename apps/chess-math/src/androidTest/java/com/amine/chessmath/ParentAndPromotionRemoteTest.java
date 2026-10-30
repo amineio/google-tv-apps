@@ -326,6 +326,7 @@ public final class ParentAndPromotionRemoteTest {
         }));
         SessionController.Persistence memory=new SessionController.Persistence(){
             private Session saved=fixture.copy();
+            {saved.revision=Math.max(1,saved.revision);}
             public Session load(){return saved.copy();}
             public void save(Session state){saved=state.copy();}
         };
