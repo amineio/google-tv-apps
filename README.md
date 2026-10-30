@@ -12,6 +12,8 @@ Each app has its own package, version, permissions, tests, and APK.
 | [Battleship](apps/battleship/) | Separate Kotlin build | `com.amine.battleship` | Offline naval strategy against the computer with remote targeting and saved matches. |
 | [AI Chat](apps/ask-tv/) | Separate Kotlin build | `com.amine.asktv` | Spoken or typed questions through a ChatGPT subscription, with local example previews. |
 | [Postbox](apps/postbox/) | Separate Kotlin build | `com.amine.postbox` | Locally captured post text, links, and screenshots sent from an Android phone for TV reading. |
+| [Treasure or Retreat](apps/treasure-or-retreat/) | Separate Kotlin build | `com.amine.treasureorretreat` | Offline temple adventure with three expeditions and remote decisions. |
+| [Memory Parade](apps/memory-parade/) | Separate Kotlin build | `com.amine.memoryparade` | Offline animal matching with twelve cards, six pairs, and an animated parade. |
 
 Clock works independently of TV Home. Its stop screen supports voluntary viewing limits.
 It remains dismissible and does not guarantee that another app pauses playback.
@@ -54,6 +56,15 @@ apps/battleship/gradlew -p apps/battleship testDebugUnitTest testReleaseUnitTest
 
 Read the [Battleship guide](apps/battleship/README.md) for remote controls, saved matches, installation, and emulator tests.
 
+Treasure or Retreat and Memory Parade also use independent Kotlin builds. They require Android 8 or later. Build each game separately:
+
+```sh
+apps/treasure-or-retreat/gradlew -p apps/treasure-or-retreat testDebugUnitTest testReleaseUnitTest lintRelease assembleDebug assembleRelease --max-workers=2
+apps/memory-parade/gradlew -p apps/memory-parade testDebugUnitTest testReleaseUnitTest lintRelease assembleDebug assembleRelease --max-workers=2
+```
+
+Read each app guide for its APK paths, remote controls, and emulator commands. Both games bundle their artwork and short sound effects. They need no account or network connection.
+
 ## Install
 
 Read the [home installation guide](apps/home/README.md) before changing the default home app.
@@ -87,6 +98,8 @@ apps/clock/      Clock app, resources, and device tests
 apps/chess-math/ Offline chess and arithmetic app
 apps/family-home/ Independent Kotlin family launcher and Gradle build
 apps/battleship/  Independent Kotlin offline naval game and Gradle build
+apps/treasure-or-retreat/ Independent Kotlin treasure game and Gradle build
+apps/memory-parade/ Independent Kotlin animal matching game and Gradle build
 gradle/          Shared Gradle wrapper
 tools/           App installers and existing TV tools
 tests/           Repository and installer tests
