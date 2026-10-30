@@ -2,7 +2,7 @@
 
 ## Tested environment
 
-The coordinator used the isolated `amine/treasure-memory-games` branch. Its base is `14bfc957` after integration of the unrelated Clock fast-forward. The final game commit remains pending.
+The coordinator used the isolated `amine/treasure-memory-games` branch. Its base is `14bfc957` after integration of the unrelated Clock fast-forward. The validated implementation commit is `1d78253b67bde92d46eba396f64550472460ade6`. The app's `src/main` Git tree is `66d3eb2753f7ecaecbdad9d480b02635497d1b26`.
 
 The local build used JDK 17 and the Homebrew Android SDK. The test target was `emulator-5584`, the `Casual_Games_TV_API_34` emulator. It used Android API 34, a 1920 by 1080 display, and density 320.
 
@@ -41,7 +41,7 @@ The test copies timestamped screenshots to `/sdcard/Download/` before app remova
 
 The three-pair capture has SHA-256 `e2b29cc3ff47467b7110b1ffe2c63812cbbd57e0b67df7d0eb6c64bcc47e21d0`.
 
-The first populated capture exposed a detached neighboring fragment below the panda's feet. The corrected sprite preserves the full panda and removes the fragment. All six sprites received visual inspection. No other detached fragments were visible. The coordinator accepts the final Memory Parade composition. Fresh independent visual acceptance remains pending.
+The first populated capture exposed a detached neighboring fragment below the panda's feet. The corrected sprite preserves the full panda and removes the fragment. All six sprites received visual inspection. No other detached fragments were visible. The coordinator accepts the final Memory Parade composition. A fresh independent reviewer accepted the final code and complete screen captures against the supplied concept. The review found no material issues.
 
 The release build also received a 1280 by 720 capture. All controls fit. A 4K logical override still produced a 1920 by 1080 screenshot. This does not establish native 4K output. The coordinator restored the 1080p emulator configuration.
 
@@ -55,4 +55,4 @@ The resource rendering tests passed. Live artwork inspection through Family Home
 
 The coordinator did not test the physical TV. Audio listening and a family playtest remain unperformed. Successful playback calls and emulator tests do not establish physical speaker balance, audible quality, or human enjoyment.
 
-The installed release is identified by its APK hash above. The final commit and delivery to `origin/main` remain pending. This record does not claim those Git results.
+The installed release is identified by its APK hash above and corresponds to the validated implementation commit. The coordinator will report delivery to `origin/main` after the push. This record does not claim that a push occurred.
