@@ -1,6 +1,6 @@
 # Clock launcher artwork validation, 2026-10-30
 
-This follow-up refreshes the launcher artwork and prepares an authorized physical-TV installation. Focused emulator validation, rendered review, and physical installation are complete. Git delivery remains pending.
+This follow-up refreshes the launcher artwork and prepares an authorized physical-TV installation. Focused emulator validation, rendered review, and physical installation are complete. Git delivery is complete.
 
 ## Scope and revision
 
@@ -12,7 +12,7 @@ The refreshed native vector icon and banner use flat-ended hands at 10:10 and 12
 
 The existing version 1.5 XML hero drawable could not decode through the Family Home `ImageDecoder` path. The new focused `ArtworkDeviceTest` confirmed the RED case against installed version 1.5: `ImageDecoder.DecodeException` with an unimplemented decode result.
 
-Version 1.6 build and lint checks passed in 10 seconds. These resource checks are separate from the earlier dashboard validation. The earlier 28 unit tests and 19 instrumented tests remain historical evidence; they were not rerun for this artwork change.
+Version 1.6 build and lint checks passed in 10 seconds. Current lint results contain zero errors and four warnings. These resource checks are separate from the earlier dashboard validation. The earlier 28 unit tests and 19 instrumented tests remain historical evidence; they were not rerun for this artwork change.
 
 Reviewer `clock_art_review` approved static and rendered review with no material findings. Native icon, banner, and background exports were inspected at the dimensions above.
 
@@ -32,7 +32,7 @@ Private native exports and TV captures remain outside Git in the thread visualiz
 
 ## Delivery
 
-The final commit, push, and merge to `origin/main` remain pending. Record the delivered revision after integration.
+The tested app source was committed as `3820f536` and pushed to the task branch. `origin/main` advanced by fast-forward from `88bbfda4` to `3820f536`. The physical installed APK hash is recorded above. A final record-only commit updates this validation evidence; use Git history to identify that documentation commit.
 
 ## Evidence limits
 
