@@ -134,7 +134,7 @@
     <string name="local_name_help">Use up to 24 characters. An empty name uses the character name.</string>
     <string name="local_invalid_name">Use up to 24 characters, with no control characters.</string>
     <string name="local_start">Start chess game</string>
-    <string name="local_rematch">Play again with these characters</string>
+    <string name="local_rematch">Play again</string>
     <string name="local_new_setup">Choose a new opponent</string>
     <string name="local_selected">Selected: %1$s</string>
     <string name="local_unavailable">Already chosen for White</string>

@@ -80,7 +80,7 @@
     <string name="local_name_help">Maximaal 24 tekens. Een lege naam gebruikt de karakternaam.</string>
     <string name="local_invalid_name">Gebruik maximaal 24 tekens, zonder besturingstekens.</string>
     <string name="local_start">Begin schaakspel</string>
-    <string name="local_rematch">Opnieuw met dezelfde karakters</string>
+    <string name="local_rematch">Nog een partij</string>
     <string name="local_new_setup">Nieuwe tegenstander kiezen</string>
     <string name="local_selected">Gekozen: %1$s</string>
     <string name="local_unavailable">Al gekozen voor Wit</string>
