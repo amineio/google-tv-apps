@@ -51,8 +51,16 @@ The coordinator installed the release APK on `emulator-5584`. The local APK and 
 
 The resource rendering tests passed. Live artwork inspection through Family Home remains unperformed. The tests do not establish the launcher's complete presentation.
 
+## Physical TV installation: 2026-10-30
+
+At the user's request, the coordinator installed the validated release on the physical TV with `adb install -r`. The command returned `Success` and preserved app data. The installed version is `1.0`, with version code `1`.
+
+The installed APK has SHA-256 `aecbdebdcba25ee47509f8e6ea4951b452942a1b244cae6c4c57cab8bcd17afb`, which matches the validated local release. The Leanback launcher intent resolves to `.MainActivity`. The app source remains unchanged from implementation commit `1d78253b67bde92d46eba396f64550472460ade6`.
+
+This installation does not establish physical gameplay behavior. The coordinator did not launch the game or test remote gameplay, audio, Cast, wake, or playback on the physical TV. No physical gameplay screenshot was captured.
+
 ## Evidence limits
 
-The coordinator did not test the physical TV. Audio listening and a family playtest remain unperformed. Successful playback calls and emulator tests do not establish physical speaker balance, audible quality, or human enjoyment.
+Physical TV evidence covers installation, installed version, APK hash, and launcher intent resolution only. Audio listening and a family playtest remain unperformed. Successful playback calls and emulator tests do not establish physical speaker balance, audible quality, or human enjoyment.
 
 The installed release is identified by its APK hash above and corresponds to the validated implementation commit. The coordinator will report delivery to `origin/main` after the push. This record does not claim that a push occurred.

@@ -13,7 +13,7 @@ The build used Homebrew JDK 17 and the installed Homebrew Android SDK.
 Instrumented tests used `emulator-5584`, the `Casual_Games_TV_API_34` Google TV emulator.
 The emulator used API 34, a 1920×1080 display, and density 320.
 The coordinator also inspected a 720p gameplay capture, then restored 1080p.
-No physical TV was tested.
+The runtime behavior tests used the emulator. A later physical installation is recorded below.
 
 From the repository root, the coordinator operated the app wrapper with this environment and integration command:
 
@@ -64,9 +64,28 @@ The local APK and the installed APK share this SHA-256 hash:
 244a5dcb878eae2e59bf3f74b2eac5de3bfd8fceb04b18cfeba0d19f385494d0
 ```
 
-Cold launch and a real draw passed the final release smoke test.
+Cold launch and a real draw passed the final release smoke test on the emulator.
 
-## Runtime visual review
+## Physical installation
+
+Date: 2026-10-30.
+
+The coordinator installed the validated release on the physical TV at the user's request.
+The coordinator used `adb install -r`. Installation succeeded and preserved app data.
+Package inspection reported version `1.0`, version code `1`.
+The installed APK matches the validated release SHA-256:
+
+```text
+244a5dcb878eae2e59bf3f74b2eac5de3bfd8fceb04b18cfeba0d19f385494d0
+```
+
+The Leanback launcher entry resolves to `com.amine.treasureorretreat/.MainActivity`.
+This record establishes installation and package identity only.
+The app code remains unchanged at implementation commit `1d78253b67bde92d46eba396f64550472460ade6`.
+The coordinator did not launch the game or capture gameplay on the physical TV.
+Physical launch, remote gameplay, audio listening, Cast, wake, and playback tests remain unperformed.
+
+## Emulator runtime visual review
 
 Status: ACCEPTED by the coordinator and a fresh independent reviewer.
 
@@ -103,7 +122,7 @@ Logs, screenshots, and other local artifacts remain outside Git.
 
 ## Evidence limits and delivery
 
-Physical-TV tests, audio listening, and a human family playtest remain unperformed.
+Physical installation succeeded. Physical gameplay tests, audio listening, and a human family playtest remain unperformed.
 Emulator tests do not establish physical remote behavior, speaker balance, audio latency, or Chromecast performance.
 Successful decoding and SoundPool state do not establish audible quality.
 Native 4K rendering is not proved by the 720p and 1080p captures.
