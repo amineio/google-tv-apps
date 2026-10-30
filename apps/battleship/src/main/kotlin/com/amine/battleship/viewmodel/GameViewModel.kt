@@ -13,4 +13,5 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     val sounds = session.sounds
     fun action(action: GameAction) = session.action(action)
     fun background() = session.background()
+    fun focusLost() = session.focusLost()
 }

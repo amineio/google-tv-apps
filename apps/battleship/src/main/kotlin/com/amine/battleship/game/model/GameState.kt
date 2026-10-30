@@ -23,6 +23,10 @@ data class GameState(
     val winner: Player? = null,
     val lastAttack: AttackEvent? = null,
     val seed: Long = 0,
+    val mode: GameMode = GameMode.COMPUTER,
+    val leftProfile: PlayerProfile = PlayerProfile("fox"),
+    val rightProfile: PlayerProfile = PlayerProfile("owl"),
+    val previewConsumed: Boolean = true,
 )
 
 @Serializable

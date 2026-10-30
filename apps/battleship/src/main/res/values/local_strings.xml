@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="choose_opponent">Choose an opponent</string>
+  <string name="computer_mode">Computer</string>
+  <string name="local_mode">Two captains</string>
+  <string name="choose_left">Choose the left fleet captain</string>
+  <string name="choose_right">Choose the right fleet captain</string>
+  <string name="profile_fox">Fox</string>
+  <string name="profile_owl">Owl</string>
+  <string name="profile_bear">Bear</string>
+  <string name="profile_cat">Cat</string>
+  <string name="profile_storm">Captain Storm</string>
+  <string name="profile_reed">Commander Reed</string>
+  <string name="profile_kai">Lieutenant Kai</string>
+  <string name="profile_mira">Chief Mira</string>
+  <string name="portrait_assigned">Selected</string>
+  <string name="portrait_unavailable">Other captain</string>
+  <string name="edit_name">Edit name (optional)</string>
+  <string name="edit_name_title">Name for %1$s</string>
+  <string name="name_save">Save name</string>
+  <string name="local_cancel">Cancel</string>
+  <string name="name_limit">Use up to 24 characters. Leave empty for the character name.</string>
+  <string name="name_invalid">Use up to 24 characters without control characters.</string>
+  <string name="next_captain">Next captain</string>
+  <string name="review_captains">Review captains</string>
+  <string name="start_local">Start match</string>
+  <string name="memory_rule">Both fleets appear once for 10 seconds. Then remember their positions. A hit ends the turn. Pass the remote after each shot.</string>
+  <string name="fleet_name">%1$s’s fleet</string>
+  <string name="local_turn">%1$s’s turn</string>
+  <string name="captain_ready">%1$s, ready?</string>
+  <string name="pass_remote">Pass the remote to %1$s. Press Ready when you have it.</string>
+  <string name="local_ready">Ready</string>
+  <string name="remember_fleets">Remember both fleets · %1$d</string>
+  <string name="preview_interrupted">The preview ended. Both fleets remain hidden.</string>
+  <string name="local_saving">Saving the match…</string>
+  <string name="retry_save">Retry save</string>
+  <string name="local_afloat">%1$s: %2$d ships afloat</string>
+  <string name="local_board_target">%1$s targets %2$s. Target %3$s. %4$s.</string>
+  <string name="local_board_public">%1$s. %2$d public shots. Intact ships hidden.</string>
+  <string name="local_winner">%1$s wins!</string>
+  <string name="local_paused">%1$s · %2$s</string>
+  <string name="local_rematch">Rematch</string>
+  <string name="local_resolving">Shot resolving</string>
+  <string name="left_owner">Left fleet · first shot</string>
+  <string name="right_owner">Right fleet</string>
+</resources>

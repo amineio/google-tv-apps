@@ -50,6 +50,8 @@ internal fun GameBoard(
     onAction: (GameAction) -> Unit = {},
     impact: ImpactPresentation? = null,
     frameTime: BoardFrameTime? = null,
+    accessibleDescription: String? = null,
+    fixedTag: String? = null,
 ) {
     val labels = remember { Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.CENTER
@@ -87,6 +89,7 @@ internal fun GameBoard(
                         true
                     }
                     Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> {
+                        if (event.type == KeyEventType.KeyUp) onAction(GameAction.ReleaseConfirm)
                         if (event.type == KeyEventType.KeyDown && event.nativeKeyEvent.repeatCount == 0 && canFire) {
                             onAction(GameAction.Fire)
                         }
@@ -96,14 +99,14 @@ internal fun GameBoard(
                 }
             }
             .semantics {
-                contentDescription = targetDescription
+                contentDescription = accessibleDescription ?: targetDescription
                 stateDescription = selectedState
             }
-            .testTag("targeting_board")
+            .testTag(fixedTag ?: "targeting_board")
             .focusable()
     } else {
-        inputModifier = inputModifier.semantics { contentDescription = fleetDescription }
-            .testTag("friendly_board")
+        inputModifier = inputModifier.semantics { contentDescription = accessibleDescription ?: fleetDescription }
+            .testTag(fixedTag ?: "friendly_board")
     }
     Box(inputModifier) {
         WaterSurface()

@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="choose_opponent">Choisir un adversaire</string>
+  <string name="computer_mode">Ordinateur</string>
+  <string name="local_mode">Deux capitaines</string>
+  <string name="choose_left">Choisir le capitaine de la flotte gauche</string>
+  <string name="choose_right">Choisir le capitaine de la flotte droite</string>
+  <string name="profile_fox">Renard</string>
+  <string name="profile_owl">Hibou</string>
+  <string name="profile_bear">Ours</string>
+  <string name="profile_cat">Chat</string>
+  <string name="profile_storm">Capitaine Storm</string>
+  <string name="profile_reed">Commandant Reed</string>
+  <string name="profile_kai">Lieutenant Kai</string>
+  <string name="profile_mira">Chef Mira</string>
+  <string name="portrait_assigned">Choisi</string>
+  <string name="portrait_unavailable">Autre capitaine</string>
+  <string name="edit_name">Modifier le nom (facultatif)</string>
+  <string name="edit_name_title">Nom pour %1$s</string>
+  <string name="name_save">Enregistrer le nom</string>
+  <string name="local_cancel">Annuler</string>
+  <string name="name_limit">24 caractères maximum. Laisser vide pour le nom du personnage.</string>
+  <string name="name_invalid">Utiliser 24 caractères maximum, sans caractères de contrôle.</string>
+  <string name="next_captain">Capitaine suivant</string>
+  <string name="review_captains">Vérifier les capitaines</string>
+  <string name="start_local">Commencer la partie</string>
+  <string name="memory_rule">Les deux flottes apparaissent une fois pendant 10 secondes. Mémorisez leurs positions. Un tir réussi termine le tour. Passez la télécommande après chaque tir.</string>
+  <string name="fleet_name">Flotte de %1$s</string>
+  <string name="local_turn">Au tour de %1$s</string>
+  <string name="captain_ready">%1$s, prêt ?</string>
+  <string name="pass_remote">Passez la télécommande à %1$s. Appuyez sur Prêt quand vous êtes prêt.</string>
+  <string name="local_ready">Prêt</string>
+  <string name="remember_fleets">Mémorisez les deux flottes · %1$d</string>
+  <string name="preview_interrupted">L’aperçu est terminé. Les deux flottes restent cachées.</string>
+  <string name="local_saving">Enregistrement de la partie…</string>
+  <string name="retry_save">Réessayer</string>
+  <string name="local_afloat">%1$s : %2$d navires à flot</string>
+  <string name="local_board_target">%1$s vise %2$s. Cible %3$s. %4$s.</string>
+  <string name="local_board_public">%1$s. %2$d tirs publics. Navires intacts cachés.</string>
+  <string name="local_winner">%1$s gagne !</string>
+  <string name="local_paused">%1$s · %2$s</string>
+  <string name="local_rematch">Rejouer</string>
+  <string name="local_resolving">Résolution du tir</string>
+  <string name="left_owner">Flotte gauche · premier tir</string>
+  <string name="right_owner">Flotte droite</string>
+</resources>

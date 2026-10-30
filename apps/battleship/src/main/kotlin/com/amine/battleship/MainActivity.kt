@@ -37,6 +37,10 @@ class MainActivity : ComponentActivity() {
         game.background()
         super.onPause()
     }
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (!hasFocus) game.focusLost()
+    }
     override fun onDestroy() {
         audio.close()
         super.onDestroy()

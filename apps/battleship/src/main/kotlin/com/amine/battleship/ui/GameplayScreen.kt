@@ -30,6 +30,7 @@ import com.amine.battleship.viewmodel.SessionState
 
 @Composable
 internal fun GameScreen(state: SessionState, onAction: (GameAction) -> Unit) {
+    if (state.game?.mode == GameMode.LOCAL) { LocalGameplayScreen(state, onAction); return }
     val frameTime = rememberBoardFrameTime(state, onAction)
     val game = state.game ?: return
     val view = GameEngine.playerView(game)
