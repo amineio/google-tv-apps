@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.Canvas
 import android.net.Uri
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -80,6 +81,36 @@ class PhonePairingUiTest {
     }
     @Test fun genuineQrPhotoDecodesAndPrivatePhotoIsDeleted() {
         val file = photo(link.encode())
+        assertEquals(link, PhonePairingPhotoReader.read(file))
+        assertFalse(file.exists())
+    }
+    private fun framedPhoto(width: Int, height: Int, codeSize: Int, jpeg: Boolean): File {
+        val file = File(context.cacheDir, "phone_pairing").apply { mkdirs() }
+            .resolve("framed-${System.nanoTime()}.${if (jpeg) "jpg" else "png"}")
+        val matrix = MultiFormatWriter().encode(link.encode(), BarcodeFormat.QR_CODE, codeSize, codeSize)
+        val qr = Bitmap.createBitmap(codeSize, codeSize, Bitmap.Config.ARGB_8888)
+        val frame = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        try {
+            val pixels = IntArray(codeSize * codeSize)
+            for (y in 0 until codeSize) for (x in 0 until codeSize) pixels[y * codeSize + x] = if (matrix[x, y]) Color.BLACK else Color.WHITE
+            qr.setPixels(pixels, 0, codeSize, 0, 0, codeSize, codeSize)
+            Canvas(frame).apply {
+                drawColor(Color.rgb(220, 225, 230))
+                drawBitmap(qr, (width - codeSize) / 3f, (height - codeSize) / 3f, null)
+            }
+            file.outputStream().use { output ->
+                assertTrue(frame.compress(if (jpeg) Bitmap.CompressFormat.JPEG else Bitmap.CompressFormat.PNG, 90, output))
+            }
+        } finally { qr.recycle(); frame.recycle() }
+        return file
+    }
+    @Test fun rectangularPhotoDecodesWithCorrectQuarterTurnGeometry() {
+        val file = framedPhoto(1400, 1100, 900, jpeg = false)
+        assertEquals(link, PhonePairingPhotoReader.read(file))
+        assertFalse(file.exists())
+    }
+    @Test fun oversizedRectangularJpegPhotoDecodesWithinTheImageBound() {
+        val file = framedPhoto(3000, 2200, 1800, jpeg = true)
         assertEquals(link, PhonePairingPhotoReader.read(file))
         assertFalse(file.exists())
     }
