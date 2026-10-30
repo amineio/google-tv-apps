@@ -32,10 +32,11 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.tv.material3.Text
 import kotlinx.coroutines.launch
 
-@Composable fun AskScreen(model:AskViewModel,onAsk:()->Unit,onExit:()->Unit) {
+@Composable fun AskScreen(model:AskViewModel,onAsk:()->Unit,onExit:()->Unit,onPhoneSignIn:(Boolean)->Unit) {
     val ui=model.ui
+    val focusManager=androidx.compose.ui.platform.LocalFocusManager.current
     var typing by rememberSaveable { mutableStateOf(false) }
-    val focus=remember { listOf("ask","type","configuration","example-0","example-1","answer-scroll","sign-in","new-conversation","follow-up","ready-sign-in").associateWith { FocusRequester() } }
+    val focus=remember { listOf("ask","type","configuration","example-0","example-1","answer-scroll","sign-in","new-conversation","follow-up","ready-sign-in","change-model","models-refresh","reconnect").associateWith { FocusRequester() } }
     fun requester(name:String)=focus.getValue(name)
     LaunchedEffect(ui.page,ui.focusVersion) { if(!typing) runCatching { requester(ui.focus).requestFocus() } }
     BackHandler { if(typing) { typing=false; model.dialogClosed() } else if(!model.back()) onExit() }
@@ -48,8 +49,8 @@ import kotlinx.coroutines.launch
                 Spacer(Modifier.width(12.dp))
                 Text("AI Chat",fontFamily=Outfit,fontSize=25.sp,fontWeight=FontWeight.SemiBold)
                 Spacer(Modifier.weight(1f))
-                if(ui.page!=Page.SETTINGS) TvButton("Configuration",Modifier.testTag("configuration").focusRequester(requester("configuration")).onFocusChanged { if(it.isFocused) model.focused("configuration") }
-                    .focusProperties { down=requester(if(ui.page==Page.READY) "ask" else "answer-scroll") },onClick=model::settings)
+                if(ui.page==Page.READY || ui.page==Page.ANSWER) TvButton("Configuration",Modifier.testTag("configuration").focusRequester(requester("configuration")).onFocusChanged { if(it.isFocused) model.focused("configuration") }
+                    .focusProperties { down=requester(if(ui.page==Page.READY) (if(ui.planAllowed) "ask" else "ready-sign-in") else "answer-scroll") },onClick=model::settings)
             }
             when(ui.page) {
                 Page.READY -> {
@@ -59,18 +60,18 @@ import kotlinx.coroutines.launch
                     Text(ui.busy ?: "Ask a question. Hear the answer.",color=Muted,fontSize=20.sp)
                     Spacer(Modifier.height(18.dp))
                     Row(horizontalArrangement=Arrangement.spacedBy(16.dp)) {
-                    TvButton(if(ui.busy=="Listening…") "Stop listening" else "Ask a question",Modifier.width(240.dp).testTag("ask").focusRequester(requester("ask")).onFocusChanged { if(it.isFocused) model.focused("ask") }
-                        .focusProperties { up=requester("configuration"); down=requester("type") },primary=true,
-                        onClick={if(ui.busy!=null) model.stop() else onAsk()})
+                    val primary=if(ui.planAllowed) "ask" else "ready-sign-in"
+                    TvButton(if(!ui.planAllowed) { if(ui.signedIn) "Enable ChatGPT plan" else "Continue with ChatGPT" } else if(ui.busy=="Listening…") "Stop listening" else "Ask a question",
+                        Modifier.width(if(ui.planAllowed) 240.dp else 290.dp).testTag(primary).focusRequester(requester(primary)).onFocusChanged { if(it.isFocused) model.focused(primary) }
+                            .focusProperties { up=requester("configuration"); down=requester("type"); right=requester("type") },
+                        onClick={if(!ui.planAllowed) model.chooseSignInRoute(ui.signedIn) else if(ui.busy!=null) model.stop() else onAsk()})
                     TvButton("Type a question",Modifier.width(240.dp).testTag("type").focusRequester(requester("type")).onFocusChanged { if(it.isFocused) model.focused("type") }
-                        .focusProperties { up=requester("ask"); down=requester("example-0") },onClick={model.stop();typing=true})
-                    if(!ui.planAllowed) TvButton(if(ui.signedIn) "Enable plan" else "Sign in",Modifier.testTag("ready-sign-in").focusRequester(requester("ready-sign-in"))
-                        .onFocusChanged { if(it.isFocused) model.focused("ready-sign-in") },onClick={if(ui.signedIn) model.enablePlan() else model.signIn()})
+                        .focusProperties { up=requester(primary); left=requester(primary); down=requester("example-0") },onClick={model.stop();focusManager.clearFocus(force=true);typing=true})
                     }
                     Spacer(Modifier.height(9.dp))
-                    Text(when { ui.planAllowed -> "Microphone off until you ask"; ui.signedIn -> "Enable ChatGPT plan for live answers · Microphone off"; else -> "Sign in for live answers · Microphone off" },color=Muted,fontSize=16.sp)
+                    Text(when { ui.busy=="Listening…" -> "Microphone on · Listening"; ui.planAllowed -> "Microphone off · Starts when you ask"; ui.signedIn -> "Enable ChatGPT plan for live answers · Microphone off"; else -> "Sign in for live answers · Microphone off" },color=Muted,fontSize=16.sp)
                     Spacer(Modifier.height(20.dp))
-                    Text("TRY AN EXAMPLE",color=Muted,fontSize=13.sp,letterSpacing=2.sp)
+                    Text("EXAMPLE PREVIEWS",color=Muted,fontSize=13.sp,letterSpacing=2.sp)
                     Spacer(Modifier.height(12.dp))
                     Row(horizontalArrangement=Arrangement.spacedBy(16.dp)) {
                         EXAMPLES.forEachIndexed { index,example ->
@@ -82,18 +83,18 @@ import kotlinx.coroutines.launch
                     Status(ui)
                 }
                 Page.ANSWER -> {
-                    Spacer(Modifier.height(22.dp))
+                    Spacer(Modifier.height(10.dp))
                     Text(if(ui.example) "Example preview · not connected" else if(ui.incomplete) "${ui.busy ?: "Incomplete answer"}" else "ChatGPT · ${ui.models.firstOrNull{it.slug==ui.model}?.displayName ?: "Subscription"}",color=Gold,fontSize=16.sp)
                     Spacer(Modifier.height(9.dp))
-                    Text(ui.question,fontFamily=Outfit,fontSize=29.sp,fontWeight=FontWeight.SemiBold,maxLines=2)
+                    Text(ui.question,fontFamily=Outfit,fontSize=25.sp,fontWeight=FontWeight.SemiBold,maxLines=2)
                     Spacer(Modifier.height(15.dp))
                     val scroll=rememberScrollState()
                     val scope=rememberCoroutineScope()
                     var scrollFocused by remember { mutableStateOf(false) }
                     LaunchedEffect(ui.question) { scroll.scrollTo(0) }
-                    Box(Modifier.weight(1f).fillMaxWidth().padding(end=52.dp).clip(RoundedCornerShape(14.dp))
+                    Box(Modifier.weight(1f).fillMaxWidth(.82f).clip(RoundedCornerShape(14.dp))
                         .background(Panel.copy(alpha=.75f)).border(if(scrollFocused) 2.dp else 1.dp,if(scrollFocused) Gold else Ink.copy(alpha=.12f),RoundedCornerShape(14.dp))
-                        .testTag("answer-scroll").focusRequester(requester("answer-scroll")).onFocusChanged { if(it.isFocused) model.focused("answer-scroll") }.focusProperties { up=requester("configuration") }
+                        .testTag("answer-scroll").focusRequester(requester("answer-scroll")).onFocusChanged { if(it.isFocused) model.focused("answer-scroll") }.focusProperties { up=requester("configuration"); down=requester("follow-up") }
                         .onFocusChanged { scrollFocused=it.isFocused }.onPreviewKeyEvent { event ->
                             if(event.type==KeyEventType.KeyDown && event.key==Key.DirectionDown && scroll.value<scroll.maxValue) { scope.launch{scroll.scrollTo((scroll.value+100).coerceAtMost(scroll.maxValue))};true }
                             else if(event.type==KeyEventType.KeyDown && event.key==Key.DirectionUp && scroll.value>0) { scope.launch{scroll.scrollTo((scroll.value-100).coerceAtLeast(0))};true } else false
@@ -128,36 +129,45 @@ import kotlinx.coroutines.launch
                     Row(horizontalArrangement=Arrangement.spacedBy(12.dp),modifier=Modifier.padding(end=60.dp)) {
                         ui.stopLabel?.let { label -> TvButton(label,onClick=model::stop) }
                         TvButton("Read aloud",enabled=ui.answer.isNotBlank()&&!ui.incomplete,onClick=model::repeatAnswer)
-                        TvButton("Follow-up",Modifier.testTag("follow-up").focusRequester(requester("follow-up")).onFocusChanged { if(it.isFocused) model.focused("follow-up") },onClick={model.stop();typing=true})
+                        TvButton("Follow-up",Modifier.testTag("follow-up").focusRequester(requester("follow-up")).onFocusChanged { if(it.isFocused) model.focused("follow-up") },onClick={model.stop();focusManager.clearFocus(force=true);typing=true})
                         TvButton("New conversation",Modifier.testTag("new-conversation").focusRequester(requester("new-conversation")).onFocusChanged { if(it.isFocused) model.focused("new-conversation") },onClick=model::newConversation)
                     }
                     Spacer(Modifier.height(10.dp))
                     Status(ui)
                 }
-                Page.SETTINGS -> {
-                    Spacer(Modifier.height(22.dp))
-                    Text("Configuration",fontFamily=Outfit,fontSize=34.sp,fontWeight=FontWeight.SemiBold)
-                    Spacer(Modifier.height(16.dp))
-                    Column(Modifier.weight(1f).fillMaxWidth().padding(end=140.dp).verticalScroll(rememberScrollState()).padding(bottom=8.dp),verticalArrangement=Arrangement.spacedBy(7.dp)) {
-                        Text(when { ui.planAllowed -> "ChatGPT subscription connected"; ui.signedIn -> "ChatGPT plan permission needed"; else -> "Sign in to use your ChatGPT subscription" },color=Ink,fontSize=22.sp)
-                        if(ui.signedIn) Text(ui.account,color=Muted,fontSize=18.sp)
-                        Row(horizontalArrangement=Arrangement.spacedBy(14.dp)) {
-                            TvButton(if(ui.signedIn && !ui.planAllowed) "Enable ChatGPT plan" else "Continue with ChatGPT",Modifier.testTag("sign-in").focusRequester(requester("sign-in")).onFocusChanged { if(it.isFocused) model.focused("sign-in") },primary=true,onClick={if(ui.signedIn && !ui.planAllowed) model.enablePlan() else model.signIn()})
-                            if(ui.signedIn) TvButton("Sign out",onClick=model::signOut)
-                            if(ui.busy!=null) TvButton("Cancel",onClick=model::stop)
+                Page.SIGN_IN -> PhoneSignInPanel(ui,onPhoneSignIn,{model.signIn(SignInRoute.MAC,it)},model::cancelSignIn,model::leaveSignIn,model::signInDone,model::enablePlan,model::focused)
+                Page.MODELS -> {
+                    Text("Choose a model",fontSize=32.sp,modifier=Modifier.padding(top=20.dp,bottom=12.dp))
+                    Column(Modifier.weight(1f).widthIn(max=680.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)) {
+                        if(ui.models.isEmpty()) Text(ui.message.ifBlank { ui.busy ?: "No models are available. Refresh to try again." },color=Muted,fontSize=20.sp)
+                        ui.models.forEach { entry ->
+                            val tag="model-option-${entry.slug}"
+                            val optionFocus=remember(entry.slug) { FocusRequester() }
+                            LaunchedEffect(ui.focusVersion,ui.models) { if(ui.focus==tag) optionFocus.requestFocus() }
+                            TvButton((if(entry.slug==ui.model) "✓  " else "")+entry.displayName,Modifier.testTag(tag).focusRequester(optionFocus).onFocusChanged { if(it.isFocused) model.focused(tag) },onClick={model.chooseModel(entry.slug)})
                         }
-                        Text(if(ui.signedIn) "Model · "+(ui.models.firstOrNull{it.slug==ui.model}?.displayName ?: "Load available models") else "Available models appear after sign-in.",color=Muted,fontSize=18.sp)
-                        if(ui.planAllowed) {
-                            TvButton("Refresh available models",onClick=model::refreshModels)
-                            ui.models.forEach { entry -> TvButton((if(entry.slug==ui.model) "✓  " else "")+entry.displayName,onClick={model.chooseModel(entry.slug)}) }
-                        }
-                        TvButton("Read answers aloud · "+if(ui.speech) "On" else "Off",onClick=model::toggleSpeech)
-                        Text("Answers use an installed Android voice.",color=Muted,fontSize=17.sp,lineHeight=23.sp)
-                        Text("If microphone input is unavailable, type your question.",color=Muted,fontSize=17.sp,lineHeight=23.sp)
-                        Text("New conversation clears the conversation in memory.",color=Muted,fontSize=17.sp,lineHeight=23.sp)
+                        TvButton("Refresh models",Modifier.testTag("models-refresh").focusRequester(requester("models-refresh")),onClick=model::refreshModels)
                         TvButton("Back",onClick={model.back()})
                     }
-                    Spacer(Modifier.height(10.dp))
+                    Status(ui)
+                }
+                Page.SETTINGS -> {
+                    Spacer(Modifier.height(18.dp))
+                    Text("Configuration",fontFamily=Outfit,fontSize=32.sp,fontWeight=FontWeight.SemiBold)
+                    Spacer(Modifier.height(14.dp))
+                    Column(Modifier.weight(1f).widthIn(max=760.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)) {
+                        Text(when { ui.planAllowed -> "ChatGPT subscription connected"; ui.signedIn -> "ChatGPT plan permission needed"; else -> "Sign in to use your ChatGPT subscription" },fontSize=22.sp)
+                        if(ui.signedIn) Text(ui.account,color=Muted,fontSize=17.sp)
+                        if(!ui.planAllowed) TvButton(if(ui.signedIn) "Enable ChatGPT plan" else "Continue with ChatGPT",
+                            Modifier.testTag("sign-in").focusRequester(requester("sign-in")).onFocusChanged { if(it.isFocused) model.focused("sign-in") },onClick={model.chooseSignInRoute(ui.signedIn)})
+                        if(ui.planAllowed) TvButton("Model · "+(ui.models.firstOrNull { it.slug==ui.model }?.displayName ?: "Choose a model"),
+                            Modifier.testTag("change-model").focusRequester(requester("change-model")).onFocusChanged { if(it.isFocused) model.focused("change-model") },onClick=model::modelChooser)
+                        TvButton("Read answers aloud · "+if(ui.speech) "On" else "Off",onClick=model::toggleSpeech)
+                        Text("Uses an installed Android voice. You can also read every answer.",color=Muted,fontSize=17.sp)
+                        if(ui.planAllowed) TvButton("Reconnect account",Modifier.testTag("reconnect").focusRequester(requester("reconnect")).onFocusChanged { if(it.isFocused) model.focused("reconnect") },onClick={model.chooseSignInRoute(false)})
+                        if(ui.signedIn) TvButton("Sign out",onClick=model::signOut)
+                        TvButton("Back",onClick={model.back()})
+                    }
                     Status(ui)
                 }
             }
@@ -166,12 +176,15 @@ import kotlinx.coroutines.launch
     if(typing) {
         var text by rememberSaveable { mutableStateOf("") }
         val inputFocus=remember { FocusRequester() }
+        var inputFocused by remember { mutableStateOf(false) }
         Dialog(onDismissRequest={typing=false;model.dialogClosed()},properties=DialogProperties(usePlatformDefaultWidth=false,decorFitsSystemWindows=false)) {
             Box(Modifier.fillMaxSize().imePadding().padding(24.dp),contentAlignment=Alignment.TopCenter) {
-            Column(Modifier.widthIn(max=640.dp).fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(Panel).border(1.dp,Gold.copy(alpha=.55f),RoundedCornerShape(22.dp)).padding(20.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
+            Column(Modifier.widthIn(max=640.dp).fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(Panel).border(1.dp,Ink.copy(alpha=.18f),RoundedCornerShape(22.dp)).padding(20.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
                 Text(if(ui.page==Page.ANSWER) "Ask a follow-up" else "Type a question",fontFamily=Outfit,fontSize=26.sp,color=Ink)
-                BasicTextField(text,{if(it.length<=4000)text=it},Modifier.fillMaxWidth().height(52.dp).background(Background,RoundedCornerShape(12.dp)).padding(horizontal=14.dp,vertical=11.dp).testTag("question-input").focusRequester(inputFocus),
+                BasicTextField(text,{if(it.length<=4000)text=it},Modifier.fillMaxWidth().height(52.dp).background(Background,RoundedCornerShape(12.dp)).border(if(inputFocused) 2.dp else 1.dp,if(inputFocused) Gold else Muted.copy(alpha=.3f),RoundedCornerShape(12.dp)).onFocusChanged { inputFocused=it.isFocused }.padding(horizontal=14.dp,vertical=11.dp).testTag("question-input").focusRequester(inputFocus),
+                    decorationBox={ inner -> Box { if(text.isEmpty()) Text("Select to enter your question",color=Muted,fontSize=21.sp); inner() } },
                     singleLine=true,textStyle=TextStyle(color=Ink,fontFamily=Outfit,fontSize=22.sp),cursorBrush=androidx.compose.ui.graphics.SolidColor(Gold))
+                Text("OK  Enter text · Back  Close keyboard, then cancel",color=Muted,fontSize=15.sp)
                 Text("${text.length} / 4,000",color=Muted,fontSize=14.sp)
                 Row(horizontalArrangement=Arrangement.spacedBy(14.dp)) {
                     TvButton("Ask",primary=true,enabled=text.isNotBlank(),onClick={typing=false;model.submit(text)})
@@ -184,6 +197,6 @@ import kotlinx.coroutines.launch
     }
 }
 @Composable private fun Status(ui:AskUi) {
-    Text(ui.message.ifBlank { ui.busy ?: when(ui.page) { Page.READY -> "OK  Select · Back  Exit"; Page.ANSWER -> "Up / Down  Scroll · Back  Return"; Page.SETTINGS -> "Back  Return" } },
+    Text(ui.message.ifBlank { ui.busy ?: when(ui.page) { Page.READY -> "OK  Select · Back  Exit"; Page.ANSWER -> "Up / Down  Scroll · Back  Return"; Page.SETTINGS,Page.MODELS,Page.SIGN_IN -> "Back  Return" } },
         modifier=Modifier.fillMaxWidth().padding(end=120.dp).heightIn(min=30.dp),color=if(ui.message.isNotBlank()) Gold else Muted,fontSize=15.sp,lineHeight=21.sp,maxLines=3)
 }

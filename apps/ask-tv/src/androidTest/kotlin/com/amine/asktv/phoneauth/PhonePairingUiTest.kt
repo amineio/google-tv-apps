@@ -7,7 +7,6 @@ import android.graphics.Color
 import android.graphics.Canvas
 import android.net.Uri
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -131,7 +130,7 @@ class PhonePairingUiTest {
     }
     @Test fun malformedDeepLinkCannotContinue() {
         withColdDeepLink("aichat://pair?token=bad") {
-            compose.onNodeWithText("Continue with ChatGPT").assertIsNotEnabled()
+            compose.onNodeWithText("Continue with ChatGPT").assertDoesNotExist()
             compose.onNodeWithText("Photograph TV code").assertIsDisplayed()
         }
     }
@@ -144,7 +143,7 @@ class PhonePairingUiTest {
                 compose.onNodeWithText("Photograph TV code").performScrollTo().performClick()
                 compose.waitUntil(5_000) { Intents.getIntents().any { it.action == MediaStore.ACTION_IMAGE_CAPTURE } }
                 compose.waitUntil(5_000) { File(context.cacheDir, "phone_pairing").listFiles().orEmpty().isEmpty() }
-                compose.onNodeWithText("Continue with ChatGPT").assertIsNotEnabled()
+                compose.onNodeWithText("Continue with ChatGPT").assertDoesNotExist()
             }
         } finally { Intents.release() }
     }

@@ -37,7 +37,7 @@ val Outfit=FontFamily(*listOf(FontWeight.Normal,FontWeight.Medium,FontWeight.Sem
         colors=ButtonDefaults.colors(containerColor=Panel,contentColor=Ink,
             focusedContainerColor=Gold,focusedContentColor=Background),
         scale=ButtonDefaults.scale(focusedScale=1.025f),
-        border=ButtonDefaults.border(border=Border(BorderStroke(1.dp,if(primary && enabled) Gold.copy(alpha=.55f) else Ink.copy(alpha=.16f)),shape=shape),
+        border=ButtonDefaults.border(border=Border(BorderStroke(1.dp,Ink.copy(alpha=.16f)),shape=shape),
             focusedBorder=Border(BorderStroke(3.dp,Gold),shape=shape)),
         contentPadding=PaddingValues(horizontal=22.dp,vertical=12.dp)) {
         Text(text,fontFamily=Outfit,fontSize=19.sp,maxLines=2)

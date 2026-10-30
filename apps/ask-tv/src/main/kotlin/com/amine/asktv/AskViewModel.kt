@@ -8,12 +8,52 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import java.util.concurrent.Executors
+import java.util.concurrent.Executor
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CopyOnWriteArrayList
+import com.amine.asktv.phoneauth.RelayState
 
-enum class Page { READY, ANSWER, SETTINGS }
+enum class Page { READY, ANSWER, SETTINGS, SIGN_IN, MODELS }
+enum class SignInRoute { PHONE, MAC }
+internal interface MacSignInHost { fun start(); fun close() }
+internal data class AskDependencies(
+    val store: SessionStore?, val worker: Executor,
+    val exchange: (AuthGrant, CredentialRecord, Cancellation) -> CredentialRecord,
+    val models: (String, Cancellation) -> List<Model>,
+    val revoke: (CredentialRecord, Cancellation) -> Boolean,
+    val phoneFactory: ((OAuthProtocol, AuthGrant, Long) -> Unit, (Long, PhonePairingUi) -> Unit) -> PhoneSignInCoordinator,
+    val macFactory: (OAuthProtocol, (AuthGrant) -> Unit, (String) -> Unit) -> MacSignInHost,
+)
+internal class GrantCompletion(private val store: SessionStore,
+    private val exchange: (AuthGrant, CredentialRecord, Cancellation) -> CredentialRecord) {
+    fun complete(protocol: OAuthProtocol, grant: AuthGrant, cancel: Cancellation, terminal: (RelayState) -> Unit): CredentialRecord =
+        completeActive(protocol,grant,cancel,{true},terminal)
+    fun completeActive(protocol: OAuthProtocol, grant: AuthGrant, cancel: Cancellation, active:()->Boolean, terminal: (RelayState)->Unit):CredentialRecord {
+        protocol.withActiveAttempt(grant.attempt) { if(!active()) throw AuthFailure(); cancel.check(); store.rememberIssuedClient(grant.clientId) }
+        val next = exchange(grant, store.snapshot(), cancel)
+        cancel.check()
+        protocol.commit(grant.attempt) {
+            if(!active()) throw AuthFailure()
+            cancel.check()
+            store.install(next)
+            terminal(if (next.canInfer) RelayState.CONNECTED else RelayState.PLAN_REQUIRED)
+        }
+        return store.snapshot()
+    }
+    fun cancelAndSignOut(protocol: OAuthProtocol, cancel: Cancellation, revoke: (CredentialRecord) -> Boolean) =
+        cancelAndSignOut(listOf(protocol to cancel), revoke)
+    fun cancelAndSignOut(attempts: List<Pair<OAuthProtocol, Cancellation>>, revoke: (CredentialRecord) -> Boolean): Boolean {
+        attempts.forEach { it.second.cancel() }
+        attempts.forEach { it.first.cancel() }
+        return store.signOut(revoke)
+    }
+}
 data class AskUi(val page:Page=Page.READY,val question:String="",val answer:String="",val example:Boolean=false,
     val incomplete:Boolean=false,val busy:String?=null,val message:String="",val signedIn:Boolean=false,
     val planAllowed:Boolean=false,val account:String="Signed out",val models:List<Model> = emptyList(),
-    val model:String?=null,val speech:Boolean=true,val focus:String="ask",val focusVersion:Long=0) {
+    val model:String?=null,val speech:Boolean=true,val focus:String="ask",val focusVersion:Long=0,
+    val signInRoute:SignInRoute?=null,val signInState:String="choose",val requestConsent:Boolean=false,
+    val phonePairing:PhonePairingUi?=null) {
     val stopLabel: String? get() = when(busy) {
         null -> null
         "Speaking…" -> "Stop reading"
@@ -23,16 +63,37 @@ data class AskUi(val page:Page=Page.READY,val question:String="",val answer:Stri
     fun afterCancellation(): AskUi = copy(busy=null,message="Stopped.")
 }
 
-class AskViewModel(private val app:Application):ViewModel() {
+class AskViewModel private constructor(private val app:Application, private val dependencies:AskDependencies?, @Suppress("UNUSED_PARAMETER") marker:Unit):ViewModel() {
+    constructor(app:Application):this(app,null,Unit)
+    internal constructor(app:Application, dependencies:AskDependencies):this(app,dependencies,Unit)
     private val prefs=app.getSharedPreferences("preferences",0)
     private val main=Handler(Looper.getMainLooper())
-    private val executor=Executors.newCachedThreadPool()
+    private val ownedExecutor=if(dependencies==null) Executors.newCachedThreadPool() else null
+    private val executor:Executor=dependencies?.worker ?: ownedExecutor!!
     private val operation=AskController()
     private val session=ConversationSession()
     private val speech=SpeechController(app)
     private val oauth=OAuthClient()
     private val client=SubscriptionClient()
-    private val store=runCatching { SessionStore(EncryptedRecords(app)) }.getOrNull()
+    private val store=if(dependencies!=null) dependencies.store else runCatching { SessionStore(EncryptedRecords(app)) }.getOrNull()
+    private val grantCompletion=store?.let { GrantCompletion(it, dependencies?.exchange ?: oauth::exchange) }
+    private class AuthOwner(val cancel:Cancellation=Cancellation()) {
+        var token=0L
+        @Volatile var protocol:OAuthProtocol?=null
+        @Volatile var phone:PhoneSignInCoordinator?=null
+        @Volatile var mac:MacSignInHost?=null
+        val startDone=CompletableFuture<Unit>()
+        val released=CompletableFuture<Unit>()
+        val retiring=java.util.concurrent.atomic.AtomicBoolean(false)
+    }
+    private val authOwners=CopyOnWriteArrayList<AuthOwner>()
+    private var activeAuth:AuthOwner?=null
+    // Presentation outlives cancellation until this specific sign-in surface is replaced.
+    private var signInPresentationOwner:AuthOwner?=null
+    private var signingOut=false
+    private var signInReturnPage=Page.READY
+    private var signInReturnFocus="ready-sign-in"
+    private var networkPermissionToken:Long?=null
     private val accountCompletion=AccountCompletion(operation, { action -> main.post { action() } },
         { store?.snapshot() }, { record -> accountStatus(record) })
     private var returnPage=Page.READY
@@ -40,22 +101,31 @@ class AskViewModel(private val app:Application):ViewModel() {
         private var permissionToken:Long?=null
     var ui by mutableStateOf(AskUi(speech=prefs.getBoolean("speech",true),model=prefs.getString("model",null)))
         private set
-    init { accountStatus(); if(store==null) ui=ui.copy(message="Secure session storage is unavailable. Reopen AI Chat to try again.") }
+    init { accountStatus(); focus(if(ui.planAllowed) "ask" else "ready-sign-in"); if(store==null) ui=ui.copy(message="Secure session storage is unavailable. Reopen AI Chat to try again.") }
     private fun accountStatus(record:CredentialRecord?=store?.snapshot()) {
         ui=ui.copy(signedIn=record?.accessToken!=null,planAllowed=record?.canInfer==true,
             account=if(record?.accessToken!=null) record.email ?: "ChatGPT account connected" else "Signed out")
     }
     private fun focus(target:String) { ui=ui.copy(focus=target,focusVersion=ui.focusVersion+1) }
-    fun settings() { stop(); returnPage=ui.page; returnFocus="configuration"; ui=ui.copy(page=Page.SETTINGS,message=""); focus("sign-in"); if(ui.planAllowed) refreshModels() }
+    fun settings() { stop(); returnPage=ui.page; returnFocus="configuration"; ui=ui.copy(page=Page.SETTINGS,message=""); focus(if(ui.planAllowed) "change-model" else "sign-in"); if(ui.planAllowed) refreshModels() }
     fun back():Boolean {
+        if(ui.page==Page.SIGN_IN) {
+            if(ui.signInState in setOf("waiting","verifying","permission","starting")) cancelSignIn() else leaveSignIn()
+            return true
+        }
+        if(ui.page==Page.MODELS) { ui=ui.copy(page=Page.SETTINGS); focus("change-model"); return true }
         if(operation.back()) { permissionToken=null; ui=ui.afterCancellation(); return true }
         if(ui.page==Page.SETTINGS) { ui=ui.copy(page=returnPage,message=""); focus(returnFocus); return true }
-        if(ui.page==Page.ANSWER) { ui=ui.copy(page=Page.READY); focus("ask"); return true }
+        if(ui.page==Page.ANSWER) { ui=ui.copy(page=Page.READY); focus(if(ui.planAllowed) "ask" else "ready-sign-in"); return true }
         return false
     }
-    fun stop() { operation.stop(); permissionToken=null; speech.stop(); ui=ui.copy(busy=null) }
-    fun stopped() { stop(); focus(ui.focus) }
-    fun newConversation() { stop(); session.clear(); ui=ui.copy(page=Page.READY,question="",answer="",example=false,incomplete=false,message=""); focus("ask") }
+    fun stop() {
+        operation.stop(); permissionToken=null; networkPermissionToken=null
+        activeAuth?.let(::retire); activeAuth=null
+        speech.stop(); ui=ui.copy(busy=null)
+    }
+    fun stopped() { if(ui.page==Page.SIGN_IN && ui.signInState!="choose") cancelSignIn() else { stop(); focus(ui.focus) } }
+    fun newConversation() { stop(); session.clear(); ui=ui.copy(page=Page.READY,question="",answer="",example=false,incomplete=false,message=""); focus(if(ui.planAllowed) "ask" else "ready-sign-in") }
     fun dialogClosed() { focus(if(ui.page==Page.ANSWER) "follow-up" else "type") }
     fun focused(target:String) { ui=ui.copy(focus=target) }
     fun example(index:Int) {
@@ -99,7 +169,7 @@ class AskViewModel(private val app:Application):ViewModel() {
         executor.execute {
             try {
                 val access=access(cancel)
-                val models=client.models(access,cancel)
+                val models=(dependencies?.models ?: client::models)(access,cancel)
                 if(models.isEmpty()) throw AuthFailure("No subscription models are available. Check ChatGPT plan access.")
                 val selected=ui.model?.takeIf { saved -> models.any { it.slug==saved } } ?: models.first().slug
                 post(token) { ui=ui.copy(models=models,model=selected,busy="Answering…"); prefs.edit().putString("model",selected).apply() }
@@ -119,16 +189,18 @@ class AskViewModel(private val app:Application):ViewModel() {
         val cancel=Cancellation(); val token=operation.begin { cancel.cancel() }
         ui=ui.copy(busy="Loading models…",models=emptyList())
         executor.execute { try {
-            val models=client.models(access(cancel),cancel)
+            val models=(dependencies?.models ?: client::models)(access(cancel),cancel)
             post(token) {
                 operation.finish(token)
                 val selected=ui.model?.takeIf { saved -> models.any { it.slug==saved } } ?: models.firstOrNull()?.slug
                 ui=ui.copy(models=models,model=selected,busy=null,message=if(models.isEmpty()) "No subscription models are available." else "")
                 prefs.edit().putString("model",selected).apply()
+                if(ui.page==Page.MODELS && ui.focus=="models-refresh" && selected!=null) focus("model-option-$selected")
             }
         } catch(e:Exception) { failure(token,e) } }
     }
-    fun chooseModel(slug:String) { SubscriptionClient.requireModel(slug,ui.models); ui=ui.copy(model=slug); prefs.edit().putString("model",slug).apply() }
+    fun modelChooser() { ui=ui.copy(page=Page.MODELS); focus(ui.models.firstOrNull { it.slug==ui.model }?.let { "model-option-${it.slug}" } ?: ui.models.firstOrNull()?.let { "model-option-${it.slug}" } ?: "models-refresh") }
+    fun chooseModel(slug:String) { SubscriptionClient.requireModel(slug,ui.models); ui=ui.copy(model=slug,page=Page.SETTINGS); prefs.edit().putString("model",slug).apply(); focus("change-model") }
     fun toggleSpeech() { speech.stop(); ui=ui.copy(speech=!ui.speech); prefs.edit().putBoolean("speech",ui.speech).apply() }
     fun repeatAnswer() {
         if(ui.answer.isBlank() || ui.incomplete) return
@@ -139,61 +211,175 @@ class AskViewModel(private val app:Application):ViewModel() {
             if(operation.isCurrent(token)) { operation.finish(token); ui=ui.copy(busy=null,message=if(success) "" else "Speech is unavailable. The answer remains on screen. Check Android speech settings.") }
         }
     }
-    fun signIn() = beginSignIn(requestConsent=false)
-    fun enablePlan() = beginSignIn(requestConsent=true)
-    private fun beginSignIn(requestConsent:Boolean) {
+    fun chooseSignInRoute(requestConsent:Boolean=false) {
+        if(signingOut) return
+        signInPresentationOwner=null
+        if(ui.page!=Page.SIGN_IN) { signInReturnPage=ui.page; signInReturnFocus=ui.focus }
+        stop()
+        ui=ui.copy(page=Page.SIGN_IN,signInRoute=null,signInState="choose",requestConsent=requestConsent,phonePairing=null,message="")
+        focus("sign-in-phone-route")
+    }
+    fun enablePlan() = chooseSignInRoute(true)
+    fun signIn() = signIn(SignInRoute.MAC)
+    fun beginPhonePermission(requestConsent:Boolean):Long {
+        signInPresentationOwner=null
+        stop()
+        val token=operation.begin {}
+        networkPermissionToken=token
+        ui=ui.copy(page=Page.SIGN_IN,signInRoute=SignInRoute.PHONE,signInState="permission",requestConsent=requestConsent,phonePairing=null,message="")
+        focus("phone-sign-in-cancel")
+        return token
+    }
+    fun phonePermissionResult(token:Long, allowed:Boolean) {
+        if(networkPermissionToken!=token || !operation.isCurrent(token)) return
+        networkPermissionToken=null
+        if(allowed) signIn(SignInRoute.PHONE,ui.requestConsent) else {
+            operation.finish(token)
+            ui=ui.copy(signInState="failed",message="Local network permission is off. Allow it to connect your phone, or use Mac.")
+            focus("phone-sign-in-retry")
+        }
+    }
+    fun signIn(route:SignInRoute,requestConsent:Boolean=false) {
+        if(signingOut) return
+        if(ui.page!=Page.SIGN_IN) { signInReturnPage=ui.page; signInReturnFocus=ui.focus }
         stop()
         val record=store?.snapshot() ?: run { ui=ui.copy(message="Secure session storage is unavailable."); return }
-        val protocol=OAuthProtocol(record.hostId,record.clientId ?: record.pendingClientId,requestConsent=requestConsent)
-        protocol.begin()
-        val cancel=Cancellation()
-        var server:LoopbackAuthServer?=null
-        val token=operation.begin { cancel.cancel(); protocol.cancel(); server?.close() }
-        ui=ui.copy(page=Page.SETTINGS,busy="Waiting for browser sign-in…",message="On your Mac, run tools/sign-in-ask-tv.sh with TV_SERIAL. Keep AI Chat open. Sign-in expires after 10 minutes.")
-        server=LoopbackAuthServer(protocol,{ grant -> executor.execute {
+        val owner=AuthOwner()
+        authOwners.removeAll { it.released.isDone }
+        authOwners.add(owner); activeAuth=owner; signInPresentationOwner=owner
+        owner.token=operation.begin { retire(owner) }
+        ui=ui.copy(page=Page.SIGN_IN,signInRoute=route,signInState="waiting",requestConsent=requestConsent,phonePairing=null,busy="Waiting for sign-in…",message="")
+        focus(if(route==SignInRoute.PHONE) "phone-sign-in-cancel" else "mac-sign-in-cancel")
+        if(route==SignInRoute.PHONE) {
+            val grant:(OAuthProtocol,AuthGrant,Long)->Unit={ protocol,value,_ ->
+                owner.protocol=protocol
+                completeGrant(owner,protocol,value)
+            }
+            val update:(Long,PhonePairingUi)->Unit={ _,state -> main.post {
+                if(activeAuth===owner && ui.page==Page.SIGN_IN) {
+                    val previous=ui.signInState
+                    ui=ui.copy(phonePairing=state,signInState=state.state,busy=if(state.state in setOf("waiting","verifying")) "Waiting for sign-in…" else null)
+                    if(previous!=state.state && state.state !in setOf("waiting","verifying")) terminalFocus(state.state)
+                }
+            } }
+            val phone=dependencies?.phoneFactory?.invoke(grant,update) ?: PhoneSignInCoordinator(app,grant,update)
+            owner.phone=phone
+            phone.start(record,requestConsent,owner.token)
+            owner.startDone.complete(Unit)
+        } else executor.execute {
             try {
-                protocol.withActiveAttempt(grant.attempt) {
-                    cancel.check()
-                    store.rememberIssuedClient(grant.clientId)
+                if(owner.cancel.canceled) return@execute
+                val protocol=OAuthProtocol(record.hostId,record.clientId ?: record.pendingClientId,requestConsent)
+                owner.protocol=protocol
+                protocol.begin()
+                val grant:(AuthGrant)->Unit={ completeGrant(owner,protocol,it) }
+                val failed:(String)->Unit={ message -> main.post {
+                    if(activeAuth===owner) { retire(owner); operation.finish(owner.token); ui=ui.copy(signInState="failed",busy=null,message=message); terminalFocus("failed") }
+                } }
+                val server=dependencies?.macFactory?.invoke(protocol,grant,failed) ?: run {
+                    val delegate=LoopbackAuthServer(protocol,grant,failed)
+                    object:MacSignInHost { override fun start()=delegate.start(); override fun close()=delegate.close() }
                 }
-                val next=oauth.exchange(grant,store.snapshot(),cancel)
-                cancel.check()
-                protocol.commit(grant.attempt) { cancel.check(); store.install(next) }
-                server?.close()
-                accountCompletion.committed(token) {
-                    operation.finish(token); ui=ui.copy(busy=null,message=if(next.canInfer) "Connected through your ChatGPT subscription." else "Signed in. ChatGPT plan use was not granted. Choose Enable ChatGPT plan to allow subscription access.")
-                    if(next.canInfer) refreshModels()
-                }
-            } catch(e:Exception) { protocol.cancel(); server?.close(); failure(token,e) }
-        } },{ message -> post(token) { operation.finish(token); ui=ui.copy(busy=null,message=message) } })
-        try { server.start() } catch (_:Exception) { operation.stop(); ui=ui.copy(busy=null,message="The sign-in listener could not start. Close another sign-in attempt and try again.") }
+                owner.mac=server
+                if(!owner.cancel.canceled) server.start()
+            } catch(_:Exception) { main.post { if(activeAuth===owner) { retire(owner); operation.finish(owner.token); ui=ui.copy(signInState="failed",busy=null,message="The Mac sign-in listener could not start. Close another attempt and retry."); terminalFocus("failed") } } }
+            finally { owner.startDone.complete(Unit) }
+        }
     }
-    fun signOut() {
-        stop()
-        val store=store ?: return
-        val cancel=Cancellation(); val token=operation.begin { cancel.cancel() }
-        ui=ui.copy(busy="Signing out…")
+    private fun completeGrant(owner:AuthOwner, protocol:OAuthProtocol, grant:AuthGrant) {
         executor.execute {
             try {
-                val confirmed=store.signOut { oauth.revoke(it,cancel) }
+                val next=grantCompletion!!.completeActive(protocol,grant,owner.cancel,{!owner.retiring.get()}) { owner.phone?.terminal(it) }
+                if(owner.phone==null) retire(owner)
+                accountCompletion.committed(owner.token) {
+                    operation.finish(owner.token)
+                }
+                // The durable result also wins a Cancel that preceded queued UI delivery.
+                // Identity, not operation liveness, protects a newer route/surface here.
                 main.post {
-                    // Account state follows the current durable record, even after operation cancellation.
-                    accountStatus()
-                    if(operation.isCurrent(token)) {
-                        operation.finish(token)
-                        session.clear()
-                        ui=ui.copy(models=emptyList(),busy=null,answer="",question="",message=if(confirmed) "Signed out." else "Signed out locally. Remote revocation was not confirmed. You can disconnect AI Chat in ChatGPT Settings.")
+                    if(signInPresentationOwner===owner && ui.page==Page.SIGN_IN) {
+                        val state=if(next.canInfer) "connected" else "plan_required"
+                        ui=ui.copy(busy=null,signInState=state,message="")
+                        terminalFocus(state)
                     }
                 }
-            } catch(e:Exception) { failure(token,e) }
+            } catch(e:Exception) {
+                owner.phone?.terminal(RelayState.FAILED)
+                executor.execute { protocol.cancel() }
+                if(owner.phone==null) retire(owner)
+                post(owner.token) { operation.finish(owner.token); accountStatus(); ui=ui.copy(signInState="failed",busy=null,message=if(e is AuthFailure) e.safeMessage else "Sign-in could not finish. Try again."); terminalFocus("failed") }
+            }
         }
+    }
+    private fun terminalFocus(state:String) { focus(when(state) {
+        "connected" -> "phone-sign-in-done"
+        "plan_required" -> "phone-sign-in-enable-plan"
+        else -> if(ui.signInRoute==SignInRoute.PHONE) "phone-sign-in-retry" else "sign-in-retry"
+    }) }
+    private fun retire(owner:AuthOwner) {
+        if(!owner.retiring.compareAndSet(false,true)) return
+        executor.execute { owner.cancel.cancel() }
+        owner.phone?.let { phone ->
+            phone.close()
+            phone.released.whenComplete { _,_ -> owner.released.complete(Unit) }
+        } ?: owner.startDone.whenComplete { _,_ -> executor.execute {
+            try { owner.protocol?.cancel(); owner.mac?.close() }
+            finally { owner.released.complete(Unit) }
+        } }
+    }
+    fun cancelSignIn() {
+        val committed=ui.signInState in setOf("connected","plan_required")
+        stop(); accountStatus()
+        ui=ui.copy(signInState=if(committed) ui.signInState else "canceled",phonePairing=null,message="")
+        terminalFocus(ui.signInState)
+    }
+    fun leaveSignIn() {
+        signInPresentationOwner=null
+        stop()
+        ui=ui.copy(page=signInReturnPage,phonePairing=null,message="")
+        focus(if(ui.page==Page.READY && ui.planAllowed) "ask" else signInReturnFocus)
+    }
+    fun signInDone() { signInPresentationOwner=null; stop(); ui=ui.copy(page=Page.READY,phonePairing=null,message=""); focus(if(ui.planAllowed) "ask" else "ready-sign-in") }
+    fun signOut() {
+        if(signingOut) return
+        signInPresentationOwner=null
+        signingOut=true
+        stop()
+        val store=store ?: run { signingOut=false; return }
+        val retiring=authOwners.toList()
+        val cancel=Cancellation(); val token=operation.begin { cancel.cancel() }
+        ui=ui.copy(busy="Signing out…")
+        // Compose completion instead of blocking a worker needed by queued cleanup.
+        CompletableFuture.allOf(*retiring.map { it.released }.toTypedArray()).whenComplete { _,_ -> executor.execute {
+            try {
+                val confirmed=store.signOut { (dependencies?.revoke ?: oauth::revoke)(it,cancel) }
+                main.post {
+                    signingOut=false
+                    accountStatus()
+                    session.clear()
+                    if(operation.isCurrent(token)) {
+                        operation.finish(token)
+                        ui=ui.copy(models=emptyList(),busy=null,answer="",question="",message=if(confirmed) "Signed out." else "Signed out locally. Remote revocation was not confirmed.")
+                        focus("sign-in")
+                    }
+                }
+            } catch(e:Exception) { main.post { signingOut=false }; failure(token,e) }
+        } }
     }
     private fun post(token:Long,action:()->Unit) { main.post { if(operation.isCurrent(token)) action() } }
     private fun failure(token:Long,error:Exception) { post(token) {
         operation.finish(token); accountStatus()
         ui=ui.copy(busy=null,message=when(error) { is AuthFailure -> error.safeMessage; is ApiFailure -> error.message.orEmpty(); else -> "The request could not finish. Check your connection and try again." })
+        if(error is AuthFailure || error is ApiFailure && error.status in setOf(401,403)) {
+            ui=ui.copy(message=ui.message+if(ui.signedIn && ui.planAllowed) " Open Configuration and choose Reconnect account." else " Continue with ChatGPT in Configuration to reconnect.")
+            if(ui.page==Page.SETTINGS && !ui.planAllowed) focus("sign-in")
+        }
     } }
-    override fun onCleared() { operation.stop(); speech.close(); executor.shutdownNow() }
+    override fun onCleared() {
+        stop(); speech.close()
+        // Accepted cleanup must finish; an interrupted executor could strand a listener or commit.
+        CompletableFuture.allOf(*authOwners.map { it.released }.toTypedArray()).whenComplete { _,_ -> ownedExecutor?.shutdown() }
+    }
 }
 
 val EXAMPLES=listOf(

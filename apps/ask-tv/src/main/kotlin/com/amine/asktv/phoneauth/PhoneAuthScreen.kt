@@ -38,11 +38,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 
-private val PhoneBackground = Color(0xFF101820)
-private val PhoneSurface = Color(0xFF1B2934)
-private val PhoneText = Color(0xFFF3F6F8)
-private val PhoneSecondary = Color(0xFFC1CFD9)
-private val PhoneAccent = Color(0xFFB9E8DD)
+private val PhoneBackground = Color(0xFF0D0E12)
+private val PhoneSurface = Color(0xFF222329)
+private val PhoneText = Color(0xFFF8F5F0)
+private val PhoneSecondary = Color(0xFFB4B0AC)
+private val PhoneAccent = Color(0xFFF6CD83)
 
 @Composable
 internal fun PhoneAuthScreen(
@@ -61,7 +61,13 @@ internal fun PhoneAuthScreen(
     LaunchedEffect(ui.deadlineElapsedMs) {
         while (ui.deadlineElapsedMs != null) { now = SystemClock.elapsedRealtime(); delay(1_000) }
     }
-    MaterialTheme(colorScheme = darkColorScheme(
+    val type=androidx.compose.material3.Typography()
+    MaterialTheme(typography=type.copy(
+        headlineLarge=type.headlineLarge.copy(fontFamily=com.amine.asktv.Outfit),
+        titleMedium=type.titleMedium.copy(fontFamily=com.amine.asktv.Outfit),
+        bodyLarge=type.bodyLarge.copy(fontFamily=com.amine.asktv.Outfit),
+        bodyMedium=type.bodyMedium.copy(fontFamily=com.amine.asktv.Outfit),
+        labelLarge=type.labelLarge.copy(fontFamily=com.amine.asktv.Outfit)),colorScheme = darkColorScheme(
         primary = PhoneAccent, onPrimary = PhoneBackground,
         background = PhoneBackground, onBackground = PhoneText,
         surface = PhoneSurface, onSurface = PhoneText,
@@ -69,12 +75,12 @@ internal fun PhoneAuthScreen(
     )) {
         Box(Modifier.fillMaxSize().background(PhoneBackground).imePadding(), contentAlignment = Alignment.TopCenter) {
             Column(
-                Modifier.widthIn(max = 560.dp).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 40.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                Modifier.widthIn(max = 560.dp).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 28.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 Text("AI CHAT · PHONE HELPER", color = PhoneAccent, style = MaterialTheme.typography.labelLarge)
                 Text("Sign in on your TV", color = PhoneText, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.SemiBold)
-                Text("This helper opens ChatGPT in your phone browser and sends authorization to AI Chat on your TV.", color = PhoneSecondary, style = MaterialTheme.typography.bodyLarge)
+                Text("Connect your TV through the ChatGPT sign-in page in your phone browser.", color = PhoneSecondary, style = MaterialTheme.typography.bodyLarge)
                 if (inProgress) {
                     HorizontalDivider(color = PhoneSecondary.copy(alpha = 0.3f))
                     Text(ui.message, color = PhoneText, style = MaterialTheme.typography.titleMedium)
@@ -84,11 +90,14 @@ internal fun PhoneAuthScreen(
                     }
                 } else {
                     if (ui.phase == PhoneAuthPhase.FINISHED) Text(ui.message, color = PhoneText, style = MaterialTheme.typography.titleMedium)
-                    Text("Install AI Chat on this phone once. Keep your phone and TV on the same Wi-Fi network.", color = PhoneSecondary)
+                    Text("Keep your phone and TV on the same Wi-Fi.", color = PhoneSecondary)
                     Text("On your TV, choose Continue with ChatGPT, then Use Android phone.", color = PhoneSecondary)
                     Text(if (hasPairingLink) "TV code ready" else "Get the code from your TV", color = PhoneText, style = MaterialTheme.typography.titleMedium)
-                    OutlinedButton(onClick = onPhotograph, modifier = Modifier.fillMaxWidth()) { Text("Photograph TV code", color = PhoneAccent) }
+                    Button(onClick = onPhotograph, modifier = Modifier.fillMaxWidth()) { Text("Photograph TV code") }
+                    var showPaste by remember { androidx.compose.runtime.mutableStateOf(false) }
                     if (!hasPairingLink) {
+                        OutlinedButton(onClick = { showPaste = !showPaste }, modifier = Modifier.fillMaxWidth()) { Text(if(showPaste) "Hide pairing link" else "Paste pairing link instead") }
+                        if(showPaste) {
                         OutlinedTextField(
                             value = paste,
                             onValueChange = onPaste,
@@ -105,7 +114,8 @@ internal fun PhoneAuthScreen(
                         )
                         OutlinedButton(onClick = onUsePaste, enabled = paste.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text("Use pasted link") }
                     }
-                    Button(
+                    }
+                    if(hasPairingLink) Button(
                         onClick = onContinue,
                         enabled = hasPairingLink,
                         modifier = Modifier.fillMaxWidth(),

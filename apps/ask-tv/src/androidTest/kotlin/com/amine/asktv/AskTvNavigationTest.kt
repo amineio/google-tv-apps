@@ -20,7 +20,7 @@ class AskTvNavigationTest {
     }
 
     @Test fun initialFocusAndDirectionalExamples() {
-        rule.onNodeWithTag("ask").assertIsFocused()
+        rule.onNodeWithTag("ready-sign-in").assertIsFocused()
         key(KeyEvent.KEYCODE_DPAD_DOWN)
         rule.onNodeWithTag("type").assertIsFocused()
         key(KeyEvent.KEYCODE_DPAD_DOWN)
