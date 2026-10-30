@@ -4,25 +4,28 @@ Capture selected post text, links, and screenshots on an Android phone. Send the
 
 Postbox uses one independent Kotlin APK for phone and TV. Version `0.1` uses package `com.amine.postbox` and requires Android 14 or later. It needs no social account login, cloud storage, or paid API.
 
-The [validation record](../../docs/postbox/validation-2026-10-30.md) records current evidence. Build, transfer, and device results remain pending until the coordinator records them.
+Release `0.1` passed local tests and is installed on the Android 14 TV emulator. The validated runtime is delivered to `origin/main`. The [validation record](../../docs/postbox/validation-2026-10-30.md) records the tested revision, native review, APK hash, and evidence limits.
 
 ## Capture on the phone
 
 Open a saved post in X or Instagram and share it to Postbox. You can also open Postbox and enter text or a source link manually. Add screenshots through sharing or the photo picker.
 
-The sending app chooses what it shares. A shared URL can contain no post text or images. Postbox labels that capture **Link only**. Use **Add text or image** to supply readable content. The app does not fetch missing post content.
+The sending app chooses what it shares. A shared URL can contain no post text or images. Postbox labels that capture **Link only**. Enter the post text or select **Add image** to supply readable content. The app does not fetch missing post content.
 
 Check the title, multiline text, source link, and images. Select **Save on phone** to keep the capture locally. **Send to TV** is a separate action. A failed transfer leaves the capture saved for retry. Sent captures stay on the phone until you delete them.
 
 Editing a saved capture gives it a new identity. This prevents edited content from overwriting a previous TV capture. The old phone draft is replaced only after the new save succeeds.
 
+To send a previously sent phone copy again, choose **Edit capture** and save it first. This creates a new capture identity.
+
 ## Pair and send
 
 1. Connect the phone and TV to the same local network.
 2. On TV, open **Add posts**.
-3. On the phone, select **Photograph TV code** and photograph the complete QR code.
-4. Confirm the photograph in the camera app.
-5. Select a saved phone capture and choose **Send to TV**.
+3. On the phone, open **Connect TV**.
+4. Select **Photograph TV code** and photograph the complete QR code.
+5. Confirm the photograph in the camera app.
+6. Select a saved phone capture and choose **Send to TV**.
 
 The phone can also open a pairing link from its system QR camera or use **Paste pairing link**. The photograph route does not depend on the system camera recognizing the custom link.
 
@@ -90,7 +93,7 @@ Run one instrumented class per invocation. For example:
 ANDROID_SERIAL=emulator-5554 apps/postbox/gradlew -p apps/postbox connectedDebugAndroidTest '-Pandroid.testInstrumentationRunnerArguments.class=com.amine.postbox.PostboxNavigationTest' --console=plain
 ```
 
-The planned focused classes are `PostboxNavigationTest`, `PhoneCaptureTest`, `LauncherArtworkTest`, and `com.amine.postbox.core.PinnedTransferTest`. Inspect XML class names and counts before claiming coverage.
+The focused classes are `PostboxNavigationTest`, `PhoneCaptureTest`, `LauncherArtworkTest`, `ReceiverLifecycleTest`, and `com.amine.postbox.core.PinnedTransferTest`. Run each class separately. Inspect XML class names and counts before claiming coverage.
 
 Emulator tests can establish native layout, remote navigation, phone share handling, persistence, and a real local pinned TLS handshake. They do not establish physical camera behavior, external phone connectivity, home Wi-Fi access, or final physical-TV appearance.
 

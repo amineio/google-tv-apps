@@ -6,7 +6,17 @@
   "prompt_manifest_sha256": "25d609c5665faf82968254556d34b881f7eccb7b12e546f959bd3861fb086d94",
   "composition": "Preserve aspect ratio with center cover resize; crop only the small difference from exact target ratio",
   "release_apk_budget_bytes": 12582912,
-  "release_apk_measurement": "Pending coordinator release build",
+  "release_apk_measurement": {
+    "runtime_revision": "45819574",
+    "bytes": 2561843,
+    "sha256": "d5e74f609e34f45617448a7d5cba00fb16ceb12e55bfb715323d72c3e96559b0",
+    "within_budget": true,
+    "version_name": "0.1",
+    "version_code": 1,
+    "emulator_api": 34,
+    "installed_hash_matches": true,
+    "evidence": "Coordinator device record plus independently measured local APK"
+  },
   "artwork": [
     {
       "name": "icon",
@@ -115,5 +125,39 @@
       "bytes": 4574,
       "sha256": "eaef82a86d987d8964c6c685781817a835ce07433de4591751a14ce2520cbad8"
     }
-  ]
+  ],
+  "release_apk_checkpoint": {
+    "runtime_revision": "23f2e4a6",
+    "bytes": 2561843,
+    "sha256": "4518027a2575458693a786a484b28ace41e55a4fe296ba12b72f68f48a52b709",
+    "within_budget": true,
+    "version_name": "0.1",
+    "version_code": 1,
+    "emulator_api": 34,
+    "installed_hash_matches": true,
+    "evidence": "Coordinator device record plus independently measured local APK",
+    "status": "Superseded checkpoint before phone contrast correction"
+  },
+  "native_launcher_review": {
+    "verdict": "APPROVE for supplied installed states",
+    "observed": [
+      "focused banner",
+      "separate hero",
+      "native title contrast",
+      "launch into TV activity",
+      "return with Postbox focus and correct artwork"
+    ],
+    "captures": "Ignored private evidence only",
+    "package_refresh_test": "Not claimed"
+  },
+  "runtime_delivery": {
+    "revision": "458195748515255db26eab72c5da20ba56b7a440",
+    "remote_refs": [
+      "origin/main",
+      "origin/amine/post-review"
+    ],
+    "method": "Atomic fast-forward push",
+    "fresh_fetch_verified_equal": true,
+    "evidence": "Coordinator-observed Git results"
+  }
 }

@@ -6,7 +6,7 @@ Date: 2026-10-30
 
 The coordinator generated the concept references and launcher artwork with OpenAI ImageGen for this project. The coordinator supplied no external image references. Use generic subjects and labels. Keep personal screenshots and family photographs out of Git.
 
-These are project-generated raster assets. No separate third-party artwork license was supplied. Repository code remains under its existing MIT license. Any bundled font must retain its own license; font selection and copying are still the UI owner's responsibility.
+These are project-generated raster assets. No separate third-party artwork license was supplied. Repository code remains under its existing MIT license. The app uses the platform Sans font and bundles no font files.
 
 The [full generation prompt manifest](concepts/image-prompts.json) was copied byte for byte from the coordinator's manifest. Source filenames and measured hashes establish which generated outputs were supplied. These records provide provenance without a blanket guarantee about artwork rights.
 
@@ -36,12 +36,14 @@ The [launcher manifest](launcher-assets.json) records each source filename, orig
 
 Asset preparation used ImageMagick to resize with preserved proportions and a centered crop for the small difference from the exact target ratio. It used `cwebp -m 6`, with quality 86 for the icon/banner and 82 for the background. No native control, title outside the banner, or focus outline was rasterized into the app interface.
 
-The release APK budget is 12 MiB, or 12,582,912 bytes. APK measurement remains pending the coordinator's release build. The artwork byte count alone does not establish that the APK meets this budget.
+The release APK budget is 12 MiB, or 12,582,912 bytes. The installed release at runtime revision `45819574` measures 2,561,843 bytes, about 2.44 MiB. The [validation record](validation-2026-10-30.md) records its SHA-256 and the matching installed APK hash.
 
 The manifest must declare `android:icon`, `android:banner`, and `com.amine.familyhome.HERO_IMAGE` with an `android:resource` drawable reference. Family Home owns presentation, contrast, focus, and fallback. No launcher-specific Postbox code is needed.
 
-## Native review still required
+## Native launcher review
 
 The documentation worker inspected the [small icon and banner previews](concepts/README.md#launcher-size-previews). Their silhouette and title remain readable at the required sizes.
 
-Inspect the selected background, title contrast, crop, focus, app return, and replacement-package refresh in the emulator. Concept and direct-resource review do not establish those results. Actual installed launcher captures remain pending.
+The independent UX reviewer approved the installed Family Home selection. The actual Postbox banner has a clear amber focus outline. The native Postbox title remains readable against the separate background. The background keeps its left half quiet and its lower area dark.
+
+The coordinator pressed OK from the launcher and confirmed that `com.amine.postbox/.MainActivity` resumed. A fresh return capture kept Postbox focused with the correct banner and background. These results establish the reviewed selection, launch, and return. They do not claim an additional package-refresh test. All native screenshots remain in ignored private evidence.
