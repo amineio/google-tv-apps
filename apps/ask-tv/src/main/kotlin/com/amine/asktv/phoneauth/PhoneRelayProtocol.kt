@@ -11,6 +11,7 @@ data class RelayClaim(val relayToken: String, val authorizationUrl: String, val 
     override fun toString(): String = "RelayClaim(redacted)"
 }
 data class RelayReceipt(val receipt: String)
+data class RelaySnapshot(val claimed: Boolean, val state: RelayState, val remainingMs: Long, val closed: Boolean)
 
 enum class RelayState(val wireValue: String) {
     WAITING("waiting"), VERIFYING("verifying"), CONNECTED("connected"),
@@ -42,6 +43,7 @@ class PhoneRelayProtocol(
     private var duration = 0L
     private var bootstrap: String? = null
     private var relayToken: String? = null
+    private var claimed = false
     private var authorizationUrl: String? = null
     private var state = RelayState.WAITING
     private var terminalAt: Long? = null
@@ -88,6 +90,7 @@ class PhoneRelayProtocol(
         val token = randomToken()
         this.bootstrap = null
         relayToken = token
+        claimed = true
         RelayClaim(token, authorizationUrl!!, duration - (monotonicMs() - started))
     }
 
@@ -139,6 +142,17 @@ class PhoneRelayProtocol(
     fun status(relayToken: String): RelayState = synchronized(stateLock) {
         authorize(relayToken)
         state
+    }
+
+    /** Secret-free observation. Expiry reporting does not cancel or mutate the attempt. */
+    fun snapshot(): RelaySnapshot = synchronized(stateLock) {
+        val now = monotonicMs()
+        val elapsed = now - started
+        val unavailable = !opened || closed || authorizationUrl == null || now < started ||
+            elapsed < 0 || elapsed >= duration ||
+            terminalAt?.let { now < it || now - it >= 30_000 } == true
+        val remaining = if (unavailable) 0L else (duration - elapsed).coerceIn(0L, duration)
+        RelaySnapshot(claimed, state, remaining, unavailable)
     }
 
     /** Call synchronously INSIDE OAuthProtocol.commit's durable action, after installation.

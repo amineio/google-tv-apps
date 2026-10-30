@@ -233,4 +233,128 @@ class PhoneRelayProtocolTest {
         assertEquals(410, rejected { relay.status(claim.relayToken) }.status)
         assertThrows(IllegalStateException::class.java) { relay.open() }
     }
+
+    @Test fun unopenedSnapshotIsUnavailableWithOneClockRead() {
+        val reads = AtomicInteger()
+        val oauth = OAuthProtocol("urn:uuid:test")
+        val relay = PhoneRelayProtocol(oauth, { reads.incrementAndGet(); 1_000L }, { fail("Observation must not dispatch") })
+        val snapshot = relay.snapshot()
+        assertEquals(RelaySnapshot(false, RelayState.WAITING, 0, true), snapshot)
+        assertEquals(1, reads.get())
+        assertNull(oauth.pending)
+    }
+
+    @Test fun unpublishedSnapshotDoesNotWaitForOAuthOrPublishAnAttempt() {
+        val starting = CountDownLatch(1)
+        val reads = AtomicInteger()
+        val pool = Executors.newFixedThreadPool(2)
+        val oauth = OAuthProtocol("urn:uuid:test")
+        val relay = PhoneRelayProtocol(oauth, {
+            reads.incrementAndGet()
+            starting.countDown()
+            1_000L
+        }, { fail("Observation must not dispatch") })
+        try {
+            val opened = synchronized(oauth) {
+                val open = pool.submit<String> { relay.open() }
+                assertTrue(starting.await(2, TimeUnit.SECONDS))
+                reads.set(0)
+                // begin() cannot finish while this test owns OAuth; snapshot must not wait on it.
+                val observation = pool.submit<RelaySnapshot> { relay.snapshot() }
+                assertEquals(RelaySnapshot(false, RelayState.WAITING, 0, true), observation.get(2, TimeUnit.SECONDS))
+                assertEquals(1, reads.get())
+                assertNull(oauth.pending)
+                open
+            }
+            val bootstrap = opened.get(2, TimeUnit.SECONDS)
+            assertEquals(RelaySnapshot(false, RelayState.WAITING, 600_000, false), relay.snapshot())
+            assertEquals(600_000L, relay.claim(bootstrap).expiresInMs)
+        } finally { pool.shutdownNow(); relay.close() }
+    }
+
+    @Test fun snapshotsObserveClaimDispatchAndTerminalWithoutExtendingTheOriginalDeadline() {
+        var elapsed = 1_000L
+        val reads = AtomicInteger()
+        val dispatches = AtomicInteger()
+        val oauth = OAuthProtocol("urn:uuid:test", now = { elapsed })
+        val relay = PhoneRelayProtocol(oauth, { reads.incrementAndGet(); elapsed }, { dispatches.incrementAndGet() })
+        val bootstrap = relay.open(60_000)
+        val attempt = oauth.pending
+        assertEquals(RelaySnapshot(false, RelayState.WAITING, 60_000, false), relay.snapshot())
+        elapsed = 11_000
+        val claim = relay.claim(bootstrap)
+        reads.set(0)
+        assertEquals(RelaySnapshot(true, RelayState.WAITING, 50_000, false), relay.snapshot())
+        assertEquals(1, reads.get())
+        assertSame(attempt, oauth.pending)
+        assertFalse(oauth.pending!!.consumed)
+        val callback = target(oauth)
+        relay.callback(claim.relayToken, callback)
+        assertEquals(RelaySnapshot(true, RelayState.VERIFYING, 50_000, false), relay.snapshot())
+        assertEquals("accepted", relay.callback(claim.relayToken, callback).receipt)
+        assertEquals(1, dispatches.get())
+        elapsed = 56_000
+        relay.terminal(RelayState.CONNECTED)
+        reads.set(0)
+        assertEquals(RelaySnapshot(true, RelayState.CONNECTED, 5_000, false), relay.snapshot())
+        assertEquals(1, reads.get())
+        elapsed = 61_000
+        assertEquals(RelaySnapshot(true, RelayState.CONNECTED, 0, true), relay.snapshot())
+        assertSame(attempt, oauth.pending)
+        assertEquals(410, rejected { relay.status(claim.relayToken) }.status)
+    }
+
+    @Test fun snapshotTerminalGraceClosesWithinTheOriginalLifetimeAndKeepsState() {
+        var elapsed = 1_000L
+        val relay = PhoneRelayProtocol(OAuthProtocol("urn:uuid:test"), { elapsed }, {})
+        relay.claim(relay.open())
+        elapsed = 11_000
+        relay.terminal(RelayState.PLAN_REQUIRED)
+        elapsed = 10_999
+        assertEquals(RelaySnapshot(true, RelayState.PLAN_REQUIRED, 0, true), relay.snapshot())
+        elapsed = 40_999
+        assertEquals(RelaySnapshot(true, RelayState.PLAN_REQUIRED, 560_001, false), relay.snapshot())
+        elapsed = 41_000
+        assertEquals(RelaySnapshot(true, RelayState.PLAN_REQUIRED, 0, true), relay.snapshot())
+        elapsed = 900_000
+        assertEquals(RelaySnapshot(true, RelayState.PLAN_REQUIRED, 0, true), relay.snapshot())
+    }
+
+    @Test fun explicitCloseRetainsClaimHistoryAndTerminalState() {
+        for (terminal in listOf(RelayState.CONNECTED, RelayState.PLAN_REQUIRED, RelayState.FAILED, RelayState.CANCELED)) {
+            val relay = PhoneRelayProtocol(OAuthProtocol("urn:uuid:test"), { 1_000L }, {})
+            relay.claim(relay.open())
+            relay.terminal(terminal)
+            relay.close()
+            assertEquals(RelaySnapshot(true, terminal, 0, true), relay.snapshot())
+            assertEquals(RelaySnapshot(true, terminal, 0, true), relay.snapshot())
+        }
+        val unclaimed = PhoneRelayProtocol(OAuthProtocol("urn:uuid:test"), { 1_000L }, {})
+        unclaimed.open()
+        unclaimed.close()
+        assertEquals(RelaySnapshot(false, RelayState.WAITING, 0, true), unclaimed.snapshot())
+    }
+
+    @Test fun expiredAndBackwardClockSnapshotsDoNotMutateOrExtendTheAttempt() {
+        var elapsed = 1_000L
+        val oauth = OAuthProtocol("urn:uuid:test", now = { elapsed })
+        val relay = PhoneRelayProtocol(oauth, { elapsed }, { fail("Observation must not dispatch") })
+        val bootstrap = relay.open(60_000)
+        val attempt = oauth.pending
+        elapsed = 999
+        assertEquals(RelaySnapshot(false, RelayState.WAITING, 0, true), relay.snapshot())
+        assertSame(attempt, oauth.pending)
+        assertFalse(oauth.pending!!.consumed)
+        // A pure observation must not cancel the attempt or move its original start time.
+        elapsed = 2_000
+        assertEquals(RelaySnapshot(false, RelayState.WAITING, 59_000, false), relay.snapshot())
+        val claim = relay.claim(bootstrap)
+        assertEquals(59_000L, claim.expiresInMs)
+        elapsed = 61_000
+        assertEquals(RelaySnapshot(true, RelayState.WAITING, 0, true), relay.snapshot())
+        assertSame(attempt, oauth.pending)
+        assertFalse(oauth.pending!!.consumed)
+        elapsed = 100_000
+        assertEquals(RelaySnapshot(true, RelayState.WAITING, 0, true), relay.snapshot())
+    }
 }
