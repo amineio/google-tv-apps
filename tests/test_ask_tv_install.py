@@ -3,6 +3,35 @@ from pathlib import Path
 import unittest
 ROOT=Path(__file__).resolve().parents[1]
 class AskTvInstallTest(unittest.TestCase):
+    def test_version_3_release_metadata(self):
+        text=(ROOT/'apps/ask-tv/build.gradle.kts').read_text()
+        for declaration in [r'applicationId = "com\.amine\.asktv"', 'minSdk = 34',
+                            'compileSdk = 37', 'targetSdk = 37',
+                            'versionCode = 3', r'versionName = "0\.3"']:
+            self.assertRegex(text,r'(?m)^\s*'+declaration+r'\s*$')
+        self.assertIn('signingConfig = signingConfigs.getByName("debug")',text)
+
+    def test_same_package_exposes_phone_and_tv_without_required_hardware(self):
+        import xml.etree.ElementTree as ET
+        android='{http://schemas.android.com/apk/res/android}'
+        manifest=ET.parse(ROOT/'apps/ask-tv/src/main/AndroidManifest.xml').getroot()
+        features={node.get(android+'name'):node.get(android+'required')
+                  for node in manifest.findall('uses-feature')}
+        for feature in ['android.software.leanback', 'android.hardware.touchscreen',
+                        'android.hardware.microphone', 'android.hardware.camera']:
+            self.assertEqual('false',features.get(feature),feature)
+        application=manifest.find('application')
+        activities={node.get(android+'name'):node for node in application.findall('activity')}
+        for name,category in [('.MainActivity','android.intent.category.LEANBACK_LAUNCHER'),
+                              ('.phoneauth.PhoneAuthActivity','android.intent.category.LAUNCHER')]:
+            activity=activities[name]
+            self.assertEqual('true',activity.get(android+'exported'))
+            categories={node.get(android+'name') for node in activity.findall('intent-filter/category')}
+            self.assertIn(category,categories)
+        phone=activities['.phoneauth.PhoneAuthActivity']
+        self.assertTrue(any(node.get(android+'scheme')=='aichat' and node.get(android+'host')=='pair'
+                            for node in phone.findall('intent-filter/data')))
+
     def test_installer_is_independent(self):
         text=(ROOT/'tools/install-ask-tv.sh').read_text()
         self.assertIn('TV_SERIAL:?',text)
