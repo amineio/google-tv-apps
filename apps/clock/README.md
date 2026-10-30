@@ -112,8 +112,9 @@ Removal also removes overlay permission. The existing home screen stays active.
 
 ## Dashboard artwork
 
-The square icon, 16:9 banner, and separate text-free launcher background use native vector geometry.
+The square icon and 16:9 banner use native vector geometry.
+The separate text-free launcher background is a 1920 by 1080 WebP export of original SVG geometry.
 The background uses `com.amine.familyhome.HERO_IMAGE` application metadata.
 The clock hands have flat ends. No external images or fonts are bundled.
-The vectors use the repository MIT license. The approved ImageGen reference is documented in
+The artwork uses the repository MIT license. The approved ImageGen reference is documented in
 [the dashboard design](../../docs/superpowers/specs/2026-10-30-clock-dashboard-design.md).
