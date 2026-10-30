@@ -2,6 +2,9 @@
 
 Status: Approved by the user on 2026-10-30. Implementation is authorized for both games. This document records design requirements, not runtime verification.
 
+The [execution record](../../two-player-games/validation-2026-10-30.md) records results and current delivery requirements.
+The later standing instruction requires physical release installation before delivery to `origin/main`. It replaces the emulator-only delivery rule recorded below.
+
 Source revision: `4aa14ef36a269293fb9361b9fb5ffc50a0595496`, on `amine/two-player-games` in the isolated `two-player-games` worktree.
 
 ## Intent and confirmed choices

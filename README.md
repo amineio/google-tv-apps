@@ -7,9 +7,9 @@ Each app has its own package, version, permissions, tests, and APK.
 | --- | --- | --- | --- |
 | [TV Home](apps/home/) | `:home` | `com.gathin.tvhome` | A home screen with an app dock, grid, themes, and screensaver. |
 | [Clock](apps/clock/) | `:clock` | `com.amine.tvclock` | A clock overlay, session timer, daily bedtime, and viewing reminders. |
-| [Schaak & Reken](apps/chess-math/) | `:chessMath` | `com.amine.chessmath` | Offline chess and arithmetic with remote controls and local progress. |
+| [Schaak & Reken](apps/chess-math/) | `:chessMath` | `com.amine.chessmath` | Offline chess against the computer or a local opponent, with animal portraits, names, and optional arithmetic. |
 | [Family Home](apps/family-home/) | Separate Kotlin build | `com.amine.familyhome` | Family profiles, child timers, allowed apps, and an optional parent PIN. |
-| [Battleship](apps/battleship/) | Separate Kotlin build | `com.amine.battleship` | Offline naval strategy against the computer with remote targeting and saved matches. |
+| [Battleship](apps/battleship/) | Separate Kotlin build | `com.amine.battleship` | Offline naval strategy against the computer or a local captain, with naval portraits, names, and a ten-second fleet preview. |
 | [AI Chat](apps/ask-tv/) | Separate Kotlin build | `com.amine.asktv` | Spoken or typed questions through a ChatGPT subscription, with local example previews. |
 | [Postbox](apps/postbox/) | Separate Kotlin build | `com.amine.postbox` | Locally captured post text, links, and screenshots sent from an Android phone for TV reading. |
 | [Treasure or Retreat](apps/treasure-or-retreat/) | Separate Kotlin build | `com.amine.treasureorretreat` | Offline temple adventure with three expeditions and remote decisions. |

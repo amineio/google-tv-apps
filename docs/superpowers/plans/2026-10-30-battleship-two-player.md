@@ -10,6 +10,10 @@
 
 **Spec:** [Approved two-player design](../specs/2026-10-30-two-player-games-design.md).
 
+The implementation, tests, and native review are complete. Physical release installation passed. Only Git delivery remains pending.
+The [validation record](../../two-player-games/validation-2026-10-30.md) records executed commands, test counts, revisions, and delivery evidence.
+The latest standing instruction requires physical release installation before delivery to `origin/main`.
+
 ## Global Constraints
 
 - Use the existing isolated `amine/two-player-games` worktree. The root coordinator owns Git, all builds/tests, installation, and device input.
@@ -61,13 +65,13 @@
 - Extend `ImpactBoard` with fixed `LEFT` / `RIGHT` targets for local play, preserving solo `ENEMY` / `FRIENDLY` behavior. Keep unique `ImpactPresentation.id`; an old completion callback must not finish a new effect or advance handoff.
 - Resource contract: `R.drawable.profile_fox`, `profile_owl`, `profile_bear`, `profile_cat`, `profile_storm`, `profile_reed`, `profile_kai`, `profile_mira`. Connect the independently supplied portraits without changing their files.
 
-- [ ] Write focused failing session/projection/save regressions first. Cover both local seats and no AI; fixed boards and effects; duplicate attacks; save-before-reveal with delayed/failed write; both Ready steps; full `10` initial countdown and hidden state at 10,000 ms; blocked reveal firing; stale work rejection; and save-plus-effect completion before Ready/results.
-- [ ] Add interruption/restore and input regressions for the first three Review Focus conditions: reveal interrupted before/during/at expiry, hidden paused restoration, no replay on Resume/Continue/recreation, held Ready/OK rejection, stale impact IDs, save failure retry, and either-seat named victory with local celebration.
-- [ ] Add projection/name/migration regressions for the last two Review Focus conditions: both fleets stripped of intact ships; public hit/miss/sunk data retained; no unsunk ship association/damage roster; schema-1 migration and schema-2 round trip; invalid mode recovery; bounded Unicode/control/empty names; distinct portrait fallback; custom names preserved by locale changes; canceled setup preserves the previous save.
-- [ ] Report exact focused selectors and expected test names/counts to the coordinator. Wait for the coordinator's red-test result and implementation green-light; do not run Gradle.
-- [ ] Implement the mode/profile/save changes and the session-controlled draft → final confirmation → both Ready steps → acknowledged consumed-preview save → ten-second reveal → hidden turns flow. Use acknowledged writes rather than conflated fire-and-forget saves for reveal, attack, and replacement gates.
-- [ ] Implement native chooser/name editor and fixed-owner gameplay using the public projection; retain full names in semantics, distinct focus/assignment states, opponent-only targeting, public fleet counts, named results, and same-identity rematch. Wire pause, focus loss, background, and recreation to hide transient reveal and invalidate stale work.
-- [ ] Add remote regressions using real D-pad input for chooser/editor/confirmation cancellation, initial/return focus, scrolling, reveal, both target boards, Ready release gating, public semantics, and results. Update app guide/version and report all changes/selectors to the coordinator for green testing. Do not commit.
+- [x] Write focused failing session/projection/save regressions first. Cover both local seats and no AI; fixed boards and effects; duplicate attacks; save-before-reveal with delayed/failed write; both Ready steps; full `10` initial countdown and hidden state at 10,000 ms; blocked reveal firing; stale work rejection; and save-plus-effect completion before Ready/results.
+- [x] Add interruption/restore and input regressions for the first three Review Focus conditions: reveal interrupted before/during/at expiry, hidden paused restoration, no replay on Resume/Continue/recreation, held Ready/OK rejection, stale impact IDs, save failure retry, and either-seat named victory with local celebration.
+- [x] Add projection/name/migration regressions for the last two Review Focus conditions: both fleets stripped of intact ships; public hit/miss/sunk data retained; no unsunk ship association/damage roster; schema-1 migration and schema-2 round trip; invalid mode recovery; bounded Unicode/control/empty names; distinct portrait fallback; custom names preserved by locale changes; canceled setup preserves the previous save.
+- [x] Report exact focused selectors and expected test names/counts to the coordinator. Wait for the coordinator's red-test result and implementation green-light; do not run Gradle.
+- [x] Implement the mode/profile/save changes and the session-controlled draft → final confirmation → both Ready steps → acknowledged consumed-preview save → ten-second reveal → hidden turns flow. Use acknowledged writes rather than conflated fire-and-forget saves for reveal, attack, and replacement gates.
+- [x] Implement native chooser/name editor and fixed-owner gameplay using the public projection; retain full names in semantics, distinct focus/assignment states, opponent-only targeting, public fleet counts, named results, and same-identity rematch. Wire pause, focus loss, background, and recreation to hide transient reveal and invalidate stale work.
+- [x] Add remote regressions using real D-pad input for chooser/editor/confirmation cancellation, initial/return focus, scrolling, reveal, both target boards, Ready release gating, public semantics, and results. Update app guide/version and report all changes/selectors to the coordinator for green testing. Do not commit.
 
 ### Task 2: Integrate, review, and deliver Battleship
 
@@ -77,8 +81,10 @@
 
 **Interfaces:** Consume Task 1 projections/actions and regression selectors. Produce passing app checks, accepted native captures, version/hash evidence, and delivery to `origin/main`.
 
-- [ ] Run focused red tests before Task 1 implementation. Example: `apps/battleship/gradlew -p apps/battleship testDebugUnitTest --tests com.amine.battleship.viewmodel.LocalGameSessionTest --console=plain`. Confirm a missing-behavior failure and authorize implementation.
-- [ ] Run the focused regressions green after handoff. At integration, run `apps/battleship/gradlew -p apps/battleship testDebugUnitTest testReleaseUnitTest lintRelease assembleDebug assembleRelease assembleDebugAndroidTest --console=plain`.
-- [ ] Use an explicit emulator serial for installation and `connectedDebugAndroidTest`. During iteration select one class per invocation, such as `'-Pandroid.testInstrumentationRunnerArguments.class=com.amine.battleship.LocalTwoPlayerRemoteTest'`; inspect XML class names/counts. Run the relevant full emulator suite at integration.
-- [ ] Capture the current native chooser/name editor, both Ready steps, reveal, hidden turns targeting each board, stable shot impact, handoff, interruption recovery, and either-seat results with generic names. Ask the fresh reviewer to inspect code and captures for all spec requirements and the five Review Focus conditions. Delegate material fixes and repeat affected checks.
-- [ ] Verify portrait packaging, release version/hash, lint/build results, and test counts. Fetch origin before integration; preserve concurrent changes and repeat affected checks if integration changes the app. After successful installation, commit only authorized changes and complete the shortest safe push/merge to `origin/main`. Report emulator installation and Git delivery separately; no physical TV operation is required.
+- [x] Run focused red tests before Task 1 implementation. Example: `apps/battleship/gradlew -p apps/battleship testDebugUnitTest --tests com.amine.battleship.viewmodel.LocalGameSessionTest --console=plain`. Confirm a missing-behavior failure and authorize implementation.
+- [x] Run the focused regressions green after handoff. At integration, run `apps/battleship/gradlew -p apps/battleship testDebugUnitTest testReleaseUnitTest lintRelease assembleDebug assembleRelease assembleDebugAndroidTest --console=plain`.
+- [x] Use an explicit emulator serial for installation and `connectedDebugAndroidTest`. During iteration select one class per invocation, such as `'-Pandroid.testInstrumentationRunnerArguments.class=com.amine.battleship.LocalTwoPlayerRemoteTest'`; inspect XML class names/counts. Run the relevant full emulator suite at integration.
+- [x] Capture the current native chooser/name editor, both Ready steps, reveal, hidden turns targeting each board, stable shot impact, handoff, interruption recovery, and either-seat results with generic names. Ask the fresh reviewer to inspect code and captures for all spec requirements and the five Review Focus conditions. Delegate material fixes and repeat affected checks.
+- [x] Install release version `1.9`, code `10`, on the physical TV and its emulator. Make sure that package versions and installed SHA-256 values match the tested release artifact. Preserve app data.
+- [x] Make sure that portrait packaging, release versions and hashes, lint/build results, and test counts match the recorded evidence.
+- [ ] Fetch origin before integration. Preserve concurrent changes and repeat affected checks if integration changes the app. Commit only authorized changes and complete the shortest safe push/merge to `origin/main`. Report emulator tests, physical installation, and Git delivery separately.

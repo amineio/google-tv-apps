@@ -10,6 +10,12 @@
 
 **Spec:** [Approved two-player design](../specs/2026-10-30-two-player-games-design.md), including the confirmed chess mood constraint.
 
+The full integration suites passed. Corrected release installation passed on the physical TV and emulator.
+Six focused native tests, lint, and release packaging passed for that resource correction.
+Final native review accepted the corrected result actions. Only Git delivery remains pending.
+The [validation record](../../two-player-games/validation-2026-10-30.md) records executed commands, test counts, revisions, and delivery evidence.
+The latest standing instruction requires physical release installation before delivery to `origin/main`.
+
 ## Global Constraints
 
 - Use the existing isolated `amine/two-player-games` worktree. The root coordinator owns Git, all builds/tests, installation, and device input.
@@ -55,12 +61,12 @@
 - Produce `Session.Mode { COMPUTER, LOCAL }`, `Session.mode`, `Session.whiteProfile`, and `Session.blackProfile`; copy every new field. Add `SessionController.startLocalGame(PlayerProfile white, PlayerProfile black): void` as the single committed local-start action and `isHumanTurn(): boolean` as the shared rules-input predicate.
 - Resource contract: `R.drawable.profile_fox`, `profile_owl`, `profile_bear`, `profile_cat`, `profile_panda`, `profile_rabbit`, `profile_turtle`, `profile_dragon`. Connect the independently supplied portraits without changing their files.
 
-- [ ] Write focused failing regression tests first. Cover local White/Black alternation; wrong-color rejection; all promotions for both colors; castling/en passant and draw-claim entry paths; no local arithmetic/delay/computer scheduling; stale solo callback rejection; mode-preserving rematch and final-board retention.
-- [ ] Add codec/name regressions: schema-3 round trip and copy; schema-1/2 compatibility; restored Black selection/promotion; invalid mode recovery; local chess-only/zero-thinking validation; distinct fallback; 24 supplementary code points accepted and 25 rejected; controls rejected; trim/empty/default behavior; custom names preserved after portrait/language changes.
-- [ ] Report the test files and exact focused selectors to the coordinator. Wait for the coordinator's red-test result and implementation green-light; do not run Gradle.
-- [ ] Implement the model/controller/codec contract, then native draft setup, two-by-four chooser, optional name editor, final replacement confirmation, and mode-aware rematch. Use chosen portraits/names and White/Black throughout setup, score, pause, result, and accessibility text. Keep focus and selected-portrait states distinct.
-- [ ] Add remote regressions for the five Review Focus conditions: real D-pad navigation; canceled editor/setup/replacement; focus after app return; held OK across move completion; local Black promotion; and full chosen-name accessibility labels. Preserve native board focus, legal moves, check, selection, and last-move distinction.
-- [ ] Update app guide and version. Report changed files, focused test selectors, expected test counts, and any limitations to the coordinator for green testing. Do not commit.
+- [x] Write focused failing regression tests first. Cover local White/Black alternation; wrong-color rejection; all promotions for both colors; castling/en passant and draw-claim entry paths; no local arithmetic/delay/computer scheduling; stale solo callback rejection; mode-preserving rematch and final-board retention.
+- [x] Add codec/name regressions: schema-3 round trip and copy; schema-1/2 compatibility; restored Black selection/promotion; invalid mode recovery; local chess-only/zero-thinking validation; distinct fallback; 24 supplementary code points accepted and 25 rejected; controls rejected; trim/empty/default behavior; custom names preserved after portrait/language changes.
+- [x] Report the test files and exact focused selectors to the coordinator. Wait for the coordinator's red-test result and implementation green-light; do not run Gradle.
+- [x] Implement the model/controller/codec contract, then native draft setup, two-by-four chooser, optional name editor, final replacement confirmation, and mode-aware rematch. Use chosen portraits/names and White/Black throughout setup, score, pause, result, and accessibility text. Keep focus and selected-portrait states distinct.
+- [x] Add remote regressions for the five Review Focus conditions: real D-pad navigation; canceled editor/setup/replacement; focus after app return; held OK across move completion; local Black promotion; and full chosen-name accessibility labels. Preserve native board focus, legal moves, check, selection, and last-move distinction.
+- [x] Update app guide and version. Report changed files, focused test selectors, expected test counts, and any limitations to the coordinator for green testing. Do not commit.
 
 ### Task 2: Integrate, review, and deliver chess
 
@@ -70,8 +76,10 @@
 
 **Interfaces:** Consume the Task 1 controller/resource contract and regression selectors. Produce passing app checks, accepted native captures, version/hash evidence, and delivery to `origin/main`.
 
-- [ ] Run focused red tests before Task 1 implementation. Example selector: `./gradlew :chessMath:testReleaseUnitTest --tests com.amine.chessmath.LocalChessTest --console=plain`. Confirm the failure concerns the missing local behavior, then authorize implementation.
-- [ ] Run the focused regressions green after handoff. At integration, run `./gradlew :chessMath:testReleaseUnitTest :chessMath:lintRelease :chessMath:assembleRelease :chessMath:assembleDebugAndroidTest --console=plain`.
-- [ ] Use an explicit emulator serial for installation and `connectedDebugAndroidTest`. During iteration select one class per invocation, such as `'-Pandroid.testInstrumentationRunnerArguments.class=com.amine.chessmath.LocalChessRemoteTest'`; inspect XML class names/counts. Run the relevant full emulator suite at integration.
-- [ ] Capture the current native chooser, name editor, White and Black turns, promotion, pause, and results with generic names. Ask the fresh reviewer to inspect code and captures for all spec requirements, the five Review Focus conditions, and the preserved chess mood. Delegate fixes and repeat affected checks.
-- [ ] Verify portrait packaging, release version/hash, lint/build results, and test counts. Fetch origin before integration; preserve concurrent changes and repeat affected checks if integration changes the app. After successful installation, commit only authorized changes and complete the shortest safe push/merge to `origin/main`. Report emulator installation and Git delivery separately; no physical TV operation is required.
+- [x] Run focused red tests before Task 1 implementation. Example selector: `./gradlew :chessMath:testReleaseUnitTest --tests com.amine.chessmath.LocalChessTest --console=plain`. Confirm the failure concerns the missing local behavior, then authorize implementation.
+- [x] Run the focused regressions green after handoff. At integration, run `./gradlew :chessMath:testReleaseUnitTest :chessMath:lintRelease :chessMath:assembleRelease :chessMath:assembleDebugAndroidTest --console=plain`.
+- [x] Use an explicit emulator serial for installation and `connectedDebugAndroidTest`. During iteration select one class per invocation, such as `'-Pandroid.testInstrumentationRunnerArguments.class=com.amine.chessmath.LocalChessRemoteTest'`; inspect XML class names/counts. Run the relevant full emulator suite at integration.
+- [x] Capture the current native chooser, name editor, White and Black turns, promotion, pause, and results with generic names. Ask the fresh reviewer to inspect code and captures for all spec requirements, the five Review Focus conditions, and the preserved chess mood. Delegate fixes and repeat affected checks.
+- [x] Install the corrected release version `0.13`, code `13`, on the physical TV and its emulator. Make sure that package versions and installed SHA-256 values match the tested release artifact. Preserve app data.
+- [x] Make sure that portrait packaging, release versions and hashes, lint/build results, and test counts match the recorded evidence.
+- [ ] Fetch origin before integration. Preserve concurrent changes and repeat affected checks if integration changes the app. Commit only authorized changes and complete the shortest safe push/merge to `origin/main`. Report emulator tests, physical installation, and Git delivery separately.
