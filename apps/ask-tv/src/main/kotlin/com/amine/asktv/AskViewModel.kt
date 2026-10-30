@@ -77,7 +77,7 @@ class AskViewModel private constructor(private val app:Application, private val 
     private val client=SubscriptionClient()
     private val store=if(dependencies!=null) dependencies.store else runCatching { SessionStore(EncryptedRecords(app)) }.getOrNull()
     private val grantCompletion=store?.let { GrantCompletion(it, dependencies?.exchange ?: oauth::exchange) }
-    private class AuthOwner(val cancel:Cancellation=Cancellation()) {
+    private class AuthOwner(val route:SignInRoute,val cancel:Cancellation=Cancellation()) {
         var token=0L
         @Volatile var protocol:OAuthProtocol?=null
         @Volatile var phone:PhoneSignInCoordinator?=null
@@ -244,8 +244,9 @@ class AskViewModel private constructor(private val app:Application, private val 
         if(ui.page!=Page.SIGN_IN) { signInReturnPage=ui.page; signInReturnFocus=ui.focus }
         stop()
         val record=store?.snapshot() ?: run { ui=ui.copy(message="Secure session storage is unavailable."); return }
-        val owner=AuthOwner()
+        val owner=AuthOwner(route)
         authOwners.removeAll { it.released.isDone }
+        val macReleases=authOwners.filter { it.route==SignInRoute.MAC && it.retiring.get() }.map { it.released }
         authOwners.add(owner); activeAuth=owner; signInPresentationOwner=owner
         owner.token=operation.begin { retire(owner) }
         ui=ui.copy(page=Page.SIGN_IN,signInRoute=route,signInState="waiting",requestConsent=requestConsent,phonePairing=null,busy="Waiting for sign-in…",message="")
@@ -266,10 +267,12 @@ class AskViewModel private constructor(private val app:Application, private val 
             owner.phone=phone
             phone.start(record,requestConsent,owner.token)
             owner.startDone.complete(Unit)
-        } else executor.execute {
+        } else CompletableFuture.allOf(*macReleases.toTypedArray()).whenComplete { _,_ -> executor.execute {
             try {
-                if(owner.cancel.canceled) return@execute
-                val protocol=OAuthProtocol(record.hostId,record.clientId ?: record.pendingClientId,requestConsent)
+                // A replaced attempt may be canceled while an older listener still owns 1455.
+                if(owner.retiring.get() || owner.cancel.canceled) return@execute
+                val currentRecord=store?.snapshot() ?: record
+                val protocol=OAuthProtocol(currentRecord.hostId,currentRecord.clientId ?: currentRecord.pendingClientId,requestConsent)
                 owner.protocol=protocol
                 protocol.begin()
                 val grant:(AuthGrant)->Unit={ completeGrant(owner,protocol,it) }
@@ -281,10 +284,10 @@ class AskViewModel private constructor(private val app:Application, private val 
                     object:MacSignInHost { override fun start()=delegate.start(); override fun close()=delegate.close() }
                 }
                 owner.mac=server
-                if(!owner.cancel.canceled) server.start()
+                if(!owner.retiring.get() && !owner.cancel.canceled) server.start()
             } catch(_:Exception) { main.post { if(activeAuth===owner) { retire(owner); operation.finish(owner.token); ui=ui.copy(signInState="failed",busy=null,message="The Mac sign-in listener could not start. Close another attempt and retry."); terminalFocus("failed") } } }
             finally { owner.startDone.complete(Unit) }
-        }
+        } }
     }
     private fun completeGrant(owner:AuthOwner, protocol:OAuthProtocol, grant:AuthGrant) {
         executor.execute {

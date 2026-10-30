@@ -13,6 +13,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,7 +67,8 @@ internal fun phoneQrBitmap(link:String):Bitmap {
                     val link=ui.phonePairing?.link
                     if(link!=null) {
                         val bitmap=remember(link) { phoneQrBitmap(link).asImageBitmap() }
-                        Image(bitmap,"Phone pairing QR code",Modifier.size(224.dp).background(Color.White).testTag("phone-sign-in-qr"))
+                        val qrSize=with(LocalDensity.current) { 512.toDp() }
+                        Image(bitmap,"Phone pairing QR code",Modifier.requiredSize(qrSize).background(Color.White).testTag("phone-sign-in-qr"))
                     }
                     Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(12.dp)) {
                         Text(when {

@@ -62,6 +62,7 @@ class PhoneSignInNavigationTest {
         val pixels = IntArray(image.width * image.height)
         image.readPixels(pixels)
         assertEquals(image.width, image.height)
+        assertEquals("The QR must render at 512 physical pixels, not just use a 512px source",512,image.width)
         val source = com.google.zxing.RGBLuminanceSource(image.width, image.height, pixels)
         val result = com.google.zxing.qrcode.QRCodeReader().decode(
             com.google.zxing.BinaryBitmap(com.google.zxing.common.HybridBinarizer(source)))

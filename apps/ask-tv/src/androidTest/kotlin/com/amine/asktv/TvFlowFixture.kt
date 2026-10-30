@@ -10,8 +10,8 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Executors
 
 /** Synthetic rendering fixture. It does not establish MainActivity window/lifecycle correctness. */
-internal class TvFlowFixture(initial: CredentialRecord = CredentialRecord(HOST)) : AutoCloseable {
-    private val worker = Executors.newSingleThreadExecutor()
+internal class TvFlowFixture(initial: CredentialRecord = CredentialRecord(HOST),
+    private val worker:java.util.concurrent.ExecutorService = Executors.newSingleThreadExecutor()) : AutoCloseable {
     private val modelStore = androidx.lifecycle.ViewModelStore()
     private val records = object : RecordStorage {
         @Volatile var value = initial
@@ -26,6 +26,10 @@ internal class TvFlowFixture(initial: CredentialRecord = CredentialRecord(HOST))
     var requestConsent = false
     var exchangeScopes = REQUIRED_SCOPES
     var modelFailure:Exception? = null
+    var macHostFactory:()->MacSignInHost = { object:MacSignInHost {
+        override fun start() = Unit
+        override fun close() = Unit
+    } }
     var exits = 0
     val model:AskViewModel = run {
         lateinit var created:AskViewModel
@@ -48,10 +52,7 @@ internal class TvFlowFixture(initial: CredentialRecord = CredentialRecord(HOST))
                     monotonicMs = android.os.SystemClock::elapsedRealtime,
                     startTicker = { action -> tickers.add(action); AutoCloseable { tickers.remove(action) } })
             },
-            macFactory = { _, _, _ -> object : MacSignInHost {
-                override fun start() = Unit
-                override fun close() = Unit
-            } },
+            macFactory = { _, _, _ -> macHostFactory() },
         ),
     ).also { modelStore.put("synthetic-tv-flow", it) } }
         created
