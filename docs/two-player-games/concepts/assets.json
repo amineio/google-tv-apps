@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-30",
+  "status": "Design references only; no production assets or game implementation",
+  "generator": {
+    "tool": "image_gen.imagegen",
+    "mode": "built-in",
+    "model": "not specified by tool",
+    "transparent_background": false
+  },
+  "rights": {
+    "source_type": "Original AI-generated concept art with existing repository art references",
+    "license_reported_by_tool": null,
+    "third_party_images_added": false,
+    "notice": "The tool did not report a separate asset license. No claim of legal exclusivity is made. Retain existing repository and font license notices."
+  },
+  "confirmed_user_choices": [
+    "Chess uses the eight animal identities",
+    "Battleship uses all eight naval captain identities, including animal and human captains",
+    "Both games use custom names or character names instead of numbered participant labels",
+    "Battleship reveals both fleets once at the start for ten seconds"
+  ],
+  "production_plan": {
+    "resources": "Separate app-owned portrait catalogs and compressed WebP files",
+    "generation": "Generate individual portraits with ImageGen using selected concepts as identity references",
+    "native_elements": [
+      "Names",
+      "Labels",
+      "Focus outlines",
+      "Boards",
+      "Coordinates",
+      "Controls"
+    ],
+    "metadata_required": [
+      "Exact prompts",
+      "Reference lineage",
+      "Dimensions",
+      "Compression",
+      "SHA-256",
+      "Rights information"
+    ],
+    "runtime_claims": false
+  },
+  "assets": [
+    {
+      "file": "chess-portrait-chooser-concept.png",
+      "source_generated_artifact": "exec-3b18a064-83a4-4de2-aebc-c1e6b2514e19.png",
+      "generation_id": "chess_chooser_final",
+      "width": 1672,
+      "height": 941,
+      "bytes": 2289701,
+      "sha256": "6664916b6a082c7bc7a21e736b1947844f61415413388c764653bce6cd3572fc",
+      "use": "concept_only",
+      "status": "Chess portrait chooser; numbered labels superseded by chosen names"
+    },
+    {
+      "file": "chess-two-player-concept.png",
+      "source_generated_artifact": "exec-bc3f6618-d938-4b86-85b3-68a0e17f4b2c.png",
+      "generation_id": "chess_gameplay_final",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1703657,
+      "sha256": "a861251b175d8573831b4a3e8a8f339c0c3fb8f1daa3bc8735fa27769511e26a",
+      "use": "concept_only",
+      "status": "Chess composition; numbered labels superseded by chosen names"
+    },
+    {
+      "file": "battleship-reveal-concept.png",
+      "source_generated_artifact": "exec-f0510586-040f-457f-84d6-2d76b6d3bd36.png",
+      "generation_id": "battleship_gameplay_final",
+      "width": 1672,
+      "height": 941,
+      "bytes": 1816206,
+      "sha256": "b415d105349c640ea668008843649a88377f9833d24d9e66109079d73f302931",
+      "use": "concept_only",
+      "status": "Battleship board composition; numbered labels and unthemed portraits superseded"
+    },
+    {
+      "file": "battleship-captain-directions.png",
+      "source_generated_artifact": "exec-01612547-82f4-4136-b498-622c98c04971.png",
+      "generation_id": "naval_captains",
+      "width": 1672,
+      "height": 941,
+      "bytes": 2336347,
+      "sha256": "f06e0438438681b9257c3ea3f20473fa623ffe3c59d2361ece9619e27082cf0d",
+      "use": "concept_only",
+      "status": "All eight selected naval captain identities; comparison headings are not app labels"
+    }
+  ],
+  "generations": [
+    {
+      "id": "chess_chooser_final",
+      "tool": "image_gen.imagegen",
+      "prompt_verbatim": "Edit the attached portrait selection CONCEPT. Preserve the eight animal identities, mature painterly portrait art, calm green/navy palette and overall TV screen. Improve native TV usability.\nChange heading to \"Choose Player 1's portrait\". At top show two more compact player slots labelled \"Player 1\" and \"Player 2\". Fox is assigned P1 and owl is assigned P2, with small plain P1 and P2 badges. Immediately below the Player 1 slot, show an unambiguous \"Choosing now\" text cue. Arrange the eight portrait choices as TWO ROWS OF FOUR large circular heads with short native-looking names under them: Fox, Owl, Bear, Cat on row one; Panda, Rabbit, Turtle, Dragon on row two. The Bear tile currently has remote focus with a BRIGHT CYAN RECTANGULAR rounded outline around its whole tile, not a gold glow. This clearly differs from the small warm P1 and P2 assignment badges on Fox and Owl. Portraits themselves have thin quiet neutral rings, no glowing frames. All eight should fit easily with large readable text and couch-distance spacing. Remove mixed \"White / First turn\" and \"Black / Second turn\" subtitles, because game-specific assignment will be shown in native setup later. The bottom primary button now says \"Choose Player 2\". No other extra text. Leave a small Back hint bottom left and bottom-right safe. Fewer ornate decorations. This remains a mockup, not an app screenshot.",
+      "arguments": {
+        "referenced_image_paths": [
+          "/Users/amine/.codex/generated_images/01a18e34-5316-7b40-a72c-079e2979d7ae/exec-de171d21-24a5-4f98-9849-27741d64aae4.png"
+        ],
+        "transparent_background": false
+      },
+      "references": [
+        {
+          "path": "/Users/amine/.codex/generated_images/01a18e34-5316-7b40-a72c-079e2979d7ae/exec-de171d21-24a5-4f98-9849-27741d64aae4.png",
+          "width": 1672,
+          "height": 941,
+          "sha256": "8453749653e84fcc7994001d5913485d3821020627da8b4791d09ceb5e3e6f75",
+          "source": "Earlier built-in ImageGen output"
+        }
+      ]
+    },
+    {
+      "id": "chess_gameplay_final",
+      "tool": "image_gen.imagegen",
+      "prompt_verbatim": "Edit attached two-player Chess CONCEPT only to remove the duplicate \"Your turn\" badge under Player 2. Keep top \"Player 2's turn\" heading as the turn information. Make both fox and owl portraits around 25 percent smaller so the chessboard remains primary, keeping Player 1, White, 39 points and Player 2, Black, 39 points intact and readable. Preserve forest palette, centered fixed board and animal identities. Keep just a subtle active player ring on owl. Replace misleading bottom-left two separate Back/Pause icons with a single quiet text \"Back  Pause\". Do not add game timers or math. All geometry and labels will be rendered natively, this is only a design concept.",
+      "arguments": {
+        "referenced_image_paths": [
+          "/Users/amine/.codex/generated_images/01a18e34-5316-7b40-a72c-079e2979d7ae/exec-7a96e27d-641c-48a6-b5e7-301a40561da2.png"
+        ],
+        "transparent_background": false
+      },
+      "references": [
+        {
+          "path": "/Users/amine/.codex/generated_images/01a18e34-5316-7b40-a72c-079e2979d7ae/exec-7a96e27d-641c-48a6-b5e7-301a40561da2.png",
+          "width": 1672,
+          "height": 941,
+          "sha256": "75609d11b56403c3a748467b3bf4e3f1e8e7168e28ea390671699b5159d8ae76",
+          "source": "Earlier built-in ImageGen output"
+        }
+      ]
+    },
+    {
+      "id": "battleship_gameplay_final",
+      "tool": "image_gen.imagegen",
+      "prompt_verbatim": "Edit target: the attached two-frame Battleship concept. Preserve the two stacked screen moments, ocean visual style, fox and owl identities, fixed boards and native-looking top-down grids. Correct the board ownership language and enlarge the grids using the empty center gap. In BOTH frames, label left board \"PLAYER 1'S FLEET\" and right board \"PLAYER 2'S FLEET\". Completely REMOVE \"ENEMY WATERS\" and \"YOUR FLEET\", and remove the stray \"A1\" near the headings. Under P1's turn banner, retain \"Target Player 2's waters\" and the single targeting reticle ONLY on the right board. Each board must show exactly ten columns A B C D E F G H I J in order and exactly ten rows 1 through 10. Grids equal square size. Do not add any new ships or markings to the bottom hidden boards. In top frame, show countdown \"10\" with a FULL progress bar because it is the start, and small subtitle \"Look at the other fleet. Ships hide after 10 seconds.\" Use existing simple sans-serif in all UI labels. Do not add glow to both portraits. Only active P1 has a small bright ring in the bottom frame. Do not change the image into a runtime screenshot.",
+      "arguments": {
+        "referenced_image_paths": [
+          "/Users/amine/.codex/generated_images/01a18e34-5316-7b40-a72c-079e2979d7ae/exec-bd9eddf0-62d7-479b-9123-249f73230e7a.png"
+        ],
+        "transparent_background": false
+      },
+      "references": [
+        {
+          "path": "/Users/amine/.codex/generated_images/01a18e34-5316-7b40-a72c-079e2979d7ae/exec-bd9eddf0-62d7-479b-9123-249f73230e7a.png",
+          "width": 1672,
+          "height": 941,
+          "sha256": "5fd3422bdfa26c835bef9e3c45170f777d07f49e1d5a2cc6aab14048fa49619b",
+          "source": "Earlier built-in ImageGen output"
+        }
+      ]
+    },
+    {
+      "id": "naval_captains",
+      "tool": "image_gen.imagegen",
+      "prompt_verbatim": "Use case: stylized-concept\nAsset type: character art direction comparison sheet for selectable Battleship player portraits, landscape 16:9.\nReferences: Image 1 shows the existing native naval game and its mature cinematic ocean palette. Image 2 supplies animal identities from the chess portraits. These are style references, not edit targets.\nPrimary request: Explore EIGHT original portraits with stronger personality for an offline family Battleship game. The image is a presentation sheet with TWO ROWS of FOUR round portrait medallions, large and evenly spaced, on a calm matte midnight-navy background. Compact title over top row \"ANIMAL CAPTAINS\", compact title over bottom row \"HUMAN CAPTAINS\". Each portrait has a short character name or role beneath, no other text. Original painterly realism with expressive, memorable faces, navy cloth, brass accents, soft cinematic sea light, crisp readable silhouette at small TV avatar sizes. Personality comes from face, posture, uniform and one signature detail, not busy scenery.\nTop row ANIMAL CAPTAINS, preserving recognizable fox/owl/bear/cat faces:\n1 Fox: self-assured red fox fleet commander, slight clever half-smile, dark navy peaked cap with simple brass anchor insignia, deep navy collar, small crimson scarf. Label \"The Strategist\".\n2 Owl: snowy owl navigator with bright intelligent eyes, round brass spectacles, navy-and-ivory officer collar, composed and observant, no hat covering the recognizable owl head. Label \"The Navigator\".\n3 Bear: big brown bear chief engineer, kind broad face, slightly raised amused brow, worn blue work collar with one small brass wrench badge, sturdy rather than angry. Label \"The Engineer\".\n4 Cat: ginger cat scout captain, alert curious expression and one ear tilted, navy sailor cap worn slightly to one side, muted teal scarf. Label \"The Scout\".\nBottom row HUMAN CAPTAINS, four equally appealing alternatives with the same rendering quality and crop:\n1 older sea captain with silver beard, warmly weathered face, traditional navy peaked cap and brass buttons, quietly confident. Label \"Captain Storm\".\n2 Black woman fleet commander, about forty, short natural hair beneath her officer cap, direct warm gaze, calm authority, teal collar accent. Label \"Commander Reed\".\n3 East Asian male navigator, about thirty, windswept dark hair, subtle wry smile, navy turtleneck and officer coat, binocular strap barely visible at collar. Label \"Lieutenant Kai\".\n4 South Asian woman chief engineer, about thirty-five, short dark curly hair, playful capable expression, small brass protective goggles resting above her brow, navy utility jacket. Label \"Chief Mira\".\nAll portraits head-and-upper-shoulders, front or gentle three-quarter gaze, same scale and lighting, fully readable ears/caps/goggles within circular bounds. Add subtle varied maritime atmosphere inside each medallion only, no full scene backgrounds. Thin quiet brass rims. Neither cute emoji nor grim war photography; premium family naval adventure characters with individual identities. No real people, celebrity resemblance, flags, text on clothing, modern military logos, weapons, skulls, or promotional copy. These are concept alternatives, not production game assets or evidence of implementation.",
+      "arguments": {
+        "referenced_image_paths": [
+          "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/docs/battleship/menu-help-refresh/native-game-en.webp",
+          "/Users/amine/.codex/generated_images/01a18e34-5316-7b40-a72c-079e2979d7ae/exec-3b18a064-83a4-4de2-aebc-c1e6b2514e19.png"
+        ],
+        "transparent_background": false
+      },
+      "references": [
+        {
+          "path": "/Users/amine/Developer/worktrees/two-player-games/google-tv-apps/docs/battleship/menu-help-refresh/native-game-en.webp",
+          "width": 1920,
+          "height": 1080,
+          "sha256": "43fe60bad05d71ef7a3bf42707e4baf6ba4e2e56df73e8eb862c2b47787ecbbf",
+          "source": "Existing repository capture"
+        },
+        {
+          "path": "/Users/amine/.codex/generated_images/01a18e34-5316-7b40-a72c-079e2979d7ae/exec-3b18a064-83a4-4de2-aebc-c1e6b2514e19.png",
+          "width": 1672,
+          "height": 941,
+          "sha256": "6664916b6a082c7bc7a21e736b1947844f61415413388c764653bce6cd3572fc",
+          "source": "Earlier built-in ImageGen output"
+        }
+      ]
+    }
+  ]
+}

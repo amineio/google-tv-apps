@@ -73,7 +73,7 @@ class MusicController(private val backend: MusicBackend) : AutoCloseable {
     }
 
     private fun available() = !closed && foreground && focused && state.loaded && state.soundEnabled
-    private fun menu() = state.screen in setOf(Screen.HOME, Screen.HELP, Screen.SETTINGS) && !state.paused
+    private fun menu() = state.screen in setOf(Screen.HOME, Screen.HELP, Screen.SETTINGS, Screen.MODE, Screen.SETUP) && !state.paused
     private fun battle() = state.screen == Screen.GAME && state.game != null &&
         state.game?.phase != GamePhase.GAME_OVER && !state.paused
 

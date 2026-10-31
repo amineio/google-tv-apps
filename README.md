@@ -7,11 +7,13 @@ Each app has its own package, version, permissions, tests, and APK.
 | --- | --- | --- | --- |
 | [TV Home](apps/home/) | `:home` | `com.gathin.tvhome` | A home screen with an app dock, grid, themes, and screensaver. |
 | [Clock](apps/clock/) | `:clock` | `com.amine.tvclock` | A clock overlay, session timer, daily bedtime, and viewing reminders. |
-| [Schaak & Reken](apps/chess-math/) | `:chessMath` | `com.amine.chessmath` | Offline chess and arithmetic with remote controls and local progress. |
+| [Schaak & Reken](apps/chess-math/) | `:chessMath` | `com.amine.chessmath` | Offline chess against the computer or a local opponent, with animal portraits, names, and optional arithmetic. |
 | [Family Home](apps/family-home/) | Separate Kotlin build | `com.amine.familyhome` | Family profiles, child timers, allowed apps, and an optional parent PIN. |
-| [Battleship](apps/battleship/) | Separate Kotlin build | `com.amine.battleship` | Offline naval strategy against the computer with remote targeting and saved matches. |
+| [Battleship](apps/battleship/) | Separate Kotlin build | `com.amine.battleship` | Offline naval strategy against the computer or a local captain, with naval portraits, names, and a ten-second fleet preview. |
 | [AI Chat](apps/ask-tv/) | Separate Kotlin build | `com.amine.asktv` | Spoken or typed questions through a ChatGPT subscription, with local example previews. |
 | [Postbox](apps/postbox/) | Separate Kotlin build | `com.amine.postbox` | Locally captured post text, links, and screenshots sent from an Android phone for TV reading. |
+| [Treasure or Retreat](apps/treasure-or-retreat/) | Separate Kotlin build | `com.amine.treasureorretreat` | Offline temple adventure with three expeditions and remote decisions. |
+| [Memory Parade](apps/memory-parade/) | Separate Kotlin build | `com.amine.memoryparade` | Offline animal matching with twelve cards, six pairs, and an animated parade. |
 
 Clock works independently of TV Home. Its stop screen supports voluntary viewing limits.
 It remains dismissible and does not guarantee that another app pauses playback.
@@ -54,6 +56,15 @@ apps/battleship/gradlew -p apps/battleship testDebugUnitTest testReleaseUnitTest
 
 Read the [Battleship guide](apps/battleship/README.md) for remote controls, saved matches, installation, and emulator tests.
 
+Treasure or Retreat and Memory Parade also use independent Kotlin builds. They require Android 8 or later. Build each game separately:
+
+```sh
+apps/treasure-or-retreat/gradlew -p apps/treasure-or-retreat testDebugUnitTest testReleaseUnitTest lintRelease assembleDebug assembleRelease --max-workers=2
+apps/memory-parade/gradlew -p apps/memory-parade testDebugUnitTest testReleaseUnitTest lintRelease assembleDebug assembleRelease --max-workers=2
+```
+
+Read each app guide for its APK paths, remote controls, and emulator commands. Both games bundle their artwork and short sound effects. They need no account or network connection.
+
 ## Install
 
 Read the [home installation guide](apps/home/README.md) before changing the default home app.
@@ -63,6 +74,12 @@ The [Family Home guide](apps/family-home/README.md) covers its separate installe
 
 For Chromecast with Google TV, use [the Cast-compatible Home installer](docs/CAST-HOME.md).
 It keeps the Google packages enabled so that the custom Home screen and casting can work together.
+
+Before merging app changes or pushing them to `origin/main`, always install the tested release APK on the physical TV.
+Make sure that the installed version and APK SHA-256 match the tested artifact.
+If the TV is unavailable or installation fails, preserve the task branch and report the blocker without merging.
+Use the emulator for development and instrumented tests. Documentation-only changes do not require an APK installation.
+Read [the delivery instructions](AGENTS.md#app-installation-and-delivery) for the standing authorization, data protection, and delivery sequence.
 
 ## Test
 
@@ -87,6 +104,8 @@ apps/clock/      Clock app, resources, and device tests
 apps/chess-math/ Offline chess and arithmetic app
 apps/family-home/ Independent Kotlin family launcher and Gradle build
 apps/battleship/  Independent Kotlin offline naval game and Gradle build
+apps/treasure-or-retreat/ Independent Kotlin treasure game and Gradle build
+apps/memory-parade/ Independent Kotlin animal matching game and Gradle build
 gradle/          Shared Gradle wrapper
 tools/           App installers and existing TV tools
 tests/           Repository and installer tests

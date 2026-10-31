@@ -4,6 +4,7 @@ import com.amine.battleship.localization.AppLanguage
 import com.amine.battleship.game.engine.GameEngine
 import com.amine.battleship.game.model.Coordinate
 import com.amine.battleship.game.model.GameState
+import com.amine.battleship.game.model.GameMode
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.File
@@ -13,7 +14,7 @@ import java.nio.file.StandardCopyOption
 
 @Serializable
 data class SavedSession(
-    val schemaVersion: Int = 1,
+    val schemaVersion: Int = 2,
     val game: GameState? = null,
     val selected: Coordinate = Coordinate(0, 0),
     val soundEnabled: Boolean = true,
@@ -30,9 +31,15 @@ class GameSaveRepository(private val file: File) {
         if (!file.exists() || file.length() == 0L) return null
         return try {
             require(file.length() <= 1_048_576)
-            json.decodeFromString<SavedSession>(file.readText()).also {
-                require(it.schemaVersion == 1 && it.selected.isValid)
+            json.decodeFromString<SavedSession>(file.readText()).let {
+                require(it.schemaVersion in 1..2 && it.selected.isValid)
                 require(it.game == null || GameEngine.isValid(it.game))
+                val match = it.game?.let { game ->
+                    val left = game.leftProfile.restored()
+                    game.copy(mode = if (it.schemaVersion == 1) GameMode.COMPUTER else game.mode,
+                        leftProfile = left, rightProfile = game.rightProfile.restored(setOf(left.portraitId)), previewConsumed = true)
+                }
+                it.copy(game = match)
             }
         } catch (_: Exception) {
             recoveredInvalidSave = true

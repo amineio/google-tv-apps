@@ -1,12 +1,12 @@
 # Battleship
 
-Battleship is an offline Google TV game for one player against a Normal computer opponent.
+Battleship is an offline Google TV game against the computer or another captain on the same TV.
 The app uses Kotlin and native Compose for TV controls. It requires Android 8 or later.
 It uses no network permission, accounts, database, advertisements, or telemetry.
 
 ## Play
 
-Choose Play Game. Each side receives five randomly placed ships on a 10 by 10 board.
+Choose Play Game, then choose Computer or Two captains. Each side receives five randomly placed ships on a 10 by 10 board.
 Ships occupy 5, 4, 3, 3, and 2 cells. Ships can touch. The human starts.
 Use the arrows to aim. Press OK to fire. Press Back to pause.
 The cursor stops at each board edge. A hit does not grant another turn.
@@ -56,6 +56,36 @@ A distinct opponent portrait frames the right side. A circular targeting sight f
 Previous shots keep their hit or miss markers without corner highlights.
 The [menu and help record](../../docs/battleship/menu-help-refresh/design.md) records the generated references.
 
+## Local two-player mode
+
+Version 1.9 adds two captains with one TV and one remote. Choose from eight naval portraits.
+Each captain can keep the translated character name or enter a custom name.
+Names accept up to 24 Unicode code points. Empty names use the character name.
+The captains must use different portraits. Cancel or Back keeps the previous saved match.
+
+The first captain owns the left board and takes the first shot. The second captain owns the right board.
+Both captains press Ready before the fleets appear. The app saves the new match before the preview starts.
+Both fleets appear once for ten seconds. Pause, background activity, loss of window focus, or recreation ends the preview.
+Resume and Continue keep the fleets hidden. Restart creates fresh fleets and another preview.
+
+After the preview, both boards show only public hits, misses, and sunk ships.
+The cursor targets the other captain’s fixed board. A hit changes the active captain.
+After each accepted shot, the complete effect and save finish before the next Ready step.
+Pass the remote to the named captain. Release OK before firing.
+A failed save blocks the next turn. Retry saves the same completed move.
+A failed save before the preview keeps the previous committed match. Retry or Cancel remains available.
+
+Continue opens an unfinished local match paused and hidden. Resume shows the saved active captain’s Ready step.
+The result shows the winner’s name and both complete fleets. Rematch keeps both captains and their board assignments.
+New game opens the opponent chooser. The app retains one current match.
+Schema 2 stores the mode and participant metadata. Schema 1 saves remain computer games without a preview.
+Unknown portrait IDs receive different fallback portraits. Invalid saved names use the character name without discarding the board.
+
+The portrait prompts, dimensions, hashes, and rights are recorded in `docs/two-player-games/portraits/assets.json` at the repository root.
+The local regression suites are `LocalGameSessionTest`, `LocalProjectionTest`, `PlayerProfileTest`, and `LocalSaveCompatibilityTest`.
+`LocalTwoPlayerRemoteTest` uses actual directional events for setup, cancellation, Ready, both target boards, and held OK.
+The coordinator records executed checks and emulator captures separately. Source tests alone do not establish device results.
+
 ## Build
 
 Install JDK 17, Android SDK platform `android-37.0`, and build tools `36.0.0`.
@@ -104,9 +134,15 @@ Follow its [risk-based test workflow](../../docs/kotlin-tv-development.md#choose
 Select one instrumented test class per invocation and inspect its XML results.
 After a minor resource correction, repeat affected tests and captures.
 Keep release lint and packaging in the final delivery checks.
-Use emulator coverage for development and delivery by default. Do not routinely install or test changes on the physical TV.
-Use the physical TV only for an explicit user request or a user-reported issue.
-Instrumented tests use directional events. The runner can remove its tested APK afterward.
+Use emulator coverage for development and instrumented tests.
+Always install the tested release APK on the physical TV before merging app changes or pushing them to `origin/main`.
+The standing delivery instruction authorizes this installation without renewed permission.
+Make sure that the installed version and APK SHA-256 match the tested artifact.
+If the TV is unavailable or installation fails, preserve the task branch and report the blocker without merging.
+Preserve app data, unrelated apps, Google TV Home, and setupwraith.
+Do not run instrumented tests on the physical TV because the runner can remove its tested APK afterward.
+Physical installation does not require unrelated Cast, wake, playback, or audio tests.
+Documentation-only changes do not require an APK installation unless they accompany app delivery.
 Keep personal account screens and device identifiers out of Git.
 Emulator results establish layout and remote behavior. Physical TV readability, audio volume, and remote hardware require separate observations.
 
@@ -148,6 +184,6 @@ python3 apps/battleship/tools/prepare_music.py --check
 
 The music script also accepts `--source-dir` to reproduce bundled bytes from original masters without changing app assets.
 Outfit retains its [font license](FONT-LICENSE-OFL.txt).
-Manual placement, other difficulties, networking, tablet layouts, and multiplayer remain outside this release.
+Manual placement, other difficulties, networking, online multiplayer, and tablet layouts remain outside this release.
 
 Read the [validation record](../../docs/battleship/validation.md) for exact test results and remaining device evidence.

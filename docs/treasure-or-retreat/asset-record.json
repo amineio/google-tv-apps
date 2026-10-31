@@ -1,0 +1,242 @@
+{
+  "date": "2026-10-30",
+  "tool": "OpenAI built-in ImageGen",
+  "reference": "User-supplied dual-game concept image; art direction only, not embedded in runtime.",
+  "rights": "Original generated illustrations and original synthesized audio for this project. Distributed with this app under the repository MIT license. No external stock or audio assets.",
+  "preparation": "ImageMagick crop/trim/resizing, preserved alpha, compressed WebP quality 85-90. All isolated cutouts inspected on green contact sheets. Original atlas exterior lid rejected after runtime assembly review and regenerated as an interior lid.",
+  "prompts": {
+    "temple": {
+      "generation": "exec-c5ce14ef-65aa-4ea2-ade3-cfb0a7231671",
+      "prompt": "Create one original premium stylized 3D casual-adventure game BACKGROUND PLATE, landscape 16:9 1920x1080 class. Ancient jungle temple with warm orange torchlight, emerald foliage, carved weathered stone pillars, blue mist and distant waterfall through the center. Perspective straight-on at chest-height, broad horizontal stone terrace across lower half. NO treasure chest, NO coins, NO gems, NO characters, NO text, NO UI, NO cards, NO panels. Rich cinematic but family-friendly appearance with beautiful detailed vegetation and layered depth. Keep central middle area a clear quiet landing platform where a separate chest sprite will be placed, left third dark and relatively quiet for native cream score text, upper-right dark relatively quiet for native count panel, lower center terrace unoccupied for controls. Lit braziers at far edges, atmospheric turquoise background, warm golden reflected light on stone. Match high-quality polished family TV game art; avoid realistic gritty horror and avoid flat vector illustration. Full-bleed complete environment with no frame."
+    },
+    "treasure_atlas": {
+      "generation": "exec-0d3bb6ca-8667-4292-99c6-379121ccae74",
+      "prompt": "Create one TRANSPARENT game sprite atlas, 1536x1024 landscape, exactly 3 columns x 2 rows of evenly spaced separate objects, generous transparent padding. Premium polished stylized 3D fantasy jungle treasure art, warm upper-left gold light, slight straight-on three-quarter perspective. No text, no grid lines, no background, no labels, no floor. SIX ISOLATED OBJECTS: top-left: ornate wide open-top wooden treasure CHEST BASE ONLY, gold straps, friendly sun lock, coins spilling over front, NO LID attached, rectangular box with visible dark interior; top-middle: matching detached curved wooden treasure CHEST LID ONLY with gold straps, viewed front at same angle, entire lid clearly separate, no chest base; top-right: beautiful pile of gold coins. Bottom-left: single large faceted glowing RUBY red jewel with small gold base. Bottom-middle: single large faceted EMERALD green jewel with small gold base. Bottom-right: playful coiled golden-brown temple snake with round glowing amber eyes, not scary, on small dark stone base. Keep each object fully within its cell, no overlap, consistent scale relative to cell and consistent style. Transparent alpha background required, not white or checkerboard painted in image.",
+      "rejected_part": "The exterior lid did not assemble into a convincing open chest and was replaced."
+    },
+    "chest_lid": {
+      "generation": "exec-b3efee6e-1462-436a-b746-83207aaba02f",
+      "prompt": "Create one isolated game sprite on actual transparent alpha background: an OPEN treasure chest LID ONLY, seen from the INSIDE with golden inner rim, warm inner golden wood panels, curved top edge and matching thick brass straps. The lid is upright at about 75 degrees open, viewed straight-on slightly from above, a little right side visible. Width about twice height. Bottom edge is a straight horizontal HINGE edge, no floating ornaments, NO chest base, NO coins, NO jewels, NO ground, NO background, NO text, NO extra objects. Premium stylized 3D family jungle treasure game art. Antique wood, bright dimensional gold trim with engraved geometric details, soft warm upper-left lighting. Single clean object centered with transparent padding. This sprite will attach directly to the rear lip of a separate open wooden chest base, so show the interior of the lid, not the exterior sun clasp."
+    },
+    "trap_atlas": {
+      "generation": "exec-0f2ff670-0113-4aee-96d1-4ff26e842ef7",
+      "prompt": "Transparent sprite atlas, landscape 1536x1024, 3 equal columns in ONE row, generous transparent padding. Three separate original whimsical ancient temple TRAP illustrations for a premium stylized 3D family casual game, warm gold upper-left light and emerald foliage accents, no text, no labels, no scenery, no panel frames. LEFT: a chunky carved falling stone with a friendly surprised ancient face, tilted and small dust puffs, no injuries. MIDDLE: a small stone floor trap tile with four stylized rounded golden spikes, playfully hazardous but not frightening, no blood or victims. RIGHT: a small golden ancient guardian statue with wide round eyes and raised hands, friendly mysterious look, stone base. Consistent polished dimensional game-art appearance matching a gold-trimmed jungle treasure chest. Each object fully inside own column with no overlap. Actual transparent alpha background required."
+    },
+    "app_icon": {
+      "generation": "exec-63db23ad-6ec8-46c9-854f-4fa254e17954",
+      "prompt": "Create a square 1024x1024 app icon for the original family TV game Treasure or Retreat. Premium stylized 3D fantasy treasure chest with chunky bright golden straps, friendly sun-shaped clasp, partly open lid and ruby and emerald peeking out, soft warm golden light inside. Dark emerald temple stone background and subtle jungle leaf corners. One bold readable central silhouette, subject fully inside central 70 percent with generous safe border, recognizable at tiny 64 pixel size. Rich polished game artwork, not flat vector, no text, no letters, no watermark, no UI frame. Entire square filled with artwork."
+    },
+    "app_banner": {
+      "generation": "exec-205ff6d8-9c0f-4b48-9b8b-d8843391c69d",
+      "prompt": "Create a horizontal 16:9 Android TV launcher banner for original casual fantasy game. The EXACT title 'Treasure or Retreat' in large beautifully readable warm cream-gold dimensional serif lettering, two lines centered in the left two-thirds, no duplicated 'or', no other text. Right third has a lovely stylized 3D golden wooden treasure chest with friendly sun lock, ruby and emerald treasure, warm interior glow. Ancient jungle temple in deep teal and warm gold, soft stone and vines. Premium polished family adventure game style, cinematic lighting. Keep essential title and chest inside central 80 percent safe area. Title must remain readable when reduced to 320x180 pixels. No gameplay UI, no buttons, no counters, no watermark. Full-bleed landscape artwork."
+    },
+    "app_hero": {
+      "generation": "exec-b7b3c969-c35d-4032-b5d0-5f691e038196",
+      "prompt": "Create a separate original 16:9 1920x1080-class television launcher hero illustration for a premium family treasure exploration game. Ancient fantasy jungle temple terrace, misty distant blue waterfall and carved stone pillars with warm torches. RIGHT THIRD: one large stylized 3D wooden treasure chest with bright chunky gold trim, sun clasp, lid open, gold coins and ruby emerald jewels glowing warmly. LEFT HALF: quiet dark emerald ruins and soft mist with low detail, no main objects, ample room for launcher text. LOWER QUARTER: dark quiet stone terrace with no important objects, reserved for launcher app row. Beautiful controlled teal-green and golden-orange palette, cinematic warm lighting, rich foliage. No text of any kind, no labels, no buttons, no cards, no UI. Different composition from the gameplay background, designed specifically for a TV launcher."
+    },
+    "ledger": {
+      "generation": "exec-f70ad90b-2fce-4c1e-b0f2-c42af3e497fe",
+      "prompt": "One isolated EMPTY decorative parchment ledger panel game UI asset on actual transparent alpha background. Portrait rectangle approximately 4:5 aspect, a rich warm golden tan parchment sheet mounted on a thin irregular dark wooden frame, gently curled parchment corners, small tasteful brass corner rivets, faint aged paper fibers and subtle darker edges, tiny jungle leaves at two outer corners only. Large center 80 percent is clean smooth light tan parchment for sharp native text. No writing, NO text, NO symbols, NO coins, NO illustrations inside panel. Premium stylized 3D fantasy jungle adventure game look. Full panel completely visible with transparent padding. Single object only. This is a background skin for a native score ledger, so keep interior plain and readable."
+    }
+  },
+  "images": [
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/drawable-nodpi/app_banner.webp",
+      "width": 640,
+      "height": 360,
+      "bytes": 82970,
+      "sha256": "9c656828cf6caaddd39b187c2cea19d11c6518ed9c7ba738394cb51869d6e749",
+      "source_prompt": "app_banner"
+    },
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/drawable-nodpi/app_hero.webp",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 293630,
+      "sha256": "92d5f308da1888a0824dbb01d6d4ac54417c0287f9d888b9ef445fae078e1d77",
+      "source_prompt": "app_hero"
+    },
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/drawable-nodpi/app_icon.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 78322,
+      "sha256": "0df5dc7b63a918980df8a1238d8d4106a43183f68767d45cc100b3c2a6524dde",
+      "source_prompt": "app_icon"
+    },
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/drawable-nodpi/boulder.webp",
+      "width": 324,
+      "height": 600,
+      "bytes": 56326,
+      "sha256": "1311d2707c96b2b2b414a3137cba2099a4cfb341d8796593196ca6afc7a458dc",
+      "source_prompt": "trap_atlas"
+    },
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/drawable-nodpi/chest_base.webp",
+      "width": 518,
+      "height": 395,
+      "bytes": 78550,
+      "sha256": "ca99d32d7becf56fb33eb2396ab9d14a84d9b6d878fa041f99d51490fa7a6727",
+      "source_prompt": "treasure_atlas"
+    },
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/drawable-nodpi/chest_lid.webp",
+      "width": 800,
+      "height": 410,
+      "bytes": 76334,
+      "sha256": "0ed788b179ff70df6f2414dc700f49b680b0557aea4287884e8cc639688726ac",
+      "source_prompt": "chest_lid"
+    },
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/drawable-nodpi/emerald.webp",
+      "width": 373,
+      "height": 463,
+      "bytes": 54650,
+      "sha256": "59ea705ec91f6f42fc6cd418cf5d1a5d74fd640d4e285f46acfb80ed518b8acd",
+      "source_prompt": "treasure_atlas"
+    },
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/drawable-nodpi/gold.webp",
+      "width": 483,
+      "height": 355,
+      "bytes": 57950,
+      "sha256": "d4fd507c9c67121807dfb412fa84d44b42788b4017d9a712e5f85c7980ce440c",
+      "source_prompt": "treasure_atlas"
+    },
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/drawable-nodpi/guardian.webp",
+      "width": 370,
+      "height": 600,
+      "bytes": 70476,
+      "sha256": "80865c4436c5c7712ba21e7ce84f7be4c4dfb8391f54f67098b4a441d8d1c2e2",
+      "source_prompt": "trap_atlas"
+    },
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/drawable-nodpi/ledger.webp",
+      "width": 600,
+      "height": 733,
+      "bytes": 90670,
+      "sha256": "4e008aac37fb98978ef93e7497111c5f9e1f3b7dedb55b39fd2dc306912df85f",
+      "source_prompt": "ledger"
+    },
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/drawable-nodpi/ruby.webp",
+      "width": 352,
+      "height": 464,
+      "bytes": 52154,
+      "sha256": "a1e066b62071c973a075a7d84536cb1477788143f0e0f403a8add6c1ac3e4f5e",
+      "source_prompt": "treasure_atlas"
+    },
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/drawable-nodpi/snake.webp",
+      "width": 488,
+      "height": 553,
+      "bytes": 83074,
+      "sha256": "cd1f045b2916c8924ba73338b7e8af06f6d379d8635153874cb58853d860e1bf",
+      "source_prompt": "treasure_atlas"
+    },
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/drawable-nodpi/spikes.webp",
+      "width": 516,
+      "height": 523,
+      "bytes": 91278,
+      "sha256": "fc950e9902ec027085b787fb927cbb24721080d12cb7d4f820cbcebe1bd6fd42",
+      "source_prompt": "trap_atlas"
+    },
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/drawable-nodpi/temple.webp",
+      "width": 1672,
+      "height": 941,
+      "bytes": 440800,
+      "sha256": "0fbd091954ea4e25bc6a72489ba4ac610e0dbda10ffcf96eb8bee5c6afb1a2fa",
+      "source_prompt": "temple"
+    }
+  ],
+  "audio_tool": "Python standard library additive synthesis; exact notes, envelopes, timing, amplitude limits in apps/treasure-or-retreat/tools/synthesize_audio.py. 22050Hz, mono 16-bit PCM, peak clamp 0.22, SoundPool playback volume 0.7.",
+  "audio": [
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/raw/bank.wav",
+      "seconds": 0.68,
+      "sample_rate": 22050,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "bytes": 30032,
+      "sha256": "c97ddfdb0803c6573f8119788c754d0b3317795174d3220f7cb0495eccea59d1"
+    },
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/raw/chest_open.wav",
+      "seconds": 0.34,
+      "sample_rate": 22050,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "bytes": 15038,
+      "sha256": "7fe334ac348371ad0f02f31dbeeb9889c4dfb16a0a04cadfd246aa97104ae4aa"
+    },
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/raw/coin.wav",
+      "seconds": 0.38,
+      "sample_rate": 22050,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "bytes": 16802,
+      "sha256": "e6a8ee9e32a7550a71fba28d7e7b67593eececb4b4911c2b31a1275d171a1cbf"
+    },
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/raw/confirm.wav",
+      "seconds": 0.23,
+      "sample_rate": 22050,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "bytes": 10188,
+      "sha256": "af01a34e4026e032aa79a6796690bf10b73a936c411004f11d16e252c1bfb2f4"
+    },
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/raw/expedition.wav",
+      "seconds": 0.55,
+      "sample_rate": 22050,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "bytes": 24300,
+      "sha256": "0f9b54d94d0a48cbfa2a0f56ec15e2b5eface0d26aefea30d42de0262ad1bb36"
+    },
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/raw/finale.wav",
+      "seconds": 0.95,
+      "sample_rate": 22050,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "bytes": 41940,
+      "sha256": "e221ea97dcdc9ed29e4c2f5c7223cc36eb5298fcb87a4501c4fd3b2a4e6fc1f5"
+    },
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/raw/jewel.wav",
+      "seconds": 0.5,
+      "sample_rate": 22050,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "bytes": 22094,
+      "sha256": "fd7b929e49452ba26f4c05438b3a312a781f7b16d7893054cbe85acb0eabdaa1"
+    },
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/raw/navigate.wav",
+      "seconds": 0.07,
+      "sample_rate": 22050,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "bytes": 3132,
+      "sha256": "e6915e2576a9875e098ecaa14312c5979d430472098bd6248d97fcb44fb778b1"
+    },
+    {
+      "file": "apps/treasure-or-retreat/src/main/res/raw/trap.wav",
+      "seconds": 0.62,
+      "sample_rate": 22050,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "bytes": 27386,
+      "sha256": "57e47d8097bcb753da99811df694eeea2daeb5c2b74dcf73c5d8361fc7e6645d"
+    }
+  ],
+  "native_assets": "Compose renders operational text, title, cards, counters, gold trims, focus, buttons, sparkles, banking coin trajectories and final particles.",
+  "listening_limit": "No physical-TV listening result is claimed."
+}

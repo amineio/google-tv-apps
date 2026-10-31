@@ -47,7 +47,7 @@ class NativeWaterPresentationTest {
             }
         }
         var id = 0L
-        for (board in ImpactBoard.entries) for (outcome in ShotOutcome.entries)
+        for (board in listOf(ImpactBoard.ENEMY, ImpactBoard.FRIENDLY)) for (outcome in ShotOutcome.entries)
             for (coordinate in if (board == ImpactBoard.ENEMY && outcome == ShotOutcome.MISS)
                 listOf(Coordinate(4, 4), Coordinate(0, 0), Coordinate(9, 9)) else listOf(Coordinate(4, 4))) {
             val targetTag = if (board == ImpactBoard.ENEMY) "targeting_board" else "friendly_board"
@@ -89,6 +89,63 @@ class NativeWaterPresentationTest {
             assertEquals(1, completed.count { it == event.id })
             assertEquals(0, changedPixels(baseline, screen.onNodeWithTag(targetTag).captureToImage()))
             capture("${board.name}-${outcome.name}-${coordinate.label}-completed")
+        }
+    }
+
+    @Test fun localFixedBoardImpactsUsePublicProjectionsAndStayOnTheirOwnerForTheFullDuration() {
+        val clock = CaptureClock()
+        var state by mutableStateOf(activeGame())
+        val completed = mutableListOf<Long>()
+        screen.setContent {
+            CompositionLocalProvider(LocalBoardPresentation provides BoardPresentationEnvironment(clock)) {
+                BattleshipApp(state, { action ->
+                    if (action is GameAction.CompleteImpact) {
+                        completed += action.id
+                        if (state.activeImpact?.id == action.id) state = state.copy(activeImpact = null)
+                    }
+                }, {})
+            }
+        }
+        var id = 100L
+        for (board in listOf(ImpactBoard.LEFT, ImpactBoard.RIGHT)) for (outcome in ShotOutcome.entries) {
+            val coordinate = Coordinate(4, 4)
+            val game = fixtureGame(board, outcome, coordinate)
+            val target = if (board == ImpactBoard.LEFT) game.playerBoard else game.computerBoard
+            assertEquals(if (outcome == ShotOutcome.SUNK) 1 else 0, GameEngine.publicBoard(target).ships.size)
+            val targetTag = if (board == ImpactBoard.LEFT) "left_fleet_board" else "right_fleet_board"
+            val otherTag = if (board == ImpactBoard.LEFT) "right_fleet_board" else "left_fleet_board"
+            screen.runOnIdle { state = state.copy(game = game, selected = coordinate, resolving = true, activeImpact = null) }
+            val baseline = screen.onNodeWithTag(targetTag).captureToImage()
+            val other = screen.onNodeWithTag(otherTag).captureToImage()
+            val bounds = screen.onNodeWithTag(targetTag).getUnclippedBoundsInRoot()
+            val acceptedAt = clock.nowNanos()
+            val shot = target.shots.last()
+            val event = ImpactPresentation(++id, board, coordinate, outcome, acceptedAt,
+                sunkCells = shot.sunkCells, shipType = shot.shipType)
+            screen.runOnIdle { state = state.copy(activeImpact = event) }
+            val stages = when (outcome) {
+                ShotOutcome.MISS -> listOf(160L, 500L, 1000L)
+                ShotOutcome.HIT -> listOf(200L, 600L, 1200L)
+                ShotOutcome.SUNK -> listOf(300L, 1000L, 2000L, 2499L)
+            }
+            for (elapsed in stages) {
+                screen.runOnIdle { clock.advance(acceptedAt + elapsed * 1_000_000L) }
+                screen.waitForIdle()
+                assertTrue("$board $outcome must remain active at $elapsed ms", event.id !in completed)
+                assertEquals(bounds, screen.onNodeWithTag(targetTag).getUnclippedBoundsInRoot())
+                if (elapsed == stages.first()) assertTrue("The local effect must alter its fixed board",
+                    changedPixels(baseline, screen.onNodeWithTag(targetTag).captureToImage()) > 12)
+                if ((outcome == ShotOutcome.HIT && elapsed == 600L) || (outcome == ShotOutcome.SUNK && elapsed == 1000L)) {
+                    assertTrue("$board $outcome needs visible warm fire at $elapsed ms",
+                        warmFirePixels(screen.onNodeWithTag(targetTag).captureToImage()) > warmFirePixels(baseline) + 16)
+                }
+                assertEquals(0, changedPixels(other, screen.onNodeWithTag(otherTag).captureToImage()))
+            }
+            val duration = when (outcome) { ShotOutcome.MISS -> 1100L; ShotOutcome.HIT -> 1500L; ShotOutcome.SUNK -> 2500L }
+            screen.runOnIdle { clock.advance(acceptedAt + duration * 1_000_000L) }
+            screen.waitForIdle()
+            assertEquals(1, completed.count { it == event.id })
+            assertEquals(0, changedPixels(baseline, screen.onNodeWithTag(targetTag).captureToImage()))
         }
     }
 
@@ -175,7 +232,12 @@ class NativeWaterPresentationTest {
             .filter { it.coordinate != at && it.coordinate != neighbor }
             .filter { shot -> marks.none { it.coordinate == shot.coordinate } }
         val board = Board(if (outcome == ShotOutcome.MISS) emptyList() else listOf(ship), dense + marks)
-        val fixture = if (target == ImpactBoard.ENEMY) game.copy(computerBoard = board) else game.copy(playerBoard = board)
+        val enemy = target == ImpactBoard.ENEMY || target == ImpactBoard.RIGHT
+        val fixture = if (enemy) game.copy(computerBoard = board) else game.copy(playerBoard = board)
+        if (target == ImpactBoard.LEFT || target == ImpactBoard.RIGHT) {
+            return fixture.copy(mode = GameMode.LOCAL,
+                phase = if (target == ImpactBoard.RIGHT) GamePhase.COMPUTER_TURN else GamePhase.PLAYER_TURN)
+        }
         if (target == ImpactBoard.ENEMY) {
             assertEquals("Only a sunk fixture can reveal an enemy ship",
                 if (outcome == ShotOutcome.SUNK) 1 else 0, GameEngine.playerView(fixture).opponentBoard.ships.size)

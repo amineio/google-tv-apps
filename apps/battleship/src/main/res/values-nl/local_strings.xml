@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="choose_opponent">Kies een tegenstander</string>
+  <string name="computer_mode">Computer</string>
+  <string name="local_mode">Twee kapiteins</string>
+  <string name="choose_left">Kies de kapitein van de linkervloot</string>
+  <string name="choose_right">Kies de kapitein van de rechtervloot</string>
+  <string name="profile_fox">Vos</string>
+  <string name="profile_owl">Uil</string>
+  <string name="profile_bear">Beer</string>
+  <string name="profile_cat">Kat</string>
+  <string name="profile_storm">Kapitein Storm</string>
+  <string name="profile_reed">Commandant Reed</string>
+  <string name="profile_kai">Luitenant Kai</string>
+  <string name="profile_mira">Chef Mira</string>
+  <string name="portrait_assigned">Gekozen</string>
+  <string name="portrait_unavailable">Andere kapitein</string>
+  <string name="edit_name">Naam wijzigen (optioneel)</string>
+  <string name="edit_name_title">Naam voor %1$s</string>
+  <string name="name_save">Naam opslaan</string>
+  <string name="local_cancel">Annuleren</string>
+  <string name="name_limit">Gebruik maximaal 24 tekens. Laat leeg voor de personagenaam.</string>
+  <string name="name_invalid">Gebruik maximaal 24 tekens zonder besturingstekens.</string>
+  <string name="next_captain">Volgende kapitein</string>
+  <string name="review_captains">Kapiteins bekijken</string>
+  <string name="start_local">Wedstrijd starten</string>
+  <string name="memory_rule">Beide vloten verschijnen één keer, 10 seconden lang. Onthoud hun posities. Een treffer beëindigt de beurt. Geef de afstandsbediening na elk schot door.</string>
+  <string name="fleet_name">Vloot van %1$s</string>
+  <string name="local_turn">%1$s is aan zet</string>
+  <string name="captain_ready">%1$s, klaar?</string>
+  <string name="pass_remote">Geef de afstandsbediening aan %1$s. Druk op Klaar als je die hebt.</string>
+  <string name="local_ready">Klaar</string>
+  <string name="remember_fleets">Onthoud beide vloten · %1$d</string>
+  <string name="preview_interrupted">Het voorbeeld is beëindigd. Beide vloten blijven verborgen.</string>
+  <string name="local_saving">Wedstrijd opslaan…</string>
+  <string name="retry_save">Opnieuw opslaan</string>
+  <string name="local_afloat">%1$s: %2$d schepen over</string>
+  <string name="local_board_target">%1$s richt op %2$s. Doel %3$s. %4$s.</string>
+  <string name="local_board_public">%1$s. %2$d openbare schoten. Intacte schepen verborgen.</string>
+  <string name="local_winner">%1$s wint!</string>
+  <string name="local_paused">%1$s · %2$s</string>
+  <string name="local_rematch">Opnieuw spelen</string>
+  <string name="local_resolving">Schot wordt verwerkt</string>
+  <string name="left_owner">Linkervloot · eerste schot</string>
+  <string name="right_owner">Rechtervloot</string>
+</resources>

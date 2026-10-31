@@ -72,7 +72,7 @@ public final class MathsModeRemoteTest {
         withFixture(new Session(),true,true,()->{
             openTitleSettings();key(KeyEvent.KEYCODE_DPAD_CENTER);
             assertTrue(controller.mathsEnabled());assertTrue(((PlayPreferences)field("sharedPlay").get(null)).mathsEnabled());
-            key(KeyEvent.KEYCODE_BACK);assertMathsSwitch(true);
+            awaitWindowFocus(false);key(KeyEvent.KEYCODE_BACK);awaitWindowFocus(true);assertMathsSwitch(true);
             assertEquals(Session.Phase.MATH,controller.state().phase);
         });
     }
@@ -123,6 +123,11 @@ public final class MathsModeRemoteTest {
         }
     }
     private void key(int code) throws Exception {instrumentation.sendKeyDownUpSync(code);instrumentation.waitForIdleSync();awaitSave();}
+    private void awaitWindowFocus(boolean expected) throws Exception{
+        AtomicBoolean ready=new AtomicBoolean();long until=SystemClock.elapsedRealtime()+5000;
+        do{instrumentation.waitForIdleSync();instrumentation.runOnMainSync(()->ready.set(activity.hasWindowFocus()==expected));if(!ready.get())SystemClock.sleep(20);}while(!ready.get()&&SystemClock.elapsedRealtime()<until);
+        assertTrue("Preference error dialog must finish its focus transition: expected Activity focus="+expected,ready.get());
+    }
     private void awaitReady() throws Exception {
         AtomicBoolean ready=new AtomicBoolean();long until=SystemClock.elapsedRealtime()+5000;
         do {

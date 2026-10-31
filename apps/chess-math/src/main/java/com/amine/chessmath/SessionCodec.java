@@ -10,7 +10,8 @@ public final class SessionCodec {
 
     public static String encode(Session s) throws JSONException {
         JSONObject j=new JSONObject();
-        j.put("schema",2).put("id",s.id).put("revision",s.revision)
+        j.put("schema",3).put("mode",s.mode.name())
+                .put("whiteProfile",profile(s.whiteProfile)).put("blackProfile",profile(s.blackProfile)).put("id",s.id).put("revision",s.revision)
                 .put("phase",s.phase.name()).put("paused",s.paused).put("elapsedMs",s.elapsedMs)
                 .put("thinkingRemainingMs",s.thinkingRemainingMs).put("thinkingTotalMs",s.thinkingTotalMs)
                 .put("chessPending",s.chessPending).put("mathPending",s.mathPending)
@@ -31,8 +32,14 @@ public final class SessionCodec {
     public static Session decode(String raw) throws JSONException {
         if(raw.length()>2000000) throw new IllegalArgumentException("Snapshot too large");
         JSONObject j=new JSONObject(raw);
-        int schema=j.getInt("schema");require(schema==1||schema==2,"Unsupported save version");
+        int schema=j.getInt("schema");require(schema==1||schema==2||schema==3,"Unsupported save version");
         Session s=new Session(false);
+        if(schema==3){
+            s.mode=Session.Mode.valueOf(j.getString("mode"));
+            JSONObject white=j.getJSONObject("whiteProfile"),black=j.getJSONObject("blackProfile");
+            s.whiteProfile=PlayerProfile.restored(white.optString("portraitId",""),white.isNull("customName")?null:white.getString("customName"),null);
+            s.blackProfile=PlayerProfile.restored(black.optString("portraitId",""),black.isNull("customName")?null:black.getString("customName"),s.whiteProfile.portraitId);
+        }
         s.id=j.getString("id"); require(s.id.length()==36,"Invalid session id");
         s.revision=j.getLong("revision"); s.elapsedMs=j.getLong("elapsedMs");
         require(s.revision>=0 && s.elapsedMs>=0 && s.elapsedMs<=31536000000L,"Invalid elapsed time");
@@ -59,7 +66,7 @@ public final class SessionCodec {
                 && game.result().isEmpty() && s.result.isEmpty(),"Thinking time without a computer move");
         if(!game.result().isEmpty()) require(s.result.equals(game.result()),"Missing game result");
         else require(s.result.isEmpty()||s.result.equals("Remise geclaimd"),"Invalid game result");
-        if(s.selected>=0) require(game.whiteToMove() && Character.isUpperCase(game.pieceAt(s.selected)),"Invalid selection");
+        if(s.selected>=0) require((s.mode==Session.Mode.LOCAL||game.whiteToMove()) && game.pieceAt(s.selected)!='.' && Character.isUpperCase(game.pieceAt(s.selected))==game.whiteToMove(),"Invalid selection");
         if(s.promotionTo>=0) {
             require(s.selected>=0,"Promotion without selection");
             String prefix=uciSquare(s.selected)+uciSquare(s.promotionTo);
@@ -84,7 +91,11 @@ public final class SessionCodec {
             else if(s.phase==Session.Phase.TO_CHESS){s.phase=Session.Phase.BREAK;s.elapsedMs=0;s.mathPending=false;}
             s.chessPending=false;s.paused=true;
         }else require(s.phase!=Session.Phase.TO_MATH&&s.phase!=Session.Phase.TO_CHESS,"Legacy handoff in new save");
+        if(s.mode==Session.Mode.LOCAL)require(s.phase==Session.Phase.CHESS&&s.thinkingRemainingMs==0&&s.thinkingTotalMs==0&&!s.chessPending&&!s.mathPending,"Invalid local session");
         return s;
+    }
+    private static JSONObject profile(PlayerProfile p) throws JSONException {
+        return new JSONObject().put("portraitId",p.portraitId).put("customName",p.customName==null?JSONObject.NULL:p.customName);
     }
 
     private static void validateExercise(Exercise e,MathConfig c) {

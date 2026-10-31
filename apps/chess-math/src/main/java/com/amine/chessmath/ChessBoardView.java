@@ -18,6 +18,8 @@ public final class ChessBoardView extends View {
     private List<String> legal = Collections.emptyList();
     private int lastFrom=-1,lastTo=-1,beforeLastFrom=-1,beforeLastTo=-1;
     private Listener listener;
+    private String participantDescription="";
+    public void setParticipantDescription(String value){participantDescription=value;}
     private android.animation.ValueAnimator animator;
     private PresentationEvent transition;
     private float progress;
@@ -105,7 +107,7 @@ public final class ChessBoardView extends View {
         return true;
     }
     private void describe(){
-        setContentDescription(getContext().getString(R.string.square_description,coordinate(square),game==null?"":pieceName(transition==null?game.pieceAt(square):transition.beforePiece(square))));
+        setContentDescription((participantDescription.isEmpty()?"":participantDescription+" · ")+getContext().getString(R.string.square_description,coordinate(square),game==null?"":pieceName(transition==null?game.pieceAt(square):transition.beforePiece(square))));
     }
     public static String coordinate(int square){
         return ""+(char)('a'+square%8)+(8-square/8);

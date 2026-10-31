@@ -54,6 +54,12 @@ object GameEngine {
         )
     }
 
+    /** Shared-screen projection: only sunk shapes and public shot information. */
+    fun publicBoard(board: Board): VisibleBoard = VisibleBoard(
+        ships = board.ships.filter { board.shipSunk(it) },
+        shots = board.shots.map { if (it.outcome == ShotOutcome.SUNK) it else it.copy(shipType = null, sunkCells = emptyList()) },
+    )
+
     /** Rejects malformed saves, including shot outcomes that contradict the saved fleets. */
     fun isValid(state: GameState): Boolean {
         if (!validBoard(state.playerBoard) || !validBoard(state.computerBoard)) return false

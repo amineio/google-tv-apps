@@ -17,6 +17,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -30,6 +31,7 @@ import com.amine.battleship.localization.*
 import com.amine.battleship.R
 import com.amine.battleship.game.engine.GameEngine
 import com.amine.battleship.game.model.GamePhase
+import com.amine.battleship.game.model.GameMode
 import com.amine.battleship.game.model.Player
 import com.amine.battleship.game.model.ShipType
 import com.amine.battleship.game.model.ShotOutcome
@@ -45,7 +47,12 @@ fun BattleshipApp(state: SessionState, onAction: (GameAction) -> Unit, onExit: (
             BackHandler {
                 if (state.screen == Screen.HOME) onExit() else onAction(GameAction.Back)
             }
-            Box(Modifier.fillMaxSize().background(Ocean)) {
+            Box(Modifier.fillMaxSize().background(Ocean).onPreviewKeyEvent { event ->
+                if (event.type == KeyEventType.KeyUp && event.key in listOf(Key.DirectionCenter, Key.Enter, Key.NumPadEnter)) {
+                    onAction(GameAction.ReleaseConfirm)
+                }
+                false
+            }) {
                 Image(painterResource(R.drawable.naval_background), null, Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop)
                 val home = state.screen == Screen.HOME
@@ -60,6 +67,9 @@ fun BattleshipApp(state: SessionState, onAction: (GameAction) -> Unit, onExit: (
                         when {
                             !state.loaded -> LoadingScreen()
                             state.screen == Screen.HOME -> HomeScreen(state, onAction, onExit)
+                            state.screen == Screen.MODE -> ModeScreen(onAction)
+                            state.screen == Screen.SETUP -> LocalSetupScreen(state, onAction)
+                            state.screen == Screen.GAME && (state.readySeat != null || state.localStarting) -> LocalReadyScreen(state, onAction)
                             state.screen == Screen.GAME -> GameScreen(state, onAction)
                             state.screen == Screen.HELP -> HelpScreen(onAction)
                             state.screen == Screen.SETTINGS -> SettingsScreen(state, onAction)
@@ -68,7 +78,7 @@ fun BattleshipApp(state: SessionState, onAction: (GameAction) -> Unit, onExit: (
                     }
                 }
                 if (state.screen == Screen.GAME && state.paused && state.confirmation == null) {
-                    PauseScreen(onAction)
+                    PauseScreen(state, onAction)
                 }
                 if (state.confirmation != null) ConfirmationScreen(state.confirmation, onAction)
             }
@@ -86,7 +96,7 @@ private fun LoadingScreen() {
 @Composable
 private fun HomeScreen(state: SessionState, onAction: (GameAction) -> Unit, onExit: () -> Unit) {
     val first = remember { FocusRequester() }
-    val unfinished = state.game?.phase in listOf(GamePhase.PLAYER_TURN, GamePhase.COMPUTER_TURN)
+    val unfinished = state.game != null
     LaunchedEffect(Unit) { withFrameNanos { }; first.requestFocus() }
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
         Text(gameText(R.string.title), fontSize = 48.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp,
@@ -97,7 +107,7 @@ private fun HomeScreen(state: SessionState, onAction: (GameAction) -> Unit, onEx
                 onAction(GameAction.Continue)
             }
             NavalButton(gameText(R.string.play_game), Modifier.fillMaxWidth().then(if (!unfinished) Modifier.focusRequester(first) else Modifier),
-                primary = !unfinished) { onAction(GameAction.Play) }
+                primary = !unfinished) { onAction(GameAction.ChooseMode) }
             NavalButton(gameText(R.string.help), Modifier.fillMaxWidth()) { onAction(GameAction.Help) }
             NavalButton(gameText(R.string.settings), Modifier.fillMaxWidth()) { onAction(GameAction.Settings) }
             NavalButton(gameText(R.string.exit), Modifier.fillMaxWidth(), onClick = onExit)
@@ -137,11 +147,15 @@ private fun SettingsScreen(state: SessionState, onAction: (GameAction) -> Unit) 
 }
 
 @Composable
-private fun PauseScreen(onAction: (GameAction) -> Unit) {
+private fun PauseScreen(state: SessionState, onAction: (GameAction) -> Unit) {
     Modal(onDismiss = { onAction(GameAction.Resume) }) {
         val first = remember { FocusRequester() }
         LaunchedEffect(Unit) { withFrameNanos { }; first.requestFocus() }
         Text(gameText(R.string.paused), fontSize = 30.sp, fontWeight = FontWeight.Bold)
+        state.game?.takeIf { it.mode == GameMode.LOCAL }?.let { game ->
+            Text(gameText(R.string.local_paused, profileName(game.leftProfile), profileName(game.rightProfile)), fontSize = 18.sp)
+            if (state.previewInterrupted) Text(gameText(R.string.preview_interrupted), color = Muted, fontSize = 16.sp)
+        }
         Spacer(Modifier.height(19.dp))
         Column(Modifier.width(310.dp), verticalArrangement = Arrangement.spacedBy(11.dp)) {
             NavalButton(gameText(R.string.resume), Modifier.fillMaxWidth().focusRequester(first), primary = true) { onAction(GameAction.Resume) }
@@ -174,6 +188,7 @@ private fun ConfirmationScreen(confirmation: Confirmation, onAction: (GameAction
 @Composable
 private fun ResultsScreen(state: SessionState, onAction: (GameAction) -> Unit) {
     val game = state.game ?: return
+    if (game.mode == GameMode.LOCAL) { LocalGameplayScreen(state, onAction, results = true); return }
     val won = game.winner == Player.HUMAN
     val first = remember { FocusRequester() }
     LaunchedEffect(Unit) { withFrameNanos { }; first.requestFocus() }

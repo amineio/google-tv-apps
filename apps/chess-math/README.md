@@ -4,15 +4,15 @@ Schaak & Reken is a free, offline chess and arithmetic app for Google TV. The Du
 
 Maths practice is optional. Turn it off in Settings to play chess without practice or breaks. The choice survives app restarts and progress resets.
 
-The child plays White. The computer uses one strength at the strongest search limits in the app. The app needs Android 8 or later.
+In computer mode, the human plays White. The computer uses one strength at the strongest search limits in the app. Local mode lets two people play on one TV with one remote. The app needs Android 8 or later.
 
-The app uses no permissions, network connection, account, advertisements, purchases, analytics, or background service. It keeps one game and its practice round in local app storage. It stores no child name or profile. Cloud backup and device transfer are disabled.
+The app uses no permissions, network connection, account, advertisements, purchases, analytics, or background service. It keeps one game and its practice round in local app storage. Local matches store the chosen portrait IDs and optional names on this device. Cloud backup and device transfer are disabled.
 
 ## Play
 
-Open Schaak & Reken from the TV app grid. The title screen shows the game name, chess artwork, and a short menu with Settings. Select Start or Verder spelen. A saved session also offers Nieuw spel. This action asks for confirmation before it clears progress. With Maths practice on, it starts a fresh arithmetic cycle. With it off, it starts chess.
+Open Schaak & Reken from the TV app grid. The title screen shows the game name, chess artwork, and a short menu with Settings. Select Start to choose the computer or a local opponent. Verder spelen opens the saved match directly. A saved session also offers Nieuw spel. Choose the opponent and complete setup before the final replacement confirmation. With Maths practice on, a new computer session starts an arithmetic cycle. With it off, it starts chess.
 
-1. Use the arrows to choose a square. Press OK to select a White piece.
+1. Use the arrows to choose a square. Press OK to select a piece of the color to move.
 2. Use the arrows to choose a marked destination. Press OK to move.
 3. Press Back to cancel a piece selection. Press Back again to open Pause.
 
@@ -43,6 +43,20 @@ Motion can end early after two seconds if a completion callback is missing.
 Promotion shows images and names for Dame, Toren, Loper, and Paard. Use Left and Right to choose the piece. Press OK to confirm. Press Back to cancel the choice before the move commits.
 
 The computer evaluates legal moves without random choices or deliberate mistakes. Its search still needs family playtesting. The app makes no rating or age-suitability claim.
+
+## Two people on one TV
+
+Select Together on this TV after Start or New game. The first participant plays White. The second plays Black. Choose from Fox, Owl, Bear, Cat, Panda, Rabbit, Turtle, and Dragon in a native two-by-four grid. Each participant needs a different portrait. A check mark shows the assigned portrait; the honey outline shows remote focus.
+
+Accept the character name or select Edit name. Names can contain up to 24 Unicode code points, including supplementary characters. Surrounding spaces are removed. Control characters are rejected. Save an empty name to return to the character name. Changing a portrait keeps an explicitly saved custom name. Changing the app language translates character names and preserves custom names. Duplicate custom names are allowed.
+
+Setup remains a draft. Back and Cancel preserve the saved match and participants. Starting a replacement match requires final confirmation. If storage fails, the existing match remains available. Retry saves the replacement in a paused state.
+
+Local games start directly in chess. They never schedule computer moves, arithmetic, or a thinking delay. The saved solo preferences stay available for the next computer session. White remains at the bottom. Pass the remote after each move. Both colors support promotion, castling, en passant, draw claims, and restoration.
+
+The score panels keep small portraits beside the existing board. They show names and colors. A portrait outline and turn text mark the active participant. Full names remain in accessible descriptions when visual labels use ellipsis. Held OK repeats cannot activate the next participant's turn.
+
+The final board remains visible until an explicit action. Play again with these characters keeps the same names, portraits, and colors. Choose a new opponent to change participants. One saved match is retained. Save schema 3 reads existing schema 1 and 2 progress as computer sessions.
 
 ## Arithmetic rounds
 
@@ -119,3 +133,14 @@ See the [verification record](../../docs/chess-math/verification.md) for actual 
 The v0.2 visual pass adds original ImageGen pieces and a forest backdrop. Text, controls, and board cells remain native. See the [visual evidence](../../docs/chess-math/visual-polish-verification-2026-10-26.md) and [design review](../../docs/chess-math/visual-review-2026-10-26.md).
 
 The chess layout centers the board on the TV without a side text panel. Routine saves do not show a Saving message during chess or maths practice. Storage errors still appear. The equation and answer form one compact centered group.
+
+## Local chess regression checks
+
+The coordinator runs unit tests and device commands. The implementation task does not run concurrent builds.
+
+```sh
+./gradlew :chessMath:testReleaseUnitTest --tests com.amine.chessmath.LocalChessTest --tests com.amine.chessmath.PlayerProfileTest --tests com.amine.chessmath.SessionCodecTest
+ANDROID_SERIAL=emulator-5554 ./gradlew :chessMath:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.amine.chessmath.LocalChessRemoteTest
+```
+
+The local remote suite covers actual D-pad chooser movement, canceled setup and replacement, name-editor cancellation, held OK, all Black promotions, full-name descriptions, and focus after app return. Use one explicit emulator serial. Emulator evidence does not establish physical remote, sound, Cast, or wake behavior.

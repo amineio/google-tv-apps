@@ -27,6 +27,16 @@ class MusicControllerTest {
     private val game = home.copy(screen = Screen.GAME, game = GameEngine.newGame(42))
     private val results = game.copy(screen = Screen.RESULTS, game = game.game!!.copy(phase = GamePhase.GAME_OVER))
 
+    @Test fun opponentChoiceAndPortraitSetupKeepTheExistingMenuLoop() {
+        val backend = Backend(); val music = MusicController(backend)
+        music.foreground(true); music.update(home)
+        val menu = backend.requests.single(); menu.ready()
+        music.update(home.copy(screen = Screen.MODE))
+        music.update(home.copy(screen = Screen.SETUP))
+        assertFalse(menu.player.released)
+        assertEquals(listOf(MusicTrack.MENU), backend.requests.map { it.track })
+    }
+
     @Test fun openingCompletionStartsBattleLoopWithoutReplayingOpening() {
         val backend = Backend(); val music = MusicController(backend)
         music.foreground(true); music.cue(SoundCue.MATCH_START, game)

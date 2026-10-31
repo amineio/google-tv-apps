@@ -62,4 +62,35 @@
     <string name="thinking_countdown">Denk eerst · %1$d s</string>
     <string name="thinking_prompt">Bekijk de laatste zet</string>
     <string name="thinking_setting_help">Wacht na elke computerzet. Wijzigingen gelden vanaf de volgende zet. Uit stopt de huidige wachttijd.</string>
+
+    <string name="choose_opponent">Kies je tegenstander</string>
+    <string name="versus_computer">Tegen de computer</string>
+    <string name="versus_local">Samen op de tv</string>
+    <string name="local_white">Wit</string>
+    <string name="local_black">Zwart</string>
+    <string name="local_choose">Kies een karakter voor %1$s</string>
+    <string name="local_seat">%1$s · %2$s</string>
+    <string name="local_turn">%1$s is aan zet</string>
+    <string name="local_active">▶ Aan zet</string>
+    <string name="local_waiting">Wacht op de volgende zet</string>
+    <string name="local_rules">Wit begint. Geef de afstandsbediening na elke zet door. Het bord blijft met Wit onderaan. Geen rekenen of wachttijd.</string>
+    <string name="local_review">Klaar om te schaken?</string>
+    <string name="local_edit_name">Naam wijzigen</string>
+    <string name="local_name_hint">Naam (optioneel)</string>
+    <string name="local_name_help">Maximaal 24 tekens. Een lege naam gebruikt de karakternaam.</string>
+    <string name="local_invalid_name">Gebruik maximaal 24 tekens, zonder besturingstekens.</string>
+    <string name="local_start">Begin schaakspel</string>
+    <string name="local_rematch">Nog een partij</string>
+    <string name="local_new_setup">Nieuwe tegenstander kiezen</string>
+    <string name="local_selected">Gekozen: %1$s</string>
+    <string name="local_unavailable">Al gekozen voor Wit</string>
+    <string name="local_replace">Dit vervangt het opgeslagen spel en de deelnemers.</string>
+    <string name="profile_fox">Vos</string>
+    <string name="profile_owl">Uil</string>
+    <string name="profile_bear">Beer</string>
+    <string name="profile_cat">Kat</string>
+    <string name="profile_panda">Panda</string>
+    <string name="profile_rabbit">Konijn</string>
+    <string name="profile_turtle">Schildpad</string>
+    <string name="profile_dragon">Draak</string>
 </resources>

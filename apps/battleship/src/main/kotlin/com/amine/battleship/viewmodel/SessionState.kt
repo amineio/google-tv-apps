@@ -1,12 +1,14 @@
 package com.amine.battleship.viewmodel
 
 import com.amine.battleship.localization.AppLanguage
+import com.amine.battleship.game.model.Player
+import com.amine.battleship.game.model.PlayerProfile
 import com.amine.battleship.game.model.Coordinate
 import com.amine.battleship.game.model.GameState
 import com.amine.battleship.game.model.ShotOutcome
 import com.amine.battleship.game.model.ShipType
 
-enum class ImpactBoard { ENEMY, FRIENDLY }
+enum class ImpactBoard { ENEMY, FRIENDLY, LEFT, RIGHT }
 
 data class ImpactPresentation(
     val id: Long,
@@ -18,10 +20,25 @@ data class ImpactPresentation(
     val shipType: ShipType? = null,
 )
 
-enum class Screen { HOME, GAME, HELP, SETTINGS, RESULTS }
+enum class Screen { HOME, GAME, HELP, SETTINGS, RESULTS, MODE, SETUP }
 enum class Confirmation { RESTART, MAIN_MENU, NEW_GAME }
 
+data class LocalSetupDraft(
+    val left: PlayerProfile = PlayerProfile("fox"),
+    val right: PlayerProfile = PlayerProfile("owl"),
+    val slot: Int = 0,
+    val nameError: Boolean = false,
+)
+
 data class SessionState(
+    val localStarting: Boolean = false,
+    val setup: LocalSetupDraft? = null,
+    val readyLeftProfile: PlayerProfile? = null,
+    val readyRightProfile: PlayerProfile? = null,
+    val readySeat: Player? = null,
+    val revealRemainingMs: Long? = null,
+    val previewInterrupted: Boolean = false,
+    val releaseRequired: Boolean = false,
     val activeImpact: ImpactPresentation? = null,
     val loaded: Boolean = false,
     val screen: Screen = Screen.HOME,
@@ -38,6 +55,15 @@ data class SessionState(
 )
 
 sealed interface GameAction {
+    data object ChooseMode : GameAction
+    data object LocalSetup : GameAction
+    data class SelectPortrait(val id: String) : GameAction
+    data class SaveName(val name: String) : GameAction
+    data object NextParticipant : GameAction
+    data object StartLocal : GameAction
+    data object Ready : GameAction
+    data object ReleaseConfirm : GameAction
+    data object RetrySave : GameAction
     data object Play : GameAction
     data object Continue : GameAction
     data object Fire : GameAction

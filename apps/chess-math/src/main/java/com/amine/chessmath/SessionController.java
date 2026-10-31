@@ -90,14 +90,14 @@ public final class SessionController implements AutoCloseable {
         }
     }
     public long thinkingRemainingMs(){
-        if(thinkingSeconds==0)return 0;
+        if(state.mode==Session.Mode.LOCAL||thinkingSeconds==0)return 0;
         long remaining=state.thinkingRemainingMs;
         if(thinkingActive()&&thinkingAnchor>=0)remaining-=Math.max(0,clock.getAsLong()-thinkingAnchor);
         return Math.max(0,remaining);
     }
-    public long thinkingTotalMs(){return thinkingSeconds==0?0:state.thinkingTotalMs;}
+    public long thinkingTotalMs(){return state.mode==Session.Mode.LOCAL||thinkingSeconds==0?0:state.thinkingTotalMs;}
     private boolean thinkingActive(){
-        return foreground&&!state.paused&&error==null&&!busy&&!closed&&presentation==null
+        return state.mode==Session.Mode.COMPUTER&&foreground&&!state.paused&&error==null&&!busy&&!closed&&presentation==null
                 &&state.phase==Session.Phase.CHESS&&state.result.isEmpty()
                 &&state.thinkingRemainingMs>0&&thinkingSeconds!=0;
     }
@@ -130,7 +130,7 @@ public final class SessionController implements AutoCloseable {
     public void resume() {
         if(!foreground||busy||error!=null||closed||presentation!=null)return;
         action(s->{
-            if(!mathsEnabled&&s.phase!=Session.Phase.CHESS)beginChess(s);
+            if((s.mode==Session.Mode.LOCAL||!mathsEnabled)&&s.phase!=Session.Phase.CHESS)beginChess(s);
             else if(s.phase==Session.Phase.TO_MATH)beginMath(s);
             else if(s.phase==Session.Phase.TO_CHESS)beginBreak(s);
             s.paused=false;
@@ -139,7 +139,7 @@ public final class SessionController implements AutoCloseable {
     public void continueAfterGame() {
         if(!canAct()||!foreground||state.paused||presentation!=null
                 ||state.phase!=Session.Phase.CHESS||state.result.isEmpty())return;
-        action(s->{if(mathsEnabled)beginMath(s);else beginChess(s);s.paused=false;},true);
+        action(s->{if(s.mode==Session.Mode.COMPUTER&&mathsEnabled)beginMath(s);else {clearBoard(s);beginChess(s);}s.paused=false;},true);
     }
     public void pause() {
         if(closed)return;
@@ -184,7 +184,7 @@ public final class SessionController implements AutoCloseable {
         action(s->{
             s.focus=square;
             if(s.selected==square) { s.selected=-1; s.feedback=""; }
-            else if(Character.isUpperCase(game.pieceAt(square))) { s.selected=square; s.feedback=""; }
+            else if(game.pieceAt(square)!='.'&&Character.isUpperCase(game.pieceAt(square))==game.whiteToMove()) { s.selected=square; s.feedback=""; }
             else if(s.selected>=0) {
                 String prefix=SessionCodec.uciSquare(s.selected)+SessionCodec.uciSquare(square);
                 List<String> matches=new ArrayList<>();
@@ -211,13 +211,13 @@ public final class SessionController implements AutoCloseable {
     }
     public void playIntendedMove() {
         if(!canAct()||state.intendedMove==null||!foreground||state.paused||presentation!=null
-                ||state.phase!=Session.Phase.CHESS||!state.result.isEmpty()||!game.whiteToMove()
+                ||state.phase!=Session.Phase.CHESS||!state.result.isEmpty()||!isHumanTurn()
                 ||thinkingRemainingMs()>0)return;
         String move=state.intendedMove;
         if(game.legalMoves().contains(move))action(s->applyMove(s,move),false);
     }
     public void claimDraw() {
-        if(!canAct()||state.phase!=Session.Phase.CHESS||!state.result.isEmpty())return;
+        if(!canAct()||state.phase!=Session.Phase.CHESS||!state.result.isEmpty()||!isHumanTurn()||presentation!=null)return;
         boolean valid=state.intendedMove==null?game.claimableDraw():game.claimableAfter(state.intendedMove);
         if(valid)action(s->{s.result="Remise geclaimd"; s.intendedMove=null; s.selected=-1; s.promotionTo=-1;clearThinking(s);},true);
     }
@@ -263,7 +263,7 @@ public final class SessionController implements AutoCloseable {
     public void skipToMath() {
         if(!canAct())return;
         epoch++; workerRunning=false;cancelPresentation();
-        action(s->{if(mathsEnabled)beginMath(s);else beginChess(s);s.paused=true;},true);
+        action(s->{if(s.mode==Session.Mode.COMPUTER&&mathsEnabled)beginMath(s);else beginChess(s);s.paused=true;},true);
     }
     public void skipToChess() {
         if(!canAct())return;
@@ -285,7 +285,8 @@ public final class SessionController implements AutoCloseable {
         if(busy||closed)return;
         epoch++; workerRunning=false;generation++;cancelPresentation();
         Session fresh=new Session(false); fresh.config=state.config.copy();
-        if(mathsEnabled)generateExercise(fresh);else beginChess(fresh);
+        fresh.mode=state.mode;fresh.whiteProfile=state.whiteProfile;fresh.blackProfile=state.blackProfile;
+        if(fresh.mode==Session.Mode.COMPUTER&&mathsEnabled)generateExercise(fresh);else beginChess(fresh);
         fresh.revision=state.revision; corrupt=false;error=null;failedSave=null;
         commit(fresh);
     }
@@ -298,12 +299,29 @@ public final class SessionController implements AutoCloseable {
     }
 
     private boolean canAct() { return !busy && !closed && error==null && !corrupt; }
+    public void startLocalGame(PlayerProfile white,PlayerProfile black){
+        if(white==null||black==null||white.portraitId.equals(black.portraitId))throw new IllegalArgumentException("Choose different portraits");
+        if(!canAct())return;
+        epoch++;generation++;workerRunning=false;replyAt=-1;cancelPresentation();
+        Session next=new Session(false);next.config=state.config.copy();next.mode=Session.Mode.LOCAL;
+        next.whiteProfile=white;next.blackProfile=black;next.phase=Session.Phase.CHESS;next.paused=false;
+        successPending=false;successAnchor=-1;successShownMs=0;commit(next);
+    }
+    /** Starts the existing solo practice flow with the saved play preferences. */
+    public void startComputerGame(){
+        if(!canAct())return;
+        epoch++;generation++;workerRunning=false;replyAt=-1;cancelPresentation();
+        Session next=new Session(false);next.config=state.config.copy();
+        if(mathsEnabled)generateExercise(next);else beginChess(next);
+        next.paused=false;commit(next);
+    }
+    public boolean isHumanTurn(){return state.mode==Session.Mode.LOCAL||game.whiteToMove();}
     private boolean canPlay() {
         return canAct()&&presentation==null&&!state.paused&&foreground&&state.phase==Session.Phase.CHESS
-                && state.result.isEmpty()&&game.whiteToMove()&&state.intendedMove==null&&thinkingRemainingMs()==0;
+                && state.result.isEmpty()&&isHumanTurn()&&state.intendedMove==null&&thinkingRemainingMs()==0;
     }
     private boolean canMath() {
-        return canAct()&&!state.paused&&foreground&&state.phase==Session.Phase.MATH&&state.exercise!=null;
+        return state.mode==Session.Mode.COMPUTER&&canAct()&&!state.paused&&foreground&&state.phase==Session.Phase.MATH&&state.exercise!=null;
     }
     private boolean active() {
         return foreground&&!state.paused&&error==null&&!busy
@@ -352,7 +370,7 @@ public final class SessionController implements AutoCloseable {
     }
     private void applyMove(Session s,String move) {
         ChessGame board=ChessGame.fromHistory(s.moves);
-        boolean computerMove=!board.whiteToMove();board.play(move);
+        boolean computerMove=s.mode==Session.Mode.COMPUTER&&!board.whiteToMove();board.play(move);
         clearThinking(s);
         if(computerMove&&board.result().isEmpty()){
             s.thinkingRemainingMs=thinkingSeconds*1000L;s.thinkingTotalMs=s.thinkingRemainingMs;
@@ -433,7 +451,7 @@ public final class SessionController implements AutoCloseable {
         });
     }
     private void scheduleComputer() {
-        if(presentation!=null||replyAt>=0||!canAct()||state.paused||!foreground||state.phase!=Session.Phase.CHESS
+        if(state.mode!=Session.Mode.COMPUTER||presentation!=null||replyAt>=0||!canAct()||state.paused||!foreground||state.phase!=Session.Phase.CHESS
                 ||!state.result.isEmpty()||game.whiteToMove()||workerRunning)return;
         long token=epoch,revision=state.revision;
         List<String> history=new ArrayList<>(state.moves);
@@ -450,7 +468,7 @@ public final class SessionController implements AutoCloseable {
             } catch(RuntimeException failure) { move=null; }
             final String chosen=move;
             main.execute(()->{
-                if(closed||token!=epoch)return;
+                if(closed||token!=epoch||state.mode!=Session.Mode.COMPUTER)return;
                 workerRunning=false;
                 if(!canAct()||state.paused||!foreground||state.phase!=Session.Phase.CHESS
                         ||revision!=state.revision||game.whiteToMove()) { scheduleComputer();return; }

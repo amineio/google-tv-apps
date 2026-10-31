@@ -1,0 +1,200 @@
+{
+  "generator": "OpenAI built-in image_gen",
+  "rights": "Original AI-generated artwork created for this project. No third-party source assets. The supplied concept is an art-direction reference only.",
+  "processing": "Pillow resampling, sprite cell extraction, alpha trim, and WebP compression. No composited screenshot is bundled.",
+  "assets": [
+    {
+      "file": "apps/memory-parade/src/main/res/drawable-nodpi/forest.webp",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "sha256": "0bbb41b2318509cad7272dd5acf26045201b4b627b40ae4e564cec839a8f45a8",
+      "source": "exec-2d54a515-2738-4d14-9dd5-7de3e5237eae.png",
+      "compression": "WebP quality 88 method 6"
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/drawable-nodpi/app_hero.webp",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "sha256": "99bb23e0fb3209c35990b9f4581db0af683c080b167d2f91cf6cbb41ffaa0db8",
+      "source": "exec-a43f013b-e6b9-4fb6-ac17-29d30df246b7.png",
+      "compression": "WebP quality 88 method 6"
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/drawable-nodpi/app_icon.webp",
+      "dimensions": [
+        512,
+        512
+      ],
+      "sha256": "af2c0e2164baf65454018653ca2c5098ca7d112df1b258964edb26e043a2eda6",
+      "source": "exec-fface563-fea1-4c48-905e-ae85c4874adc.png",
+      "compression": "WebP quality 88 method 6"
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/drawable-nodpi/app_banner.webp",
+      "dimensions": [
+        640,
+        360
+      ],
+      "sha256": "85c07dceedd474a3349490bd440f6dc1e96998016dcf0fee88938aec788b51da",
+      "source": "exec-9d70ada7-82f3-4433-b483-d7b4610c09f0.png",
+      "compression": "WebP quality 88 method 6"
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/drawable-nodpi/fox.webp",
+      "dimensions": [
+        335,
+        400
+      ],
+      "sha256": "ba9045bd8fe93f4e84f4b371562832165515ab91c6ca9f48c311ab81a57e43fe",
+      "source": "generated transparent six-animal atlas cell 0",
+      "compression": "WebP quality 92 method 6, alpha preserved"
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/drawable-nodpi/panda.webp",
+      "dimensions": [
+        306,
+        382
+      ],
+      "sha256": "b8d7750e81cbe698c5f3fcea563e89e284ac9d3815dbd899e2c86d26c3d8683d",
+      "source": "generated transparent six-animal atlas cell 1",
+      "compression": "WebP quality 92 method 6, alpha preserved",
+      "processing_note": "Removed detached neighboring deer-ear fragment below panda feet. All genuine panda pixels retained. Bottom crop changed from400 to382 pixels. All six sprites visually inspected."
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/drawable-nodpi/rabbit.webp",
+      "dimensions": [
+        244,
+        400
+      ],
+      "sha256": "e0a86b03c82d84a55f41745ed395795d971f3608223bbd775e0a1c4cd0345bda",
+      "source": "generated transparent six-animal atlas cell 2",
+      "compression": "WebP quality 92 method 6, alpha preserved"
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/drawable-nodpi/owl.webp",
+      "dimensions": [
+        314,
+        400
+      ],
+      "sha256": "8a69cbb715aba870c1397d299f31e0ee3ca4a4dab0851994a5b048c87f8dc579",
+      "source": "generated transparent six-animal atlas cell 3",
+      "compression": "WebP quality 92 method 6, alpha preserved"
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/drawable-nodpi/deer.webp",
+      "dimensions": [
+        293,
+        400
+      ],
+      "sha256": "d8d5e90a8572bd4026b3347949bc827e4f6e038dc6b868e158e0fc0a11693c14",
+      "source": "generated transparent six-animal atlas cell 4",
+      "compression": "WebP quality 92 method 6, alpha preserved"
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/drawable-nodpi/bear.webp",
+      "dimensions": [
+        338,
+        400
+      ],
+      "sha256": "d4c4991cf7f2375029151b8e98f81c87d9185f5ef3ffffa04a4a9d150ad39fcb",
+      "source": "generated transparent six-animal atlas cell 5",
+      "compression": "WebP quality 92 method 6, alpha preserved"
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/drawable-nodpi/card_back.webp",
+      "dimensions": [
+        536,
+        460
+      ],
+      "sha256": "5e18db2b44c7a09e024cdce168f46780caa49ed1dd17341fbc6ca2d567549210",
+      "source": "exec-dc17dd57-3393-4e25-a127-cf2c618482b0.png",
+      "compression": "WebP quality91 method6, stage alpha preserved"
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/drawable-nodpi/parade_stage.webp",
+      "dimensions": [
+        600,
+        600
+      ],
+      "sha256": "5fd80438a15dc8dd7878473be4a8c03bef7736e3048226ab4a925435f040e111",
+      "source": "exec-b99d74cf-14f6-4b1c-8f9c-cbf0265ab153.png",
+      "compression": "WebP quality91 method6, stage alpha preserved"
+    }
+  ],
+  "audio": [
+    {
+      "file": "apps/memory-parade/src/main/res/raw/arrival.wav",
+      "duration_seconds": 0.22,
+      "sample_rate": 22050,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "sha256": "d9b03c6a8a44d7e425ff3e0592bdb8cb213af7d69db97321c9932b32debd0507",
+      "source": "Original additive synthesis in apps/memory-parade/tools/synthesize_audio.py",
+      "rights": "Original generated waveforms; no third-party samples"
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/complete.wav",
+      "duration_seconds": 0.95,
+      "sample_rate": 22050,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "sha256": "065e716352f56a417841af08035570888a0d226ca2d9072fb017262eabff18ce",
+      "source": "Original additive synthesis in apps/memory-parade/tools/synthesize_audio.py",
+      "rights": "Original generated waveforms; no third-party samples"
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/confirm.wav",
+      "duration_seconds": 0.17,
+      "sample_rate": 22050,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "sha256": "f28b3b64fca0d0c6672e603b2b914a3583e8ce32e863471c338191c2a25d3079",
+      "source": "Original additive synthesis in apps/memory-parade/tools/synthesize_audio.py",
+      "rights": "Original generated waveforms; no third-party samples"
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/flip.wav",
+      "duration_seconds": 0.18,
+      "sample_rate": 22050,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "sha256": "db0805a7d7034159c63206493756e2e1c1be96f92e4b883f5075b3aea775e428",
+      "source": "Original additive synthesis in apps/memory-parade/tools/synthesize_audio.py",
+      "rights": "Original generated waveforms; no third-party samples"
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/match.wav",
+      "duration_seconds": 0.42,
+      "sample_rate": 22050,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "sha256": "cfc5dc6d268665d4069c4edbe6819bcbced96b13c6eb23177b89e049fb6c0e2e",
+      "source": "Original additive synthesis in apps/memory-parade/tools/synthesize_audio.py",
+      "rights": "Original generated waveforms; no third-party samples"
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/mismatch.wav",
+      "duration_seconds": 0.24,
+      "sample_rate": 22050,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "sha256": "1d654c78210eae09a3915ca517bc8252121a938fb2d45429b27c7033cd8b2a74",
+      "source": "Original additive synthesis in apps/memory-parade/tools/synthesize_audio.py",
+      "rights": "Original generated waveforms; no third-party samples"
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/navigate.wav",
+      "duration_seconds": 0.055,
+      "sample_rate": 22050,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "sha256": "025ab9ad1457de88013a571549639aa5f97c7e5efbdc3f73b622203a2ea87fdd",
+      "source": "Original additive synthesis in apps/memory-parade/tools/synthesize_audio.py",
+      "rights": "Original generated waveforms; no third-party samples"
+    }
+  ]
+}
