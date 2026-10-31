@@ -34,8 +34,11 @@ Leaving the app stops all recording, inference, and audio. The displayed text re
 Install the same release APK privately from the Mac through ADB, the Android device connection tool.
 There is no helper download website or public APK upload.
 The TV QR connects an installed helper to one sign-in attempt. It does not install the helper.
-On the TV route screen, **Phone setup guide · install once** opens a guide QR.
-That QR opens this installation section. It does not install the APK or start a pairing attempt.
+Select **Phone setup guide** from the TV route screen or while pairing.
+Its guide QR opens this installation section. It does not install the APK or start a pairing attempt.
+The guide offers the matching return action: **Back to pairing**, **Back to sign-in choices**, or **Back to sign-in status**.
+Opening the guide while pairing keeps the same host and original expiry deadline.
+The active guide shows **Pairing expires in m:ss** from that original deadline.
 Enable the phone's developer connection and authorize the Mac before installation.
 Replace each serial placeholder with the target shown by `adb devices`.
 Build the APK with the commands in **Build and install**, then run:
@@ -80,7 +83,9 @@ When available, its notification opens the helper or cancels the attempt.
 Do not force-stop the helper or remove its task during authorization.
 If the helper stops, get a new code on the TV.
 
-“Authorization sent” on the phone means that the callback reached the TV.
+The browser says “Authorization received on this phone. Return to AI Chat to check delivery.”
+That browser message confirms only local callback receipt on the phone.
+“Authorization sent” in the phone helper appears only after the TV accepts the callback delivery.
 It does not mean that the TV saved a verified account.
 The TV must verify the identity and save the account before it reports **Your TV is connected**.
 If the TV saves the account without plan permission, select **Allow plan access** and complete consent again.
@@ -165,7 +170,7 @@ The installer tests the release unit suite, runs release lint, builds the APK, i
 It prints the artifact hash and installed version.
 It leaves launcher routing, Cast packages, other apps, and existing app data unchanged.
 The release APK uses the repository's local debug signing configuration. Store signing is separate work.
-Physical TV installation requires a specific user request or a reported TV issue.
+Follow the [repository delivery instructions](../../AGENTS.md) for installation and delivery.
 
 Run each native test class separately with an explicit emulator serial. For example:
 
@@ -183,7 +188,8 @@ Answers longer than the speech engine limit remain fully readable. **Read aloud*
 
 Artwork and rights are recorded in [the asset record](../../docs/ask-tv/assets.md).
 The [phone sign-in concept record](../../docs/ask-tv/phone-sign-in-concept.md) records private ImageGen previews. Existing bundled artwork is unchanged.
-The [0.3 phone sign-in validation record](../../docs/ask-tv/phone-sign-in-validation-2026-10-30.md) separates tests, reviews, pending release checks, and live authorization.
+The [0.3 phone sign-in validation record](../../docs/ask-tv/phone-sign-in-validation-2026-10-30.md) records completed release checks, verified TV installation, application delivery, and live-test limits.
+Personal-phone installation and live QR authorization are deferred at the user's request.
 The [0.2 validation record](../../docs/ask-tv/validation-2026-10-30-ai-chat.md) records the earlier installed release and completed Mac sign-in.
 The user reported a successful remote question and spoken answer on installed 0.2.
 That result does not establish phone authorization or physical voice behavior for 0.3.
