@@ -26,7 +26,8 @@ import androidx.lifecycle.viewModelScope
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -80,18 +81,16 @@ internal class PhoneHelperMemory : ViewModel() {
 
 class PhoneAuthActivity : ComponentActivity() {
     private lateinit var memory: PhoneHelperMemory
-    private var binder: PhoneAuthService.LocalBinder? = null
+    private val binding = MutableStateFlow<PhoneAuthService.LocalBinder?>(null)
     private var bound = false
-    private var collector: Job? = null
     private var ui by mutableStateOf(PhoneAuthUi())
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
-            binder = service as PhoneAuthService.LocalBinder
-            collectSession()
+            binding.value = service as PhoneAuthService.LocalBinder
             continueWhenReady()
         }
         override fun onServiceDisconnected(name: ComponentName) {
-            binder = null
+            binding.value = null
             memory.inProgress = false
             memory.cancelConfirmation()
             ui = PhoneAuthUi(PhoneAuthPhase.FINISHED, "The phone helper stopped. Get a new code on your TV.")
@@ -130,6 +129,31 @@ class PhoneAuthActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         memory = ViewModelProvider(this)[PhoneHelperMemory::class.java]
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                binding.collectLatest { service ->
+                    if (service == null) return@collectLatest
+                    service.snapshot.collect { update ->
+                        ui = update
+                        memory.inProgress = update.phase in ACTIVE_PHASES
+                        if (memory.inProgress && memory.candidate != null) {
+                            memory.candidate = null
+                            memory.paste = ""
+                            memory.message = "Sign-in is already active. Cancel it before opening another TV code."
+                        }
+                        if (update.canOpenBrowser) {
+                            val authorization = service.takeBrowserLaunch() ?: return@collect
+                            try {
+                                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(authorization.url)).addCategory(Intent.CATEGORY_BROWSABLE))
+                            } catch (_: Exception) {
+                                service.cancel()
+                                memory.message = "A browser could not open. Install or enable a browser, then get a new TV code."
+                            }
+                        }
+                    }
+                }
+            }
+        }
         receiveAndClear(intent)
         // Remove private leftovers from a process that stopped before a camera result arrived.
         val createdAt = System.currentTimeMillis()
@@ -163,24 +187,18 @@ class PhoneAuthActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         if (!bound) bound = bindService(Intent(this, PhoneAuthService::class.java), connection, Context.BIND_AUTO_CREATE)
-        if (binder != null) collectSession()
         if (!bound) memory.message = "The phone helper could not start. Reopen AI Chat and try a new TV code."
     }
     override fun onResume() {
         super.onResume()
         continueWhenReady()
     }
-    override fun onStop() {
-        collector?.cancel(); collector = null
-        // Keep the actual binding while the browser is visible. After foreground completion,
-        // the bound service retains only its safe result until this activity is destroyed.
-        super.onStop()
-    }
     override fun onDestroy() {
-        collector?.cancel(); collector = null
+        // Keep the binding while the browser is visible. After foreground completion,
+        // the bound service retains only its safe result until this activity is destroyed.
         if (bound) unbindService(connection)
         bound = false
-        binder = null
+        binding.value = null
         super.onDestroy()
     }
     override fun onNewIntent(intent: Intent) {
@@ -203,32 +221,6 @@ class PhoneAuthActivity : ComponentActivity() {
             memory.message = if (parsed == null) "This is not a valid AI Chat TV code. Get a new code on your TV." else null
         }
     }
-    private fun collectSession() {
-        collector?.cancel()
-        val service = binder ?: return
-        collector = lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                service.snapshot.collect { update ->
-                    ui = update
-                    memory.inProgress = update.phase in ACTIVE_PHASES
-                    if (memory.inProgress && memory.candidate != null) {
-                        memory.candidate = null
-                        memory.paste = ""
-                        memory.message = "Sign-in is already active. Cancel it before opening another TV code."
-                    }
-                    if (update.canOpenBrowser) {
-                        val authorization = service.takeBrowserLaunch() ?: return@collect
-                        try {
-                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(authorization.url)).addCategory(Intent.CATEGORY_BROWSABLE))
-                        } catch (_: Exception) {
-                            service.cancel()
-                            memory.message = "A browser could not open. Install or enable a browser, then get a new TV code."
-                        }
-                    }
-                }
-            }
-        }
-    }
     private fun continueFromVisibleUi() {
         if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) || !memory.confirmCandidate()) return
         memory.message = null
@@ -248,7 +240,7 @@ class PhoneAuthActivity : ComponentActivity() {
     private fun continueWhenReady() {
         if (!::memory.isInitialized || !memory.continueRequested || !memory.permissionsReady || !hasLocalNetworkPermission() ||
             !lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) return
-        val service = binder
+        val service = binding.value
         if (service == null) {
             if (!bound) {
                 memory.cancelConfirmation()
@@ -279,7 +271,7 @@ class PhoneAuthActivity : ComponentActivity() {
         memory.message = null
         memory.inProgress = false
         memory.discardPhoto()
-        binder?.cancel()
+        binding.value?.cancel()
     }
     private fun takePhotograph() {
         if (memory.hasActiveFlow) return
