@@ -77,6 +77,60 @@ class PhoneSignInNavigationTest {
         oneFocus()
     }
 
+    @Test fun activePairingGuideReturnsByBackWithoutReplacingOrCancelingTheAttempt() {
+        val f=start()
+        phoneRoute(); qrVisible()
+        val host=f.hosts.single()
+        val deadline=f.model.ui.phonePairing?.expiresAtElapsedMs
+        key(KeyEvent.KEYCODE_DPAD_RIGHT)
+        rule.onNodeWithTag("phone-sign-in-mac").assertIsFocused()
+        key(KeyEvent.KEYCODE_DPAD_RIGHT)
+        rule.onNodeWithTag("phone-sign-in-setup").assertIsFocused()
+        key(KeyEvent.KEYCODE_DPAD_CENTER)
+        rule.onNodeWithTag("phone-setup-back").assertIsFocused()
+        rule.onNodeWithText("Back to pairing").assertExists()
+        rule.onNodeWithTag("phone-setup-guide-qr").assertIsDisplayed()
+        assertEquals(1,f.hosts.size)
+        assertFalse(host.closed)
+        assertEquals(deadline,f.model.ui.phonePairing?.expiresAtElapsedMs)
+        oneFocus()
+        key(KeyEvent.KEYCODE_BACK)
+        rule.onNodeWithTag("phone-sign-in-setup").assertIsFocused()
+        qrVisible()
+        assertSame(host,f.hosts.single())
+        assertFalse(host.closed)
+        assertEquals(deadline,f.model.ui.phonePairing?.expiresAtElapsedMs)
+        oneFocus()
+    }
+
+    @Test fun guideReturnFollowsAnExternalMacRouteAndItsCanceledState() {
+        val f=start()
+        fun openGuideFromReady() {
+            key(KeyEvent.KEYCODE_DPAD_CENTER)
+            rule.onNodeWithTag("sign-in-phone-route").assertIsFocused()
+            key(KeyEvent.KEYCODE_DPAD_DOWN)
+            key(KeyEvent.KEYCODE_DPAD_CENTER)
+            rule.onNodeWithTag("phone-setup-back").assertIsFocused()
+        }
+        openGuideFromReady()
+        // Same public route entry used by the existing Mac helper intent.
+        rule.runOnIdle { f.model.signIn(SignInRoute.MAC) }
+        rule.onNodeWithText("Back to sign-in status").assertExists()
+        key(KeyEvent.KEYCODE_BACK)
+        rule.onNodeWithTag("mac-sign-in-cancel").assertIsFocused()
+        oneFocus()
+        key(KeyEvent.KEYCODE_BACK)
+        rule.onNodeWithTag("sign-in-retry").assertIsFocused()
+        key(KeyEvent.KEYCODE_BACK)
+        rule.onNodeWithTag("ready-sign-in").assertIsFocused()
+        openGuideFromReady()
+        rule.runOnIdle { f.model.signIn(SignInRoute.MAC) }
+        rule.runOnIdle { f.model.cancelSignIn() }
+        key(KeyEvent.KEYCODE_BACK)
+        rule.onNodeWithTag("sign-in-retry").assertIsFocused()
+        oneFocus()
+    }
+
     @Test fun displayedQrDecodesToTheSyntheticAttemptAndKeepsAWhiteQuietZone() {
         val f = start()
         phoneRoute(); qrVisible()

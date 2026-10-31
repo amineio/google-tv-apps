@@ -62,6 +62,8 @@ class AskTvNavigationTest {
             key(KeyEvent.KEYCODE_DPAD_CENTER)
             rule.onNodeWithTag("question-input").assertExists()
             waitForIme(automation, visible = true)
+            rule.onNodeWithText("Use the keyboard · Back  Close keyboard").assertIsDisplayed()
+            rule.onNodeWithText("Enter your question").assertIsDisplayed()
 
             rule.onNodeWithTag("question-input").performTextInput("What is two plus two?")
             // Wait for actual keyboard dismissal before navigating to Ask or canceling.

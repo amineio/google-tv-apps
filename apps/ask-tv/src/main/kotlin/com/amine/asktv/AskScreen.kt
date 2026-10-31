@@ -21,7 +21,6 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -194,7 +193,7 @@ import kotlinx.coroutines.launch
         val cancelFocus=remember { FocusRequester() }
         var inputFocused by remember { mutableStateOf(false) }
         Dialog(onDismissRequest={typing=false;model.dialogClosed()},properties=DialogProperties(usePlatformDefaultWidth=false,decorFitsSystemWindows=false)) {
-            val keyboardVisible=WindowInsets.ime.getBottom(LocalDensity.current)>0
+            val keyboardVisible=WindowInsets.isImeVisible
             Box(Modifier.fillMaxSize().imePadding().padding(24.dp),contentAlignment=Alignment.TopCenter) {
             Column(Modifier.widthIn(max=640.dp).fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(Panel).border(1.dp,Ink.copy(alpha=.18f),RoundedCornerShape(22.dp)).padding(20.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
                 Text(if(ui.page==Page.ANSWER) "Ask a follow-up" else "Type a question",fontFamily=Outfit,fontSize=26.sp,color=Ink)
@@ -207,9 +206,9 @@ import kotlinx.coroutines.launch
                             true
                         } else false
                     },
-                    decorationBox={ inner -> Box { if(text.isEmpty()) Text("Select to enter your question",color=Muted,fontSize=21.sp); inner() } },
+                    decorationBox={ inner -> Box { if(text.isEmpty()) Text(if(keyboardVisible) "Enter your question" else "Select to enter your question",color=Muted,fontSize=21.sp); inner() } },
                     singleLine=true,textStyle=TextStyle(color=Ink,fontFamily=Outfit,fontSize=22.sp),cursorBrush=androidx.compose.ui.graphics.SolidColor(Gold))
-                Text(if(keyboardVisible) "Back  Close keyboard" else if(inputFocused) "OK  Edit · Down  ${if(text.isNotBlank()) "Ask" else "Cancel"} · Back  Cancel" else "OK  Select · Up  Edit · Back  Cancel",color=Muted,fontSize=15.sp)
+                Text(if(keyboardVisible) "Use the keyboard · Back  Close keyboard" else if(inputFocused) "OK  Edit · Down  ${if(text.isNotBlank()) "Ask" else "Cancel"} · Back  Cancel" else "OK  Select · Up  Edit · Back  Cancel",color=Muted,fontSize=15.sp)
                 Text("${text.length} / 4,000",color=Muted,fontSize=14.sp)
                 Row(horizontalArrangement=Arrangement.spacedBy(14.dp)) {
                     TvButton("Ask",Modifier.testTag("question-submit").focusRequester(submitFocus).focusProperties { up=inputFocus },primary=true,enabled=text.isNotBlank(),onClick={typing=false;model.submit(text)})

@@ -37,17 +37,33 @@ internal fun phoneQrBitmap(link:String):Bitmap {
 @Composable internal fun PhoneSignInPanel(ui:AskUi,onPhone:(Boolean)->Unit,onMac:(Boolean)->Unit,
     onCancel:()->Unit,onBack:()->Unit,onDone:()->Unit,onEnablePlan:()->Unit,onFocused:(String)->Unit) {
     val names=listOf("sign-in-phone-route","sign-in-mac-route","sign-in-back","phone-sign-in-cancel","phone-sign-in-mac",
-        "phone-sign-in-retry","sign-in-retry","mac-sign-in-cancel","phone-sign-in-done","phone-sign-in-enable-plan","phone-setup","phone-setup-back")
+        "phone-sign-in-retry","sign-in-retry","mac-sign-in-cancel","phone-sign-in-done","phone-sign-in-enable-plan","phone-setup","phone-setup-back","phone-sign-in-setup")
     val focus=remember { names.associateWith { FocusRequester() } }
     var setup by rememberSaveable { mutableStateOf(false) }
     fun control(tag:String)=Modifier.testTag(tag).focusRequester(focus.getValue(tag)).onFocusChanged { if(it.isFocused) onFocused(tag) }
     LaunchedEffect(ui.focusVersion,ui.signInState,ui.signInRoute,setup) {
         focus[if(setup) "phone-setup-back" else ui.focus]?.let { runCatching { it.requestFocus() } }
     }
-    fun closeSetup() { onFocused("phone-setup"); setup=false }
-    BackHandler(setup) { closeSetup() }
     val phone=ui.signInRoute==SignInRoute.PHONE
     val waiting=ui.signInState in setOf("waiting","verifying","permission","starting")
+    val setupBackLabel=when {
+        ui.signInState=="choose" -> "Back to sign-in choices"
+        waiting && phone -> "Back to pairing"
+        else -> "Back to sign-in status"
+    }
+    fun closeSetup() {
+        onFocused(when {
+            ui.signInState=="choose" -> "phone-setup"
+            waiting && phone -> "phone-sign-in-setup"
+            waiting -> "mac-sign-in-cancel"
+            ui.signInState=="connected" -> "phone-sign-in-done"
+            ui.signInState=="plan_required" -> "phone-sign-in-enable-plan"
+            phone -> "phone-sign-in-retry"
+            else -> "sign-in-retry"
+        })
+        setup=false
+    }
+    BackHandler(setup) { closeSetup() }
     val committed=ui.signInState in setOf("connected","plan_required")
     var now by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
     LaunchedEffect(ui.phonePairing?.expiresAtElapsedMs) { while(true) { now=SystemClock.elapsedRealtime(); delay(1000) } }
@@ -72,14 +88,15 @@ internal fun phoneQrBitmap(link:String):Bitmap {
                         Text("SETUP GUIDE · opens a web page",color=Gold,fontSize=14.sp)
                     }
                     Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                        Text("Install once from your Mac",fontSize=23.sp)
-                        Text("Use an Android 14+ phone. Connect it to your Mac and allow USB debugging.",color=Muted,fontSize=18.sp)
-                        Text("Install AI Chat privately with ADB from this repository on your Mac. The guide has the build and install commands.",color=Muted,fontSize=18.sp)
-                        Text("Scan this guide with your phone camera. It is not a pairing code or an APK download.",color=Muted,fontSize=18.sp)
-                        Text("After installation, open AI Chat on the phone. Return here and choose Use Android phone.",color=Muted,fontSize=18.sp)
+                        Text("Android 14+ phone and Mac required",fontSize=22.sp)
+                        Text("1  Scan to open the setup guide.",color=Muted,fontSize=19.sp)
+                        Text("2  Follow the guide for one-time private installation from your Mac over USB.",color=Muted,fontSize=19.sp)
+                        Text(if(ui.signInState=="choose") "3  Select Back to sign-in choices, then Use Android phone." else "3  Open AI Chat on your phone. Select $setupBackLabel on this TV.",color=Muted,fontSize=19.sp)
+                        Text("This QR opens instructions. It does not pair or install the helper.",color=Muted,fontSize=16.sp)
+                        if(ui.signInState!="choose") Text(if(waiting && phone) "Pairing stays active. Its original timer continues." else if(waiting) "Mac sign-in stays active. Its original timer continues." else "The sign-in status changed. Go back to check it.",color=Gold,fontSize=16.sp)
                     }
                 }
-                TvButton("Back to sign-in choices",control("phone-setup-back"),onClick=::closeSetup)
+                TvButton(setupBackLabel,control("phone-setup-back"),onClick=::closeSetup)
             }
             ui.signInState=="choose" -> {
                 Text(if(ui.requestConsent) "Sign in again and allow AI Chat to use your existing ChatGPT plan." else "Choose where to open the secure ChatGPT sign-in page.",color=Muted,fontSize=19.sp)
@@ -124,6 +141,7 @@ internal fun phoneQrBitmap(link:String):Bitmap {
                 Row(horizontalArrangement=Arrangement.spacedBy(16.dp)) {
                     TvButton("Cancel",control("phone-sign-in-cancel"),onClick=onCancel)
                     TvButton("Use Mac helper",control("phone-sign-in-mac"),onClick={onMac(ui.requestConsent)})
+                    TvButton("Phone setup guide",control("phone-sign-in-setup"),onClick={setup=true})
                 }
             }
             waiting -> {
@@ -157,6 +175,6 @@ internal fun phoneQrBitmap(link:String):Bitmap {
                 }
             }
         }
-        Text(if(waiting) "Back  Cancel sign-in" else "Back  Return",color=Muted,fontSize=15.sp)
+        Text(if(setup) "Back  Return" else if(waiting) "Back  Cancel sign-in" else "Back  Return",color=Muted,fontSize=15.sp)
     }
 }

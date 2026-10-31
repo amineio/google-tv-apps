@@ -81,6 +81,19 @@ class TvFlowCaptureTest {
         rule.onNodeWithTag("phone-sign-in-cancel").assertIsFocused()
         // The QR is synthetic: no listener is bound and the host is a fixed test address.
         capture("03-phone-synthetic-qr")
+        key(KeyEvent.KEYCODE_DPAD_RIGHT)
+        rule.onNodeWithTag("phone-sign-in-mac").assertIsFocused()
+        key(KeyEvent.KEYCODE_DPAD_RIGHT)
+        rule.onNodeWithTag("phone-sign-in-setup").assertIsFocused()
+        key(KeyEvent.KEYCODE_DPAD_CENTER)
+        rule.onNodeWithTag("phone-setup-back").assertIsFocused()
+        capture("03b-active-phone-setup-guide")
+        key(KeyEvent.KEYCODE_BACK)
+        rule.onNodeWithTag("phone-sign-in-setup").assertIsFocused()
+        capture("03c-pairing-guide-return")
+        key(KeyEvent.KEYCODE_DPAD_LEFT)
+        key(KeyEvent.KEYCODE_DPAD_LEFT)
+        rule.onNodeWithTag("phone-sign-in-cancel").assertIsFocused()
         f.workerAction { f.claim(); f.pulse() }
         rule.waitUntil(5_000) { rule.onAllNodesWithTag("phone-sign-in-qr").fetchSemanticsNodes().isEmpty() }
         capture("04-phone-claimed")
@@ -173,9 +186,15 @@ class TvFlowCaptureTest {
         serviceInfo.flags=originalFlags or AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
         automation.serviceInfo=serviceInfo
         try {
+            val entryWindows=rule.runOnIdle { WindowInspector.getGlobalWindowViews().filter { it.isAttachedToWindow }.toSet() }
+            val entryAppWindows=automation.windows.count { it.type==AccessibilityWindowInfo.TYPE_APPLICATION }
             key(KeyEvent.KEYCODE_DPAD_CENTER)
             rule.onNodeWithTag("question-input").assertIsFocused()
             waitForIme(automation,true)
+            rule.onNodeWithText("Use the keyboard · Back  Close keyboard").assertIsDisplayed()
+            rule.onNodeWithText("Enter your question").assertIsDisplayed()
+            val dialogWindows=rule.runOnIdle { WindowInspector.getGlobalWindowViews().filter { it.isAttachedToWindow && it !in entryWindows } }
+            check(dialogWindows.isNotEmpty()) { "Expected an application Dialog window for typing." }
             capture("19-type-ime")
             rule.onNodeWithTag("question-input").performTextInput("What is two plus two?")
             key(KeyEvent.KEYCODE_BACK)
@@ -187,6 +206,14 @@ class TvFlowCaptureTest {
             capture("21-type-ask-focused")
             key(KeyEvent.KEYCODE_BACK)
             rule.onNodeWithTag("type").assertIsFocused()
+            // Semantic removal can precede the platform Dialog window's exit.
+            // Wait for both the actual outgoing window and accessibility window to disappear.
+            rule.waitUntil(5_000) {
+                rule.onAllNodesWithTag("question-input").fetchSemanticsNodes().isEmpty() &&
+                    rule.runOnIdle { dialogWindows.none { it.isAttachedToWindow } } &&
+                    automation.windows.count { it.type==AccessibilityWindowInfo.TYPE_APPLICATION }==entryAppWindows
+            }
+            automation.waitForIdle(200,5_000)
             capture("22-type-return")
         } finally {
             serviceInfo.flags=originalFlags
