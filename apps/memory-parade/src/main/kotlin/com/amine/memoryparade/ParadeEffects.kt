@@ -3,23 +3,23 @@ package com.amine.memoryparade
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.*
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
+
+private fun paradeX(index: Int) = 690f + (index % 4) * 60f
+private fun paradeFeet(index: Int) = if (index < 4) 269f else 367f
 
 @Composable internal fun Parade(game: GameState, active: Boolean) {
     val arrival = remember { Animatable(1f) }
@@ -35,50 +35,37 @@ import kotlin.math.sin
         val phase by transition.animateFloat(0f, (2 * PI).toFloat(), infiniteRepeatable(tween(3200, easing = LinearEasing)), label = "gentle sway")
         phase
     } else 0f
-    Image(painterResource(R.drawable.parade_stage), null, Modifier.offset(632.dp, 176.dp).size(300.dp, 274.dp), contentScale = ContentScale.FillBounds)
-    Column(Modifier.offset(650.dp, 157.dp).width(265.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Label(if (game.completed) "Everyone is here!" else "Your forest friends", 19, Gold)
-        Spacer(Modifier.height(12.dp))
-        repeat(2) { row ->
-            Box(Modifier.height(116.dp).fillMaxWidth()) {
-                Row(Modifier.width(216.dp).align(Alignment.TopCenter), horizontalArrangement = Arrangement.SpaceBetween) {
-                    repeat(3) { col ->
-                        val index = row * 3 + col
-                        Box(Modifier.size(72.dp, 100.dp), contentAlignment = Alignment.BottomCenter) {
-                            if (index < game.parade.size && (index < game.parade.lastIndex || arrival.value >= .99f)) {
-                                Image(painterResource(game.parade[index].drawable), game.parade[index].label,
-                                    Modifier.size(72.dp, 96.dp).graphicsLayer {
-                                        translationY = if (active) sin(motion + index * 1.7f) * 2.4f * density else 0f
-                                        rotationZ = if (active) sin(motion + index * 1.7f) * 1.5f else 0f
-                                    })
-                            }
-                        }
-                    }
-                }
-            }
-            if (row == 0) Spacer(Modifier.height(6.dp))
+    Image(painterResource(R.drawable.parade_stage_expanded), null, Modifier.offset(632.dp, 180.dp).size(300.dp, 240.dp), contentScale = ContentScale.FillBounds)
+    game.parade.forEachIndexed { index, animal ->
+        if (index < game.parade.lastIndex || arrival.value >= .99f) {
+            Image(painterResource(animal.drawable), animal.label,
+                Modifier.offset((paradeX(index) - 29f).dp, (paradeFeet(index) - 84f).dp).size(58.dp, 84.dp).graphicsLayer {
+                    translationY = if (active) sin(motion + index * 1.7f) * 2.4f * density else 0f
+                    rotationZ = if (active) sin(motion + index * 1.7f) * 1.5f else 0f
+                }, alignment = Alignment.BottomCenter)
         }
-        Spacer(Modifier.height(13.dp))
-        Label(if (game.parade.isEmpty()) "Who will join first?" else "${game.parade.size} friends together", 16)
     }
     if (arrival.value < .99f && game.parade.isNotEmpty()) {
         val index = game.parade.lastIndex
+        val layout = BoardLayout(game.size)
         val source = game.lastMatch.lastOrNull() ?: 0
-        val sx = 48f + (source % 4) * 144f + 22f
-        val sy = 120f + (source / 4) * 125f + 10f
-        val tx = 665f + (index % 3) * 72f
-        val ty = 196f + (index / 3) * 122f
+        val sx = layout.cardX(source) + (layout.cardWidth - 58f) / 2
+        val sy = layout.cardY(source) + (layout.cardHeight - 84f) / 2
+        val tx = paradeX(index) - 29f
+        val ty = paradeFeet(index) - 84f
         val p = arrival.value
-        Image(painterResource(game.parade.last().drawable), null, Modifier.offset((sx + (tx - sx) * p).dp, (sy + (ty - sy) * p - sin(p * PI).toFloat() * 65f).dp)
-            .size(90.dp, 100.dp).graphicsLayer { scaleX = .8f + p * .2f; scaleY = .8f + p * .2f; rotationZ = sin(p * PI).toFloat() * 8f })
+        Image(painterResource(game.parade.last().drawable), null, Modifier.offset((sx + (tx - sx) * p).dp, (sy + (ty - sy) * p - sin(p * PI).toFloat() * 55f).dp)
+            .size(58.dp, 84.dp).graphicsLayer { scaleX = 1.2f - p * .2f; scaleY = scaleX; rotationZ = sin(p * PI).toFloat() * 8f }, alignment = Alignment.BottomCenter)
     }
     if (game.completed && active) CompletionSparkles()
 }
 
-@Composable internal fun MatchSparkles(card: Int) {
+@Composable internal fun MatchSparkles(game: GameState) {
+    val card = game.second ?: return
+    val layout = BoardLayout(game.size)
     val progress = remember(card) { Animatable(0f) }
     LaunchedEffect(card) { delay(260); progress.animateTo(1f, tween(600)) }
-    Canvas(Modifier.offset((48 + card % 4 * 144 - 20).dp, (120 + card / 4 * 125 - 20).dp).size(174.dp, 155.dp)) {
+    Canvas(Modifier.offset((layout.cardX(card) - 16).dp, (layout.cardY(card) - 16).dp).size((layout.cardWidth + 32).dp, (layout.cardHeight + 32).dp)) {
         val p = progress.value
         repeat(12) { i ->
             val a = i * PI * 2 / 12
@@ -92,9 +79,9 @@ import kotlin.math.sin
 }
 @Composable private fun CompletionSparkles() {
     val progress = remember { Animatable(0f) }
-    LaunchedEffect(Unit) { progress.animateTo(1f, tween(1150)) }
+    LaunchedEffect(Unit) { progress.animateTo(1f, tween(1500)) }
     Canvas(Modifier.fillMaxSize()) {
-        repeat(45) { i ->
+        repeat(40) { i ->
             val p = progress.value
             val x = size.width * ((i * 37 % 100) / 100f)
             val y = size.height * (.2f + p * .7f) + sin(i.toFloat()) * 80f

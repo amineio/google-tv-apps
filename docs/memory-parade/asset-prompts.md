@@ -34,7 +34,7 @@ Native Compose code draws card geometry, borders, panels, labels, focus outlines
 
 ## Audio synthesis
 
-The original Python script creates mono 16-bit PCM WAV files at 22050 Hz. Each note combines a sine fundamental at 80 percent amplitude and a second harmonic at 15 percent. A sine envelope and short fades prevent clicks. Maximum source peak is 0.23. SoundPool plays each channel at 0.6 volume and limits playback to three streams. The script stores each event's exact frequencies, duration, and peak. Durations range from 55 milliseconds to 950 milliseconds. The app contains navigation, flip, match, mismatch, arrival, completion, and menu confirmation sounds.
+The current Python script creates twelve original mono PCM16 WAV effects at 44.1 kHz. It uses additive, modal, and noise synthesis, DC removal, short entrance/exit fades, and per-effect peak normalization. The exact parameters, playback gains, durations, and hashes are in `audio-upgrade-2026-10-31.json`. SoundPool uses four voices, throttles navigation, gives rewards priority, and lets the finale clear other voices. Mute, pause, and app departure clear voices. No queued sound replays on return.
 
 Audio decoding and event playback do not establish audible quality. The coordinator records listening evidence separately. No music or external audio service is used.
 

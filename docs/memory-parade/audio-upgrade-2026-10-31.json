@@ -1,0 +1,261 @@
+{
+  "date": "2026-10-31",
+  "generator": "Original deterministic Python additive/modal/noise synthesis",
+  "source": "apps/memory-parade/tools/synthesize_audio.py",
+  "sample_format": "44.1 kHz mono PCM16 WAV",
+  "rights": "Original synthesized waveforms. No recordings, third-party samples, or generated voices. Repository MIT license.",
+  "processing": "DC removal, 3 ms entrance and 12 ms exit fades, per-effect peak normalization; no limiting or clipping.",
+  "playback": "Four independent channels. UI navigation has an 80 ms throttle. Rewards outrank UI. The 1.35-second finale clears other voices and rejects further audio until it ends. Stop/mute/release clear every voice and never replay queued effects.",
+  "listening_limit": "Source and numeric inspection do not establish audible quality. A local audition sequence is provided outside Git; TV listening remains separate evidence.",
+  "reproduce": "python3 apps/memory-parade/tools/synthesize_audio.py --metadata docs/memory-parade/audio-upgrade-2026-10-31.json --preview-dir /Users/amine/.codex/artifacts/memory-parade-upgrade-20261031",
+  "assets": [
+    {
+      "file": "apps/memory-parade/src/main/res/raw/navigate.wav",
+      "parameters": {
+        "kind": "wood",
+        "duration": 0.052,
+        "peak": 0.16,
+        "frequency": 465,
+        "seed": 101
+      },
+      "playback_gain": 0.3,
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "duration_seconds": 0.05199546485260771,
+      "bytes": 4630,
+      "sha256": "7342e034e2df718516586831490c57bc64239857884c06ef79315e9653d7b60a",
+      "peak_dbfs": -15.92,
+      "rms_dbfs": -27.5,
+      "clipped_samples": 0
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/navigate_2.wav",
+      "parameters": {
+        "kind": "wood",
+        "duration": 0.056,
+        "peak": 0.16,
+        "frequency": 510,
+        "seed": 102
+      },
+      "playback_gain": 0.3,
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "duration_seconds": 0.05600907029478458,
+      "bytes": 4984,
+      "sha256": "b57d3b8c6c25e2eb8a9a03fa97cc02b4d5f98d10657bfaa4ff27f85dec8f0027",
+      "peak_dbfs": -15.92,
+      "rms_dbfs": -27.69,
+      "clipped_samples": 0
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/flip.wav",
+      "parameters": {
+        "kind": "flip",
+        "duration": 0.18,
+        "peak": 0.25,
+        "frequency": 310,
+        "seed": 201
+      },
+      "playback_gain": 0.5,
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "duration_seconds": 0.18,
+      "bytes": 15920,
+      "sha256": "0597810c774d17d9ea161796004fd3fd40c8b7ce563bbb8e4a6a2bbcf971820b",
+      "peak_dbfs": -12.04,
+      "rms_dbfs": -26.38,
+      "clipped_samples": 0
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/flip_2.wav",
+      "parameters": {
+        "kind": "flip",
+        "duration": 0.172,
+        "peak": 0.25,
+        "frequency": 337,
+        "seed": 202
+      },
+      "playback_gain": 0.5,
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "duration_seconds": 0.17199546485260772,
+      "bytes": 15214,
+      "sha256": "ccaddb22f6cbb699383dc94ebb4956362a7049e4bc03b376b4f71190efe888e1",
+      "peak_dbfs": -12.04,
+      "rms_dbfs": -26.09,
+      "clipped_samples": 0
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/flip_3.wav",
+      "parameters": {
+        "kind": "flip",
+        "duration": 0.188,
+        "peak": 0.25,
+        "frequency": 294,
+        "seed": 203
+      },
+      "playback_gain": 0.5,
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "duration_seconds": 0.1880045351473923,
+      "bytes": 16626,
+      "sha256": "0fca73cb674fb7777657d9cd0ce5907b2918f1241e28fca81a62db61852faf37",
+      "peak_dbfs": -12.04,
+      "rms_dbfs": -26.1,
+      "clipped_samples": 0
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/match.wav",
+      "parameters": {
+        "kind": "match",
+        "duration": 0.47,
+        "peak": 0.3,
+        "notes": [
+          "C5",
+          "E5",
+          "G5"
+        ],
+        "seed": 301
+      },
+      "playback_gain": 0.58,
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "duration_seconds": 0.47,
+      "bytes": 41498,
+      "sha256": "94980de298305dcfd9138a90426f956f8d07afe53d7a784337b65009c2e84594",
+      "peak_dbfs": -10.46,
+      "rms_dbfs": -22.69,
+      "clipped_samples": 0
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/match_2.wav",
+      "parameters": {
+        "kind": "match",
+        "duration": 0.48,
+        "peak": 0.3,
+        "notes": [
+          "E5",
+          "G5",
+          "C6"
+        ],
+        "seed": 302
+      },
+      "playback_gain": 0.58,
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "duration_seconds": 0.48,
+      "bytes": 42380,
+      "sha256": "b62b8b290cc06773d7481b6645fddb7cbda2ef0d0f1900b42298ef5788312f80",
+      "peak_dbfs": -10.46,
+      "rms_dbfs": -22.84,
+      "clipped_samples": 0
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/match_3.wav",
+      "parameters": {
+        "kind": "match",
+        "duration": 0.46,
+        "peak": 0.3,
+        "notes": [
+          "G4",
+          "C5",
+          "E5"
+        ],
+        "seed": 303
+      },
+      "playback_gain": 0.58,
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "duration_seconds": 0.46,
+      "bytes": 40616,
+      "sha256": "6e61cf6288b0a93c185c3aa0f98aa9a8d6d165f17bc044f4b83ea7460500f06c",
+      "peak_dbfs": -10.46,
+      "rms_dbfs": -21.86,
+      "clipped_samples": 0
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/mismatch.wav",
+      "parameters": {
+        "kind": "mismatch",
+        "duration": 0.24,
+        "peak": 0.2,
+        "seed": 401
+      },
+      "playback_gain": 0.42,
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "duration_seconds": 0.24,
+      "bytes": 21212,
+      "sha256": "9fb3ffad1826c900098f9ad56af2418d4f5bc022d0a8fa560e79690e1c0ceca4",
+      "peak_dbfs": -13.98,
+      "rms_dbfs": -26.73,
+      "clipped_samples": 0
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/arrival.wav",
+      "parameters": {
+        "kind": "arrival",
+        "duration": 0.285,
+        "peak": 0.25,
+        "seed": 501
+      },
+      "playback_gain": 0.46,
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "duration_seconds": 0.2849886621315193,
+      "bytes": 25180,
+      "sha256": "cd0dadec3fe9730e94647eac2d6338ffd2bad7b928c74896ac342bbe1b7996fb",
+      "peak_dbfs": -12.04,
+      "rms_dbfs": -24.48,
+      "clipped_samples": 0
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/complete.wav",
+      "parameters": {
+        "kind": "complete",
+        "duration": 1.35,
+        "peak": 0.35,
+        "seed": 601
+      },
+      "playback_gain": 0.65,
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "duration_seconds": 1.35,
+      "bytes": 119114,
+      "sha256": "e0ec224f00ec8a5eb5c62641edfbe3f02462e4f34770cf06a6e08b5cebdf342b",
+      "peak_dbfs": -9.12,
+      "rms_dbfs": -22.1,
+      "clipped_samples": 0
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/confirm.wav",
+      "parameters": {
+        "kind": "confirm",
+        "duration": 0.22,
+        "peak": 0.25,
+        "seed": 701
+      },
+      "playback_gain": 0.5,
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "duration_seconds": 0.22,
+      "bytes": 19448,
+      "sha256": "ee900b2143b483eca7413969e77d5a91b69194cd79fc139a352584da78a54cd5",
+      "peak_dbfs": -12.04,
+      "rms_dbfs": -23.69,
+      "clipped_samples": 0
+    }
+  ]
+}

@@ -13,7 +13,7 @@ Each app has its own package, version, permissions, tests, and APK.
 | [AI Chat](apps/ask-tv/) | Separate Kotlin build | `com.amine.asktv` | Spoken or typed questions through a ChatGPT subscription, with local example previews. |
 | [Postbox](apps/postbox/) | Separate Kotlin build | `com.amine.postbox` | Locally captured post text, links, and screenshots sent from an Android phone for TV reading. |
 | [Treasure or Retreat](apps/treasure-or-retreat/) | Separate Kotlin build | `com.amine.treasureorretreat` | Offline temple adventure with three expeditions and remote decisions. |
-| [Memory Parade](apps/memory-parade/) | Separate Kotlin build | `com.amine.memoryparade` | Offline animal matching with twelve cards, six pairs, and an animated parade. |
+| [Memory Parade](apps/memory-parade/) | Separate Kotlin build | `com.amine.memoryparade` | Offline animal matching with three board sizes, eight animals, and an animated parade. |
 
 Clock works independently of TV Home. Its stop screen supports voluntary viewing limits.
 It remains dismissible and does not guarantee that another app pauses playback.

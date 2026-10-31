@@ -9,7 +9,7 @@ class GameRulesTest {
         repeat(30) { seed ->
             val state = GameRules.newGame(Random(seed))
             assertEquals(12, state.cards.size)
-            assertEquals(Animal.entries.toSet(), state.cards.toSet())
+            assertEquals(6, state.cards.toSet().size)
             state.cards.groupingBy { it }.eachCount().values.forEach { assertEquals(2, it) }
         }
         assertNotEquals(GameRules.newGame(Random(1)).cards, GameRules.newGame(Random(2)).cards)
@@ -29,7 +29,7 @@ class GameRulesTest {
     }
     @Test fun matchCountsOnceAndCompletionRequiresSix() {
         var s = GameRules.newGame(Random(4))
-        Animal.entries.forEachIndexed { number, animal ->
+        s.cards.distinct().forEachIndexed { number, animal ->
             val pair = s.cards.indices.filter { s.cards[it] == animal }
             s = GameRules.flip(s, pair[0]); s = GameRules.flip(s, pair[1])
             s = GameRules.resolve(s)

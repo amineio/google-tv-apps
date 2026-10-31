@@ -1,7 +1,7 @@
 {
   "generator": "OpenAI built-in image_gen",
   "rights": "Original AI-generated artwork created for this project. No third-party source assets. The supplied concept is an art-direction reference only.",
-  "processing": "Pillow resampling, sprite cell extraction, alpha trim, and WebP compression. No composited screenshot is bundled.",
+  "processing": "Original assets: Pillow resampling, sprite cell extraction, alpha trim, and WebP compression. Upgrade cutouts: ImageMagick alpha trim, resize, transparent padding, and WebP compression. No composited screenshot is bundled.",
   "assets": [
     {
       "file": "apps/memory-parade/src/main/res/drawable-nodpi/forest.webp",
@@ -123,78 +123,314 @@
       "sha256": "5fd80438a15dc8dd7878473be4a8c03bef7736e3048226ab4a925435f040e111",
       "source": "exec-b99d74cf-14f6-4b1c-8f9c-cbf0265ab153.png",
       "compression": "WebP quality91 method6, stage alpha preserved"
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/drawable-nodpi/squirrel.webp",
+      "dimensions": [
+        416,
+        416
+      ],
+      "sha256": "1e6039bbf5ee2094a8a85d9859fd0ddea1fd6bff40e8255e07635984dd5a7865",
+      "source": "exec-fd4bf004-19a3-4765-9e86-e8f4c8020de7.png",
+      "compression": "WebP quality 92, alpha preserved",
+      "provenance": "docs/memory-parade/upgrade-art-2026-10-31.md"
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/drawable-nodpi/raccoon.webp",
+      "dimensions": [
+        416,
+        415
+      ],
+      "sha256": "314daa1fffeb75cb4013f9bae289b7f8fbf8bbf2613c62759fd959ea1e195a71",
+      "source": "exec-3063f6a7-a045-4202-9374-165379632a6e.png",
+      "compression": "WebP quality 92, alpha preserved",
+      "provenance": "docs/memory-parade/upgrade-art-2026-10-31.md"
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/drawable-nodpi/parade_stage_expanded.webp",
+      "dimensions": [
+        920,
+        673
+      ],
+      "sha256": "64e6c289574ac0041faff59af801bfadd33841151e5dcdcf363502868c721322",
+      "source": "exec-ca4b6413-b031-45ca-bfb0-34f11102680d.png",
+      "compression": "WebP quality 90, alpha preserved",
+      "provenance": "docs/memory-parade/upgrade-art-2026-10-31.md"
     }
   ],
   "audio": [
     {
-      "file": "apps/memory-parade/src/main/res/raw/arrival.wav",
-      "duration_seconds": 0.22,
-      "sample_rate": 22050,
+      "file": "apps/memory-parade/src/main/res/raw/navigate.wav",
+      "parameters": {
+        "kind": "wood",
+        "duration": 0.052,
+        "peak": 0.16,
+        "frequency": 465,
+        "seed": 101
+      },
+      "playback_gain": 0.3,
+      "sample_rate": 44100,
       "channels": 1,
       "sample_width_bytes": 2,
-      "sha256": "d9b03c6a8a44d7e425ff3e0592bdb8cb213af7d69db97321c9932b32debd0507",
-      "source": "Original additive synthesis in apps/memory-parade/tools/synthesize_audio.py",
-      "rights": "Original generated waveforms; no third-party samples"
+      "duration_seconds": 0.05199546485260771,
+      "bytes": 4630,
+      "sha256": "7342e034e2df718516586831490c57bc64239857884c06ef79315e9653d7b60a",
+      "peak_dbfs": -15.92,
+      "rms_dbfs": -27.5,
+      "clipped_samples": 0,
+      "source": "apps/memory-parade/tools/synthesize_audio.py",
+      "rights": "Original synthesized waveforms. No recordings, third-party samples, or generated voices. Repository MIT license."
     },
     {
-      "file": "apps/memory-parade/src/main/res/raw/complete.wav",
-      "duration_seconds": 0.95,
-      "sample_rate": 22050,
+      "file": "apps/memory-parade/src/main/res/raw/navigate_2.wav",
+      "parameters": {
+        "kind": "wood",
+        "duration": 0.056,
+        "peak": 0.16,
+        "frequency": 510,
+        "seed": 102
+      },
+      "playback_gain": 0.3,
+      "sample_rate": 44100,
       "channels": 1,
       "sample_width_bytes": 2,
-      "sha256": "065e716352f56a417841af08035570888a0d226ca2d9072fb017262eabff18ce",
-      "source": "Original additive synthesis in apps/memory-parade/tools/synthesize_audio.py",
-      "rights": "Original generated waveforms; no third-party samples"
-    },
-    {
-      "file": "apps/memory-parade/src/main/res/raw/confirm.wav",
-      "duration_seconds": 0.17,
-      "sample_rate": 22050,
-      "channels": 1,
-      "sample_width_bytes": 2,
-      "sha256": "f28b3b64fca0d0c6672e603b2b914a3583e8ce32e863471c338191c2a25d3079",
-      "source": "Original additive synthesis in apps/memory-parade/tools/synthesize_audio.py",
-      "rights": "Original generated waveforms; no third-party samples"
+      "duration_seconds": 0.05600907029478458,
+      "bytes": 4984,
+      "sha256": "b57d3b8c6c25e2eb8a9a03fa97cc02b4d5f98d10657bfaa4ff27f85dec8f0027",
+      "peak_dbfs": -15.92,
+      "rms_dbfs": -27.69,
+      "clipped_samples": 0,
+      "source": "apps/memory-parade/tools/synthesize_audio.py",
+      "rights": "Original synthesized waveforms. No recordings, third-party samples, or generated voices. Repository MIT license."
     },
     {
       "file": "apps/memory-parade/src/main/res/raw/flip.wav",
-      "duration_seconds": 0.18,
-      "sample_rate": 22050,
+      "parameters": {
+        "kind": "flip",
+        "duration": 0.18,
+        "peak": 0.25,
+        "frequency": 310,
+        "seed": 201
+      },
+      "playback_gain": 0.5,
+      "sample_rate": 44100,
       "channels": 1,
       "sample_width_bytes": 2,
-      "sha256": "db0805a7d7034159c63206493756e2e1c1be96f92e4b883f5075b3aea775e428",
-      "source": "Original additive synthesis in apps/memory-parade/tools/synthesize_audio.py",
-      "rights": "Original generated waveforms; no third-party samples"
+      "duration_seconds": 0.18,
+      "bytes": 15920,
+      "sha256": "0597810c774d17d9ea161796004fd3fd40c8b7ce563bbb8e4a6a2bbcf971820b",
+      "peak_dbfs": -12.04,
+      "rms_dbfs": -26.38,
+      "clipped_samples": 0,
+      "source": "apps/memory-parade/tools/synthesize_audio.py",
+      "rights": "Original synthesized waveforms. No recordings, third-party samples, or generated voices. Repository MIT license."
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/flip_2.wav",
+      "parameters": {
+        "kind": "flip",
+        "duration": 0.172,
+        "peak": 0.25,
+        "frequency": 337,
+        "seed": 202
+      },
+      "playback_gain": 0.5,
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "duration_seconds": 0.17199546485260772,
+      "bytes": 15214,
+      "sha256": "ccaddb22f6cbb699383dc94ebb4956362a7049e4bc03b376b4f71190efe888e1",
+      "peak_dbfs": -12.04,
+      "rms_dbfs": -26.09,
+      "clipped_samples": 0,
+      "source": "apps/memory-parade/tools/synthesize_audio.py",
+      "rights": "Original synthesized waveforms. No recordings, third-party samples, or generated voices. Repository MIT license."
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/flip_3.wav",
+      "parameters": {
+        "kind": "flip",
+        "duration": 0.188,
+        "peak": 0.25,
+        "frequency": 294,
+        "seed": 203
+      },
+      "playback_gain": 0.5,
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "duration_seconds": 0.1880045351473923,
+      "bytes": 16626,
+      "sha256": "0fca73cb674fb7777657d9cd0ce5907b2918f1241e28fca81a62db61852faf37",
+      "peak_dbfs": -12.04,
+      "rms_dbfs": -26.1,
+      "clipped_samples": 0,
+      "source": "apps/memory-parade/tools/synthesize_audio.py",
+      "rights": "Original synthesized waveforms. No recordings, third-party samples, or generated voices. Repository MIT license."
     },
     {
       "file": "apps/memory-parade/src/main/res/raw/match.wav",
-      "duration_seconds": 0.42,
-      "sample_rate": 22050,
+      "parameters": {
+        "kind": "match",
+        "duration": 0.47,
+        "peak": 0.3,
+        "notes": [
+          "C5",
+          "E5",
+          "G5"
+        ],
+        "seed": 301
+      },
+      "playback_gain": 0.58,
+      "sample_rate": 44100,
       "channels": 1,
       "sample_width_bytes": 2,
-      "sha256": "cfc5dc6d268665d4069c4edbe6819bcbced96b13c6eb23177b89e049fb6c0e2e",
-      "source": "Original additive synthesis in apps/memory-parade/tools/synthesize_audio.py",
-      "rights": "Original generated waveforms; no third-party samples"
+      "duration_seconds": 0.47,
+      "bytes": 41498,
+      "sha256": "94980de298305dcfd9138a90426f956f8d07afe53d7a784337b65009c2e84594",
+      "peak_dbfs": -10.46,
+      "rms_dbfs": -22.69,
+      "clipped_samples": 0,
+      "source": "apps/memory-parade/tools/synthesize_audio.py",
+      "rights": "Original synthesized waveforms. No recordings, third-party samples, or generated voices. Repository MIT license."
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/match_2.wav",
+      "parameters": {
+        "kind": "match",
+        "duration": 0.48,
+        "peak": 0.3,
+        "notes": [
+          "E5",
+          "G5",
+          "C6"
+        ],
+        "seed": 302
+      },
+      "playback_gain": 0.58,
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "duration_seconds": 0.48,
+      "bytes": 42380,
+      "sha256": "b62b8b290cc06773d7481b6645fddb7cbda2ef0d0f1900b42298ef5788312f80",
+      "peak_dbfs": -10.46,
+      "rms_dbfs": -22.84,
+      "clipped_samples": 0,
+      "source": "apps/memory-parade/tools/synthesize_audio.py",
+      "rights": "Original synthesized waveforms. No recordings, third-party samples, or generated voices. Repository MIT license."
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/match_3.wav",
+      "parameters": {
+        "kind": "match",
+        "duration": 0.46,
+        "peak": 0.3,
+        "notes": [
+          "G4",
+          "C5",
+          "E5"
+        ],
+        "seed": 303
+      },
+      "playback_gain": 0.58,
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "duration_seconds": 0.46,
+      "bytes": 40616,
+      "sha256": "6e61cf6288b0a93c185c3aa0f98aa9a8d6d165f17bc044f4b83ea7460500f06c",
+      "peak_dbfs": -10.46,
+      "rms_dbfs": -21.86,
+      "clipped_samples": 0,
+      "source": "apps/memory-parade/tools/synthesize_audio.py",
+      "rights": "Original synthesized waveforms. No recordings, third-party samples, or generated voices. Repository MIT license."
     },
     {
       "file": "apps/memory-parade/src/main/res/raw/mismatch.wav",
-      "duration_seconds": 0.24,
-      "sample_rate": 22050,
+      "parameters": {
+        "kind": "mismatch",
+        "duration": 0.24,
+        "peak": 0.2,
+        "seed": 401
+      },
+      "playback_gain": 0.42,
+      "sample_rate": 44100,
       "channels": 1,
       "sample_width_bytes": 2,
-      "sha256": "1d654c78210eae09a3915ca517bc8252121a938fb2d45429b27c7033cd8b2a74",
-      "source": "Original additive synthesis in apps/memory-parade/tools/synthesize_audio.py",
-      "rights": "Original generated waveforms; no third-party samples"
+      "duration_seconds": 0.24,
+      "bytes": 21212,
+      "sha256": "9fb3ffad1826c900098f9ad56af2418d4f5bc022d0a8fa560e79690e1c0ceca4",
+      "peak_dbfs": -13.98,
+      "rms_dbfs": -26.73,
+      "clipped_samples": 0,
+      "source": "apps/memory-parade/tools/synthesize_audio.py",
+      "rights": "Original synthesized waveforms. No recordings, third-party samples, or generated voices. Repository MIT license."
     },
     {
-      "file": "apps/memory-parade/src/main/res/raw/navigate.wav",
-      "duration_seconds": 0.055,
-      "sample_rate": 22050,
+      "file": "apps/memory-parade/src/main/res/raw/arrival.wav",
+      "parameters": {
+        "kind": "arrival",
+        "duration": 0.285,
+        "peak": 0.25,
+        "seed": 501
+      },
+      "playback_gain": 0.46,
+      "sample_rate": 44100,
       "channels": 1,
       "sample_width_bytes": 2,
-      "sha256": "025ab9ad1457de88013a571549639aa5f97c7e5efbdc3f73b622203a2ea87fdd",
-      "source": "Original additive synthesis in apps/memory-parade/tools/synthesize_audio.py",
-      "rights": "Original generated waveforms; no third-party samples"
+      "duration_seconds": 0.2849886621315193,
+      "bytes": 25180,
+      "sha256": "cd0dadec3fe9730e94647eac2d6338ffd2bad7b928c74896ac342bbe1b7996fb",
+      "peak_dbfs": -12.04,
+      "rms_dbfs": -24.48,
+      "clipped_samples": 0,
+      "source": "apps/memory-parade/tools/synthesize_audio.py",
+      "rights": "Original synthesized waveforms. No recordings, third-party samples, or generated voices. Repository MIT license."
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/complete.wav",
+      "parameters": {
+        "kind": "complete",
+        "duration": 1.35,
+        "peak": 0.35,
+        "seed": 601
+      },
+      "playback_gain": 0.65,
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "duration_seconds": 1.35,
+      "bytes": 119114,
+      "sha256": "e0ec224f00ec8a5eb5c62641edfbe3f02462e4f34770cf06a6e08b5cebdf342b",
+      "peak_dbfs": -9.12,
+      "rms_dbfs": -22.1,
+      "clipped_samples": 0,
+      "source": "apps/memory-parade/tools/synthesize_audio.py",
+      "rights": "Original synthesized waveforms. No recordings, third-party samples, or generated voices. Repository MIT license."
+    },
+    {
+      "file": "apps/memory-parade/src/main/res/raw/confirm.wav",
+      "parameters": {
+        "kind": "confirm",
+        "duration": 0.22,
+        "peak": 0.25,
+        "seed": 701
+      },
+      "playback_gain": 0.5,
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "duration_seconds": 0.22,
+      "bytes": 19448,
+      "sha256": "ee900b2143b483eca7413969e77d5a91b69194cd79fc139a352584da78a54cd5",
+      "peak_dbfs": -12.04,
+      "rms_dbfs": -23.69,
+      "clipped_samples": 0,
+      "source": "apps/memory-parade/tools/synthesize_audio.py",
+      "rights": "Original synthesized waveforms. No recordings, third-party samples, or generated voices. Repository MIT license."
     }
-  ]
+  ],
+  "audio_metadata": "docs/memory-parade/audio-upgrade-2026-10-31.json"
 }

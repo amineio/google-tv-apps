@@ -22,8 +22,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.*
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -38,6 +36,7 @@ internal val Gold = Color(0xFFFFD378)
 internal val Cream = Color(0xFFFFF1D1)
 internal val Cyan = Color(0xFFABFFFF)
 internal val Deep = Color(0xFF102C28)
+private val PanelShape = RoundedCornerShape(14.dp)
 
 @Composable fun MemoryApp(model: GameViewModel, exit: () -> Unit) {
     val focus = remember { FocusRequester() }
@@ -51,8 +50,10 @@ internal val Deep = Color(0xFF102C28)
         lifecycle.addObserver(observer)
         onDispose { lifecycle.removeObserver(observer); audio.release() }
     }
-    LaunchedEffect(model.event) { if (model.active && model.sound) audio.play(model.eventKind) }
-    LaunchedEffect(model.active, model.sound) { if (!model.active || !model.sound) audio.stop() }
+    LaunchedEffect(model.event) { model.consumeAudioEvent()?.let(audio::play) }
+    LaunchedEffect(model.active, model.sound, model.screen) {
+        if (!model.active || !model.sound || model.screen == Screen.PAUSE) audio.stop()
+    }
     BackHandler { model.back(exit) }
     LaunchedEffect(Unit) { focus.requestFocus() }
     MaterialTheme {
@@ -71,12 +72,13 @@ internal val Deep = Color(0xFF102C28)
             val scale = minOf(maxWidth.value / 960f, maxHeight.value / 540f)
             Box(Modifier.requiredSize(960.dp, 540.dp).graphicsLayer { scaleX = scale; scaleY = scale }) {
                 Image(painterResource(R.drawable.forest), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xAA062E28), Color.Transparent, Color(0x59042824)))))
-                if (model.screen == Screen.WELCOME) Welcome(model)
-                else {
+                Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0x79062E28), Color.Transparent, Color(0x4D042824)))))
+                if (model.screen == Screen.WELCOME) Welcome(model) else {
                     Playfield(model)
-                    if (model.screen == Screen.PAUSE) Modal("Take a little break", "Your parade will wait.", listOf("Resume", "Restart", if (model.sound) "Sound On" else "Sound Off", "Exit"), model.menuIndex)
-                    if (model.screen == Screen.RESULTS) Modal("A wonderful parade!", "${model.game.moves} moves  ·  Best ${model.best}", listOf("Play Again", "Exit"), model.menuIndex)
+                    if (model.screen == Screen.PAUSE) Modal("Paused", null,
+                        listOf("Resume", "Restart", if (model.sound) "Sound On" else "Sound Off", "Choose board", "Exit"), model.menuIndex)
+                    if (model.screen == Screen.RESULTS) Modal("Parade complete", "${model.game.moves} moves  ·  Best ${model.best}",
+                        listOf("Play Again", "Choose board", "Exit"), model.menuIndex)
                 }
             }
         }
@@ -84,113 +86,117 @@ internal val Deep = Color(0xFF102C28)
 }
 
 @Composable private fun Welcome(model: GameViewModel) {
-    Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(listOf(Color(0xBB082C25), Color.Transparent))))
-    Column(Modifier.offset(70.dp, 66.dp).width(450.dp)) {
-        Title(54)
-        Spacer(Modifier.height(18.dp))
-        Label("A little memory. A lot of magic.", 23)
-        Spacer(Modifier.height(16.dp))
-        Label("Find six animal pairs.\nWatch your forest friends join the parade.", 21)
-        Spacer(Modifier.height(30.dp))
-        ActionPanel("Play", true, Modifier.width(260.dp).height(62.dp).testTag("menu_0"))
-        Spacer(Modifier.height(18.dp))
-        Label("D-pad to move  ·  OK to turn a card", 17, Cream.copy(alpha = .9f))
-        Label("Back to pause  ·  Sound ${if (model.sound) "on" else "off"}", 17, Cream.copy(alpha = .9f))
+    Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(listOf(Color(0x80072A24), Color.Transparent))))
+    Box(Modifier.offset(48.dp, 45.dp).background(Deep.copy(alpha = .94f), PanelShape).padding(horizontal = 20.dp, vertical = 12.dp)) { Title(42) }
+    Image(painterResource(R.drawable.fox), null, Modifier.offset(639.dp, 32.dp).size(107.dp, 125.dp))
+    Image(painterResource(R.drawable.owl), null, Modifier.offset(760.dp, 40.dp).size(98.dp, 110.dp))
+    Row(Modifier.offset(48.dp, 180.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+        BoardSize.entries.forEachIndexed { index, size ->
+            val selected = model.menuIndex == index
+            Column(Modifier.size(272.dp, 265.dp).shadow(if (selected) 18.dp else 6.dp, PanelShape)
+                .background(if (selected) Color(0xFF184E40) else Deep.copy(alpha = .96f), PanelShape)
+                .border(if (selected) 4.dp else 1.dp, if (selected) Cyan else Gold.copy(alpha = .7f), PanelShape)
+                .padding(20.dp).testTag("board_${size.key}").semantics { this.selected = selected; role = Role.Button; contentDescription = "${size.cards} cards" },
+                horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("${size.cards} cards", color = Cream, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(20.dp))
+                MiniBoard(size)
+                val record = model.bestFor(size)
+                if (record > 0) Text("Best $record", color = Cream, fontSize = 20.sp, modifier = Modifier.padding(top = 18.dp))
+            }
+        }
     }
-    Image(painterResource(R.drawable.fox), null, Modifier.offset(550.dp, 158.dp).size(210.dp, 270.dp))
-    Image(painterResource(R.drawable.owl), null, Modifier.offset(737.dp, 220.dp).size(140.dp, 190.dp))
+    Hint("OK  Play  ·  Back  Exit")
+}
+
+@Composable private fun MiniBoard(size: BoardSize) {
+    val cell = if (size == BoardSize.EASY) 38.dp else 27.dp
+    Column(Modifier.height(124.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+        repeat(size.rows) { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                repeat(size.columns) { Box(Modifier.size(cell).background(Color(0xFF2B8172), RoundedCornerShape(5.dp)).border(1.dp, Gold, RoundedCornerShape(5.dp))) }
+            }
+            if (row < size.rows - 1) Spacer(Modifier.height(6.dp))
+        }
+    }
 }
 
 @Composable private fun Playfield(model: GameViewModel) {
-    Column(Modifier.offset(48.dp, 26.dp)) {
-        Title(38)
-        Label("Find the pairs. Build your parade.", 18)
-    }
-    Row(Modifier.offset(653.dp, 43.dp).width(260.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    Box(Modifier.offset(48.dp, 27.dp).background(Deep.copy(alpha = .96f), PanelShape).padding(horizontal = 16.dp, vertical = 8.dp)) { Title(32) }
+    Row(Modifier.offset(653.dp, 27.dp).width(259.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Counter("Moves", "${model.game.moves}", Modifier.weight(1f))
-        Counter("Pairs found", "${model.game.pairs} / 6", Modifier.weight(1f))
+        Counter("Pairs", "${model.game.pairs}/${model.game.size.pairs}", Modifier.weight(1f))
     }
-    Column(Modifier.offset(48.dp, 120.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        repeat(3) { row -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            repeat(4) { column ->
-                val index = row * 4 + column
-                AnimalCard(model.game.cards[index], index in model.game.visible, index in model.game.matched,
-                    model.game.isMatch && index in listOf(model.game.first, model.game.second), model.selected == index,
-                    Modifier.size(134.dp, 115.dp).testTag("card_$index").semantics {
-                        selected = model.selected == index
-                        contentDescription = if (index in model.game.visible) model.game.cards[index].label else "Hidden card ${index + 1}"
-                    })
-            }
-        } }
+    val layout = BoardLayout(model.game.size)
+    model.game.cards.forEachIndexed { index, animal ->
+        AnimalCard(animal, index in model.game.visible, index in model.game.matched,
+            model.game.isMatch && index in listOf(model.game.first, model.game.second), model.selected == index,
+            Modifier.offset(layout.cardX(index).dp, layout.cardY(index).dp).size(layout.cardWidth.dp, layout.cardHeight.dp)
+                .testTag("card_$index").semantics {
+                    selected = model.selected == index
+                    contentDescription = if (index in model.game.visible) animal.label else "Hidden card ${index + 1}"
+                })
     }
     Parade(model.game, model.active && model.screen == Screen.GAME)
-    if (model.game.isMatch && model.active && model.screen == Screen.GAME) MatchSparkles(model.game.second ?: 0)
-    Row(Modifier.offset(48.dp, 497.dp).width(710.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-        Label(if (model.game.comparing) { if (model.game.isMatch) "A pair! A new friend joins." else "Remember these friends…" }
-            else if (model.game.first != null) "Find this animal's friend." else "D-pad to move  ·  OK to turn a card", 17)
-        Label("Back to pause", 17)
-    }
+    if (model.game.isMatch && model.active && model.screen == Screen.GAME) MatchSparkles(model.game)
+    Hint("Back  Pause")
 }
 
 @Composable private fun AnimalCard(animal: Animal, faceUp: Boolean, matched: Boolean, celebrating: Boolean, focused: Boolean, modifier: Modifier) {
     val rotation by animateFloatAsState(if (faceUp) 180f else 0f, tween(320, easing = FastOutSlowInEasing), label = "card flip")
-    val pulse by animateFloatAsState(if (celebrating) 1.055f else 1f, spring(dampingRatio = .5f), label = "match pulse")
+    val pulse by animateFloatAsState(if (celebrating) 1.045f else 1f, spring(dampingRatio = .5f), label = "match pulse")
     val shape = RoundedCornerShape(13.dp)
     Box(modifier.graphicsLayer { scaleX = pulse; scaleY = pulse }
         .shadow(if (focused) 15.dp else 7.dp, shape, ambientColor = if (focused) Cyan else Color.Black, spotColor = if (focused) Cyan else Color.Black)
         .then(if (focused) Modifier.border(3.dp, Cyan, shape) else Modifier), contentAlignment = Alignment.Center) {
-        Box(Modifier.fillMaxSize().padding(if (focused) 5.dp else 2.dp).graphicsLayer { rotationY = rotation; cameraDistance = 14 * density }
+        Box(Modifier.fillMaxSize().padding(5.dp).graphicsLayer { rotationY = rotation; cameraDistance = 14 * density }
             .clip(shape).background(Brush.verticalGradient(if (rotation > 90f) listOf(Color(0xFF38694D), Color(0xFF123F36)) else listOf(Color(0xFF227A70), Color(0xFF063E3B))))
             .border(if (matched || celebrating) 3.dp else 2.dp, if (matched || celebrating) Gold else Color(0xFFC99B45), shape), contentAlignment = Alignment.Center) {
-            if (rotation > 90f) {
-                Column(Modifier.fillMaxSize().graphicsLayer { rotationY = 180f }.padding(5.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Image(painterResource(animal.drawable), animal.label, Modifier.weight(1f).fillMaxWidth(), contentScale = ContentScale.Fit)
-                    Label(animal.label, 13, Cream)
-                }
-            } else Image(painterResource(R.drawable.card_back), null, Modifier.fillMaxSize(), contentScale = ContentScale.FillBounds)
+            if (rotation > 90f) Image(painterResource(animal.drawable), animal.label,
+                Modifier.fillMaxSize().padding(1.dp).graphicsLayer { rotationY = 180f }, contentScale = ContentScale.Fit)
+            else Image(painterResource(R.drawable.card_back), null, Modifier.fillMaxSize(), contentScale = ContentScale.FillBounds)
         }
     }
 }
 
 @Composable internal fun Title(size: Int) {
     Row {
-        Text("Memory ", color = Gold, fontSize = size.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Serif,
-            style = TextStyle(shadow = Shadow(Color(0xFF3F230E), androidx.compose.ui.geometry.Offset(2f, 4f), 3f)))
-        Text("Parade", color = Color(0xFF76DDF3), fontSize = size.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Serif,
-            style = TextStyle(shadow = Shadow(Color(0xFF092B3D), androidx.compose.ui.geometry.Offset(2f, 4f), 3f)))
+        Text("Memory ", color = Gold, fontSize = size.sp, fontWeight = FontWeight.SemiBold)
+        Text("Parade", color = Cyan, fontSize = size.sp, fontWeight = FontWeight.SemiBold)
     }
 }
-@Composable internal fun Label(text: String, size: Int, color: Color = Cream, modifier: Modifier = Modifier) {
-    Text(text, modifier, color = color, fontSize = size.sp, fontWeight = FontWeight.SemiBold,
-        style = TextStyle(shadow = Shadow(Color.Black.copy(alpha = .65f), androidx.compose.ui.geometry.Offset(0f, 2f), 3f)))
+@Composable internal fun Hint(text: String) {
+    Text(text, Modifier.offset(48.dp, 479.dp).background(Deep, RoundedCornerShape(10.dp)).padding(horizontal = 14.dp, vertical = 5.dp),
+        color = Cream, fontSize = 20.sp, fontWeight = FontWeight.Medium)
 }
 @Composable private fun Counter(label: String, value: String, modifier: Modifier) {
-    Column(modifier.shadow(5.dp, RoundedCornerShape(10.dp)).clip(RoundedCornerShape(10.dp))
-        .background(Brush.verticalGradient(listOf(Color(0xFFFBE0AA), Color(0xFFD9AF71))))
-        .border(2.dp, Color(0xFF94622F), RoundedCornerShape(10.dp)).padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(label, color = Color(0xFF3C2819), fontSize = 15.sp, fontWeight = FontWeight.Bold)
-        Text(value, color = Color(0xFF402516), fontSize = 27.sp, fontFamily = FontFamily.Serif, fontWeight = FontWeight.Black)
+    Column(modifier.shadow(5.dp, PanelShape).background(Color(0xFFF7D99F), PanelShape)
+        .border(2.dp, Color(0xFF94622F), PanelShape).padding(horizontal = 8.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(label, color = Color(0xFF302014), fontSize = 20.sp, fontWeight = FontWeight.Medium)
+        Text(value, color = Color(0xFF302014), fontSize = 34.sp, fontWeight = FontWeight.Bold)
     }
 }
-@Composable private fun Modal(title: String, subtitle: String, actions: List<String>, selected: Int) {
+@Composable private fun Modal(title: String, subtitle: String?, actions: List<String>, selected: Int) {
     Box(Modifier.fillMaxSize().background(Color(0xC4051817)), contentAlignment = Alignment.Center) {
-        Column(Modifier.width(480.dp).shadow(24.dp, RoundedCornerShape(24.dp)).background(Brush.verticalGradient(listOf(Color(0xFF285246), Deep)), RoundedCornerShape(24.dp))
-            .border(2.dp, Gold, RoundedCornerShape(24.dp)).padding(26.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(title, color = Gold, fontSize = 30.sp, fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-            Spacer(Modifier.height(8.dp)); Label(subtitle, 20)
+        Column(Modifier.width(480.dp).shadow(24.dp, PanelShape).background(Deep, PanelShape)
+            .border(2.dp, Gold, PanelShape).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(title, color = Cream, fontSize = 30.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            if (subtitle != null) Text(subtitle, color = Cream, fontSize = 23.sp, modifier = Modifier.padding(top = 10.dp))
             Spacer(Modifier.height(20.dp))
             actions.forEachIndexed { index, action ->
-                ActionPanel(action, selected == index, Modifier.fillMaxWidth().height(50.dp).testTag("menu_$index").semantics { this.selected = selected == index })
+                ActionPanel(action, selected == index, Modifier.fillMaxWidth().height(48.dp).testTag("menu_$index").semantics { this.selected = selected == index })
                 if (index < actions.lastIndex) Spacer(Modifier.height(8.dp))
             }
         }
     }
 }
 @Composable private fun ActionPanel(label: String, selected: Boolean, modifier: Modifier) {
-    Box(modifier.shadow(if (selected) 12.dp else 3.dp, RoundedCornerShape(12.dp)).background(
-        Brush.verticalGradient(if (selected) listOf(Color(0xFF3E8757), Color(0xFF165238)) else listOf(Color(0xFF344B40), Color(0xFF203C32))), RoundedCornerShape(12.dp))
-        .border(if (selected) 3.dp else 1.dp, if (selected) Cyan else Color(0xFFB39862), RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
-        Label(label, 23, if (selected) Cream else Cream.copy(alpha = .75f))
+    Box(modifier.background(if (selected) Color(0xFF286A49) else Color(0xFF223F34), PanelShape)
+        .border(if (selected) 3.dp else 1.dp, if (selected) Cyan else Gold.copy(alpha = .6f), PanelShape), contentAlignment = Alignment.Center) {
+        Text(label, color = Cream, fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
     }
 }
-internal val Animal.drawable get() = when (this) { Animal.FOX -> R.drawable.fox; Animal.PANDA -> R.drawable.panda; Animal.RABBIT -> R.drawable.rabbit; Animal.OWL -> R.drawable.owl; Animal.DEER -> R.drawable.deer; Animal.BEAR -> R.drawable.bear }
+internal val Animal.drawable get() = when (this) {
+    Animal.FOX -> R.drawable.fox; Animal.PANDA -> R.drawable.panda; Animal.RABBIT -> R.drawable.rabbit; Animal.OWL -> R.drawable.owl
+    Animal.DEER -> R.drawable.deer; Animal.BEAR -> R.drawable.bear; Animal.SQUIRREL -> R.drawable.squirrel; Animal.RACCOON -> R.drawable.raccoon
+}
