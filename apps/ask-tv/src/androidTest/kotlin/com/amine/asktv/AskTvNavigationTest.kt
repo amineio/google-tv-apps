@@ -28,7 +28,7 @@ class AskTvNavigationTest {
         key(KeyEvent.KEYCODE_DPAD_RIGHT)
         rule.onNodeWithTag("example-1").assertIsFocused()
         key(KeyEvent.KEYCODE_DPAD_CENTER)
-        rule.onNodeWithText("Example preview · not connected").assertExists()
+        rule.onNodeWithText("Built-in example · no live model used").assertExists()
     }
 
     @Test fun configurationAndBackRestoreFocus() {
@@ -63,11 +63,15 @@ class AskTvNavigationTest {
             rule.onNodeWithTag("question-input").assertExists()
             waitForIme(automation, visible = true)
 
-            // Wait for actual keyboard dismissal before sending the dialog's Back event.
+            rule.onNodeWithTag("question-input").performTextInput("What is two plus two?")
+            // Wait for actual keyboard dismissal before navigating to Ask or canceling.
             key(KeyEvent.KEYCODE_BACK)
             waitForIme(automation, visible = false)
             rule.onNodeWithTag("question-input").assertExists()
             rule.onNodeWithTag("question-input").assertIsFocused()
+            rule.onNodeWithText("OK  Edit · Down  Ask · Back  Cancel").assertExists()
+            key(KeyEvent.KEYCODE_DPAD_DOWN)
+            rule.onNodeWithTag("question-submit").assertIsFocused()
             key(KeyEvent.KEYCODE_BACK)
             rule.waitUntil(timeoutMillis = 5_000) {
                 rule.onAllNodesWithTag("question-input").fetchSemanticsNodes().isEmpty()

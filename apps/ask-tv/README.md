@@ -13,7 +13,8 @@ Microphone permission is requested only when you choose Ask.
 Select **Type a question** to use the keyboard. If Android speech recognition is unavailable, use typed input.
 The separate Assistant button keeps its normal system behavior.
 
-The two example buttons show built-in sample answers. Each answer is labeled as an example and does not contact OpenAI.
+The two example buttons show built-in sample answers.
+Each answer is labeled **Built-in example · no live model used** and does not contact OpenAI.
 Live questions require sign-in and ChatGPT plan permission.
 Configuration shows the account, plan status, current server model catalog, and speech controls.
 Only listed subscription models can be selected. No default model name is bundled.
@@ -33,6 +34,8 @@ Leaving the app stops all recording, inference, and audio. The displayed text re
 Install the same release APK privately from the Mac through ADB, the Android device connection tool.
 There is no helper download website or public APK upload.
 The TV QR connects an installed helper to one sign-in attempt. It does not install the helper.
+On the TV route screen, **Phone setup guide · install once** opens a guide QR.
+That QR opens this installation section. It does not install the APK or start a pairing attempt.
 Enable the phone's developer connection and authorize the Mac before installation.
 Replace each serial placeholder with the target shown by `adb devices`.
 Build the APK with the commands in **Build and install**, then run:
@@ -80,7 +83,7 @@ If the helper stops, get a new code on the TV.
 “Authorization sent” on the phone means that the callback reached the TV.
 It does not mean that the TV saved a verified account.
 The TV must verify the identity and save the account before it reports **Your TV is connected**.
-If the TV saves the account without plan permission, select **Enable ChatGPT plan** and complete consent again.
+If the TV saves the account without plan permission, select **Allow plan access** and complete consent again.
 That action reuses the saved registration. Ordinary sign-in does not force consent.
 
 Select **Cancel** or press Back on the TV to cancel an active attempt.
@@ -93,7 +96,7 @@ You do not need to select **Sign out** first.
 
 ## Mac fallback
 
-Select **Use Mac** on the route screen or the active phone panel.
+Select **Use Mac helper** on the route screen or the active phone panel.
 Keep AI Chat visible and run this command from the repository root:
 
 ```sh
@@ -103,7 +106,7 @@ TV_SERIAL='<TV serial>' tools/sign-in-ask-tv.sh
 The helper opens the Mac browser. Complete **Continue with ChatGPT** and allow ChatGPT plan use.
 Make sure that Configuration on the TV shows the verified account and subscription status.
 An unfinished browser flow does not connect the account.
-For **Enable ChatGPT plan**, run the helper while that screen remains open.
+For **Allow plan access**, run the helper while that screen remains open.
 The helper preserves the active consent attempt.
 
 The Mac helper forwards only local port 1455, opens the browser, and waits.

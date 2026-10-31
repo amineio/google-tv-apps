@@ -25,7 +25,7 @@ class PhoneSignInNavigationTest {
         key(KeyEvent.KEYCODE_DPAD_CENTER)
         rule.onNodeWithTag("sign-in-phone-route").assertIsFocused()
         rule.onNodeWithText("Use Android phone").assertExists()
-        rule.onNodeWithText("Use Mac").assertExists()
+        rule.onNodeWithText("Use Mac helper").assertExists()
         key(KeyEvent.KEYCODE_DPAD_CENTER)
     }
     private fun qrVisible() = rule.waitUntil(5_000) {
@@ -50,6 +50,30 @@ class PhoneSignInNavigationTest {
         rule.onNodeWithTag("phone-sign-in-qr").assertDoesNotExist()
         rule.onNodeWithText("Sign-in canceled").assertExists()
         rule.onNodeWithTag("phone-sign-in-retry").assertIsFocused()
+        oneFocus()
+    }
+
+    @Test fun setupGuideUsesDpadAndStartsNoRelayBeforePairing() {
+        val f=start()
+        key(KeyEvent.KEYCODE_DPAD_CENTER)
+        rule.onNodeWithTag("sign-in-phone-route").assertIsFocused()
+        key(KeyEvent.KEYCODE_DPAD_DOWN)
+        rule.onNodeWithTag("phone-setup").assertIsFocused()
+        key(KeyEvent.KEYCODE_DPAD_CENTER)
+        rule.onNodeWithTag("phone-setup-back").assertIsFocused()
+        rule.onNodeWithTag("phone-setup-guide-qr").assertIsDisplayed()
+        rule.onNodeWithTag("phone-sign-in-qr").assertDoesNotExist()
+        f.workerAction {}
+        assertTrue(f.hosts.isEmpty())
+        assertNull(f.pendingPermissionGeneration)
+        oneFocus()
+        key(KeyEvent.KEYCODE_BACK)
+        rule.onNodeWithTag("phone-setup").assertIsFocused()
+        key(KeyEvent.KEYCODE_DPAD_UP)
+        rule.onNodeWithTag("sign-in-phone-route").assertIsFocused()
+        key(KeyEvent.KEYCODE_DPAD_CENTER)
+        qrVisible()
+        assertEquals(1,f.hosts.size)
         oneFocus()
     }
 
