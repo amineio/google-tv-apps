@@ -1,5 +1,6 @@
 package com.amine.asktv
 
+import android.os.SystemClock
 import android.view.KeyEvent
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -81,15 +82,24 @@ class PhoneSignInNavigationTest {
         val f=start()
         phoneRoute(); qrVisible()
         val host=f.hosts.single()
-        val deadline=f.model.ui.phonePairing?.expiresAtElapsedMs
+        val deadline=requireNotNull(f.model.ui.phonePairing).expiresAtElapsedMs
         key(KeyEvent.KEYCODE_DPAD_RIGHT)
         rule.onNodeWithTag("phone-sign-in-mac").assertIsFocused()
         key(KeyEvent.KEYCODE_DPAD_RIGHT)
         rule.onNodeWithTag("phone-sign-in-setup").assertIsFocused()
+        val beforeGuide=SystemClock.elapsedRealtime()
         key(KeyEvent.KEYCODE_DPAD_CENTER)
         rule.onNodeWithTag("phone-setup-back").assertIsFocused()
         rule.onNodeWithText("Back to pairing").assertExists()
         rule.onNodeWithTag("phone-setup-guide-qr").assertIsDisplayed()
+        val countdown=rule.onNodeWithText("Pairing expires in ",substring=true).assertIsDisplayed()
+            .fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.Text].single().text
+        val parts=countdown.removePrefix("Pairing expires in ").split(':')
+        val shownSeconds=parts[0].toLong()*60+parts[1].toLong()
+        // The existing display tick samples once per second; bound it around guide entry.
+        val minimum=((deadline-SystemClock.elapsedRealtime()).coerceAtLeast(0)+999)/1000
+        val maximum=((deadline-(beforeGuide-1000)).coerceAtLeast(0)+999)/1000
+        assertTrue("Guide countdown must use the original deadline",shownSeconds in minimum..maximum)
         assertEquals(1,f.hosts.size)
         assertFalse(host.closed)
         assertEquals(deadline,f.model.ui.phonePairing?.expiresAtElapsedMs)

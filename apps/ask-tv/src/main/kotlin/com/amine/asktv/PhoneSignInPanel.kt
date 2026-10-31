@@ -67,6 +67,10 @@ internal fun phoneQrBitmap(link:String):Bitmap {
     val committed=ui.signInState in setOf("connected","plan_required")
     var now by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
     LaunchedEffect(ui.phonePairing?.expiresAtElapsedMs) { while(true) { now=SystemClock.elapsedRealtime(); delay(1000) } }
+    val remaining=ui.phonePairing?.let {
+        val seconds=((it.expiresAtElapsedMs-now).coerceAtLeast(0)+999)/1000
+        "${seconds/60}:${(seconds%60).toString().padStart(2,'0')}"
+    }
     Column(Modifier.fillMaxSize().padding(top=24.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
         Text(when {
             setup -> "Set up the phone helper"
@@ -93,7 +97,12 @@ internal fun phoneQrBitmap(link:String):Bitmap {
                         Text("2  Follow the guide for one-time private installation from your Mac over USB.",color=Muted,fontSize=19.sp)
                         Text(if(ui.signInState=="choose") "3  Select Back to sign-in choices, then Use Android phone." else "3  Open AI Chat on your phone. Select $setupBackLabel on this TV.",color=Muted,fontSize=19.sp)
                         Text("This QR opens instructions. It does not pair or install the helper.",color=Muted,fontSize=16.sp)
-                        if(ui.signInState!="choose") Text(if(waiting && phone) "Pairing stays active. Its original timer continues." else if(waiting) "Mac sign-in stays active. Its original timer continues." else "The sign-in status changed. Go back to check it.",color=Gold,fontSize=16.sp)
+                        if(ui.signInState!="choose") Text(when {
+                            waiting && phone && remaining!=null -> "Pairing expires in $remaining"
+                            waiting && phone -> "Preparing phone pairing…"
+                            waiting -> "Mac sign-in stays active. Its original timer continues."
+                            else -> "The sign-in status changed. Go back to check it."
+                        },color=Gold,fontSize=16.sp)
                     }
                 }
                 TvButton(setupBackLabel,control("phone-setup-back"),onClick=::closeSetup)
@@ -133,8 +142,7 @@ internal fun phoneQrBitmap(link:String):Bitmap {
                             Text("Pairing code only · Install the helper first using Phone setup guide.",Modifier.testTag("phone-helper-install-instructions"),color=Muted,fontSize=16.sp)
                         }
                         if(ui.phonePairing!=null) {
-                            val seconds=((ui.phonePairing.expiresAtElapsedMs-now).coerceAtLeast(0)+999)/1000
-                            Text("${if(link==null) "Sign-in" else "Code"} expires in ${seconds/60}:${(seconds%60).toString().padStart(2,'0')}",color=Muted,fontSize=17.sp)
+                            Text("${if(link==null) "Sign-in" else "Code"} expires in $remaining",color=Muted,fontSize=17.sp)
                         }
                     }
                 }
