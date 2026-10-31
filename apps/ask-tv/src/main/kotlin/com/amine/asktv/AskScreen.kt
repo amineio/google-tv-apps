@@ -41,8 +41,6 @@ import kotlinx.coroutines.launch
     val focus=remember { listOf("ask","type","configuration","example-0","example-1","answer-scroll","sign-in","new-conversation","follow-up","ready-sign-in","change-model","models-refresh","reconnect").associateWith { FocusRequester() } }
     fun requester(name:String)=focus.getValue(name)
     LaunchedEffect(ui.page,ui.focusVersion) {
-        // Let newly composed TV Surface interaction collectors subscribe before entry focus.
-        withFrameNanos { }
         if(!typing) runCatching { requester(ui.focus).requestFocus() }
     }
     BackHandler { if(typing) { typing=false; model.dialogClosed() } else if(!model.back()) onExit() }

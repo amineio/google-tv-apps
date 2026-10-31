@@ -42,8 +42,6 @@ internal fun phoneQrBitmap(link:String):Bitmap {
     var setup by rememberSaveable { mutableStateOf(false) }
     fun control(tag:String)=Modifier.testTag(tag).focusRequester(focus.getValue(tag)).onFocusChanged { if(it.isFocused) onFocused(tag) }
     LaunchedEffect(ui.focusVersion,ui.signInState,ui.signInRoute,setup) {
-        // Let newly composed TV Surface interaction collectors subscribe before entry focus.
-        withFrameNanos { }
         focus[if(setup) "phone-setup-back" else ui.focus]?.let { runCatching { it.requestFocus() } }
     }
     fun closeSetup() { onFocused("phone-setup"); setup=false }
