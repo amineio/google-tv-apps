@@ -8,6 +8,7 @@ import java.net.Socket
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 
 class PhoneLoopbackServerTest {
     private fun exchange(port: Int, target: String): String = Socket("127.0.0.1", port).use {
@@ -34,8 +35,22 @@ class PhoneLoopbackServerTest {
                 assertTrue(exchange(listener.localPort, target).contains("400"))
             }
             assertEquals(0, calls.get())
-            assertTrue(exchange(listener.localPort, "/auth/callback?state=s&code=x").contains("Authorization sent"))
+            assertTrue(exchange(listener.localPort, "/auth/callback?state=s&code=x").startsWith("HTTP/1.1 200 "))
             assertEquals(1, calls.get())
+        }
+    }
+    @Test fun browserAcknowledgesPhoneReceiptWhileRelayCallbackIsOnlyQueued() {
+        val pendingRelayCallback = AtomicReference<String>()
+        PhoneLoopbackServer({ pendingRelayCallback.set(it) }, {}, portOverride = 0).use { listener ->
+            listener.start(); listener.expectState("s")
+            val target = "/auth/callback?state=s&code=x"
+            val response = exchange(listener.localPort, target)
+            assertTrue(response.startsWith("HTTP/1.1 200 "))
+            assertEquals(target, pendingRelayCallback.get())
+            assertEquals(
+                "Authorization received on this phone. Return to AI Chat to check delivery.",
+                response.substringAfter("\r\n\r\n"),
+            )
         }
     }
     @Test fun browserWriteResetDoesNotDiscardCallback() {

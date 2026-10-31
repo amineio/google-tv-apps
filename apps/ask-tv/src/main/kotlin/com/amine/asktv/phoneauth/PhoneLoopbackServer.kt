@@ -86,7 +86,7 @@ class PhoneLoopbackServer internal constructor(
                 runCatching { page(socket, 400, "Authorization could not be sent. Check AI Chat on your TV.") }
                 return
             }
-            runCatching { page(socket, 200, "Authorization sent. Check AI Chat on your TV. You can close this tab.") }
+            runCatching { page(socket, 200, "Authorization received on this phone. Return to AI Chat to check delivery.") }
         } catch (failure: RelayRejected) {
             runCatching { page(socket, failure.status, "This callback could not be accepted. Check AI Chat.") }
         } catch (_: SocketTimeoutException) {
