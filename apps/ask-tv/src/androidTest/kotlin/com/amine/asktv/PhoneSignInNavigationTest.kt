@@ -126,6 +126,10 @@ class PhoneSignInNavigationTest {
         openGuideFromReady()
         rule.runOnIdle { f.model.signIn(SignInRoute.MAC) }
         rule.runOnIdle { f.model.cancelSignIn() }
+        // runOnIdle waits before its action, not for the action's recomposition.
+        // Observe the canceled guide presentation before sending the user's Back.
+        rule.onNodeWithText("The sign-in status changed. Go back to check it.").assertIsDisplayed()
+        rule.onNodeWithTag("phone-setup-back").assertIsFocused()
         key(KeyEvent.KEYCODE_BACK)
         rule.onNodeWithTag("sign-in-retry").assertIsFocused()
         oneFocus()
